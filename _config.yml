@@ -9,7 +9,7 @@ url: "http://aspen.vital.ai" # the base hostname & protocol for your site
 twitter_username: vital_ai
 github_username:  vital-ai
 
-permalink: /blog/:pretty
+permalink: /blog/pretty
 
 # Build settings
 markdown: kramdown
