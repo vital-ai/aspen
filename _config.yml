@@ -1,5 +1,5 @@
 # Site settings
-title: Aspen: AI on Spark
+title: "Aspen: AI on Spark"
 email: info@vital.ai
 description: > # this means to ignore newlines until "baseurl:"
   Aspen provides implementations of AI algorithms on Apache Spark.
