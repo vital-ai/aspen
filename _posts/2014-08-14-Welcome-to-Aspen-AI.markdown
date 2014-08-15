@@ -7,5 +7,6 @@ categories: aspen ai
 Welcome to Aspen!
 Aspen provides implementations of AI algorithms on the Apache Spark platform
 
-[aspen]:      http://aspen.vital.ai
+Aspen is available on github: [Aspen][aspen-github]
+
 [aspen-github]:   https://github.com/vital-ai/aspen
