@@ -1,0 +1,100 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>vital-ai</groupId>
+  <artifactId>aspen-groovy</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>Aspen Groovy Modules</name>
+  
+  
+  <repositories>
+  
+ <repository>
+    <id>vital-public-mvn-repo-releases</id>
+    <name>Vital AI Public Maven Repo Releases</name>
+    <url>https://github.com/vital-ai/vital-public-mvn-repo/raw/releases/</url>
+</repository>
+
+<repository>
+    <id>vital-public-mvn-repo-snapshots</id>
+    <name>Vital AI Public Maven Repo Snapshots</name>
+    <url>https://github.com/vital-ai/vital-public-mvn-repo/raw/snapshots/</url>
+</repository>
+
+  </repositories>
+  
+  
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+      
+      <plugin>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>2.8.1</version>
+        <configuration>
+            <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/snapshots</altDeploymentRepository>
+        </configuration>
+    </plugin>
+      
+      
+      <plugin>
+            <groupId>com.github.github</groupId>
+            <artifactId>site-maven-plugin</artifactId>
+            <version>0.10</version>
+            <configuration>
+                <message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
+                <noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
+                <outputDirectory>${project.build.directory}/snapshots</outputDirectory> <!-- matches distribution management repository url above -->
+                <branch>refs/heads/snapshots</branch>                       <!-- remote branch name -->
+                <includes><include>**/*</include></includes>
+                <merge>true</merge>                                        <!-- don't delete old artifacts -->
+                <repositoryName>vital-public-mvn-repo</repositoryName>      <!-- github repo name -->
+                <repositoryOwner>vital-ai</repositoryOwner>    <!-- github username  -->
+            </configuration>
+            <executions>
+              <!-- run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase -->
+              <execution>
+                <goals>
+                  <goal>site</goal>
+                </goals>
+                <phase>deploy</phase>
+              </execution>
+            </executions>
+        </plugin>
+      
+      
+      
+      
+    </plugins>
+  </build>
+  
+  
+  <properties>
+    <!-- github server corresponds to entry in ~/.m2/settings.xml -->
+    <github.global.server>github</github.global.server>
+</properties>
+  
+  
+  <distributionManagement>
+    <repository>
+        <id>internal.repo</id>
+        <name>Temporary Staging Repository</name>
+        <url>file://${project.build.directory}/snaphots</url>
+    </repository>
+</distributionManagement>
+ 
+ 
+ 
+ 
+  
+  
+  
+  
+</project>
