@@ -96,7 +96,28 @@
   		<groupId>org.apache.spark</groupId>
   		<artifactId>spark-core_2.10</artifactId>
   		<version>1.1.0</version>
+  		<exclusions>
+  			<exclusion>
+  				<artifactId>commons-codec</artifactId>
+  				<groupId>commons-codec</groupId>
+  			</exclusion>
+  		</exclusions>
   	</dependency>
+  	
+  	<dependency>
+	<groupId>org.apache.commons</groupId>
+	<artifactId>commons-math3</artifactId>
+	<version>3.3</version>
+</dependency>
+  	
+  	
+  	<dependency>
+	<groupId>org.apache.spark</groupId>
+	<artifactId>spark-mllib_2.10</artifactId>
+	<version>1.1.0</version>
+</dependency>
+  	
+  	
   	<dependency>
   		<groupId>org.apache.opennlp</groupId>
   		<artifactId>opennlp-tools</artifactId>
