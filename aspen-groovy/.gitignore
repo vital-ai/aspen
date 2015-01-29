@@ -1,3 +1,4 @@
 /target/
 classes/
 .settings/
+.DS_Store

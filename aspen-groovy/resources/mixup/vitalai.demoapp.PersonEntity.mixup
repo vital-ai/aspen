@@ -1,0 +1,16 @@
+//required by the entity class resolution
+
+//define some package prefix
+defSpanProp package_demo:'vitalai.demoapp' = : [ ... ] ;
+
+require 'npchunks';
+
+provide 'vitalai.demoapp.PersonEntity' ;
+
+defDict namePrefixDict = mr, mrs, dr, president ;
+
+defSpanType 'demo:PersonEntity' = NP : [ ai(namePrefixDict) ... ] ;
+
+defSpanType 'demo:PersonEntity#title' = 'demo:PersonEntity' : [ ai(namePrefixDict) ] any+ ;
+
+defSpanType 'demo:PersonEntity#name' = 'demo:PersonEntity' : any [ any+ ];

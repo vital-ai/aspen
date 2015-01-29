@@ -1,0 +1,15 @@
+//required by the entity class resolution
+
+//define some package prefix
+defSpanProp package_demo:'vitalai.demoapp' = : [ ... ] ;
+
+require 'npchunks';
+
+provide 'vitalai.demoapp.BrandEntity' ;
+
+defSpanType 'demo:BrandEntity' =~ trie "fashion_brands.txt" ;
+
+//mixup bug for trie implementation - we need to force this as well
+declareSpanType 'demo:BrandEntity' ;
+
+defSpanType 'demo:BrandEntity#name' = 'demo:BrandEntity' : [ any+ ];
