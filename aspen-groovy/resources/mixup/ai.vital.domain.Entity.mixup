@@ -1,0 +1,5 @@
+defSpanProp package_vital:'ai.vital.domain' = : [ ... ] ;
+
+provide 'ai.vital.domain.Entity' ;
+
+defSpanType 'vital:Entity' = extracted_time : [ any+ ];

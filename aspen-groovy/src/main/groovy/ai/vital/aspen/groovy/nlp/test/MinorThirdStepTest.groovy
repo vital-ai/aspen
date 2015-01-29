@@ -39,7 +39,7 @@ class MinorThirdStepTest {
 		
 		d.URI = URIGenerator.generateURI(app, Document)
 		
-		d.body = "The meeting is at 2pm.  Hello.  Mr. Smith is a great guy.  This is another sentence.  Everyone loves the Beatles.  Here is a large red ball.  He very quickly runs down the wet street."
+		d.body = "The meeting is at 2 pm.  Hello.  Mr Smith is a great guy.  This is another sentence.  Everyone loves The Beatles.  Here is a large red ball.  He very quickly runs down the wet street."
 		
 		
 		TextExtractStep extract_step = new TextExtractStep()
@@ -127,6 +127,8 @@ class MinorThirdStepTest {
 		
 		
 		d.getTextBlocks().each{ it.getSentences().each{ it.getSentenceEntityInstances().each { println "Entity: " + it      }} }
+		
+		d.getEntities().each { println it }
 		
 		
 			

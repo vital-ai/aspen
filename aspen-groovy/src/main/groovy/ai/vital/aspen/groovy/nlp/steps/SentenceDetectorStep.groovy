@@ -4,7 +4,6 @@ import opennlp.tools.sentdetect.SentenceDetectorME;
 
 import org.slf4j.Logger;
 
-import ai.vital.aspen.groovy.nlp.config.NLPServerConfig;
 import ai.vital.aspen.groovy.step.AbstractStep
 import ai.vital.domain.Document;
 import ai.vital.domain.TextBlock;
@@ -30,8 +29,7 @@ import ai.vital.domain.Document;
 import ai.vital.domain.Edge_hasSentence;
 import ai.vital.domain.Sentence;
 import ai.vital.domain.TextBlock;
-import ai.vital.aspen.groovy.nlp.config.NLPServerConfig;
-import ai.vital.aspen.groovy.nlp.config.OpenNLPConfig;
+
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.models.SentenceDetectorModel;
 import ai.vital.flow.server.ontology.VitalOntology;

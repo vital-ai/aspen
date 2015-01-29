@@ -39,8 +39,7 @@ import ai.vital.domain.Sentence;
 import ai.vital.domain.TextBlock;
 import ai.vital.domain.Token;
 import ai.vital.domain.VerbPhrase;
-import ai.vital.aspen.groovy.nlp.config.MinorthirdConfig;
-import ai.vital.aspen.groovy.nlp.config.NLPServerConfig;
+
 import ai.vital.aspen.groovy.nlp.m3rd.DocumentTokenizer_VS;
 import ai.vital.aspen.groovy.nlp.m3rd.PosAnnotator_VS;
 import ai.vital.aspen.groovy.nlp.m3rd.VitalAnnotatorLoader;
@@ -49,7 +48,6 @@ import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.PosTagsUtils;
 import ai.vital.aspen.groovy.nlp.model.TokenUtils;
 import ai.vital.flow.server.ontology.VitalOntology;
-import ai.vital.aspen.groovy.nlp.workflowstep.MinorthirdWorkflowStep.EntityLocation;
 import ai.vital.aspen.groovy.step.AbstractStep
 import ai.vital.flow.server.utils.JSONUtils;
 import ai.vital.vitalsigns.model.container.Payload;
@@ -227,7 +225,6 @@ class MinorThirdStep extends AbstractStep {
 		start = System.currentTimeMillis();
 		
 		
-		println "running interpreter..."
 		
 		_interpreter.eval(labels);
 		
@@ -242,7 +239,6 @@ class MinorThirdStep extends AbstractStep {
 			
 		Set<String> types = labels.getTypes();
 		
-		println "M3RD Types: " + types
 		
 		
 			
@@ -311,7 +307,6 @@ class MinorThirdStep extends AbstractStep {
 			//first iteration to collect entity types, and create instances
 			for(String type : types) {
 				
-				println "collecting type: " + type
 				
 				//filter out unwanted types
 				if(inputTypes.contains(type)) continue;
@@ -320,23 +315,19 @@ class MinorThirdStep extends AbstractStep {
 				
 				if(aposFilter(type).startsWith(PACKAGE_PREFIX)) continue;
 				
-				println "Accepting Type: " + type
 				
 				String clsName = resolveClass(prefix2Package, aposFilter(type));
 				
-				println "Classname: " + clsName
 				
 				
 				List<Span> spans = new ArrayList<Span>(labels.getTypeSet(type, docID));
 				
 				
-				println "Number of Spans: " + spans.size()
 				
 				spans = filterOutInnerSpans(spans);
 				
 				for(Span span : spans) {
 					
-					println "Trying to create entity from class: " + clsName
 					
 					//try to create an entity from span type
 					Entity entity = createEntityFromType(clsName);
@@ -388,7 +379,6 @@ class MinorThirdStep extends AbstractStep {
 					ei.offsetInSentence = sentenceOffset;
 					ei.offset = offset;
 
-					println "Entity Instance: " + ei
 					
 					
 					

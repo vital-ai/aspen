@@ -26,8 +26,7 @@ import ai.vital.domain.Sentence;
 import ai.vital.domain.TextBlock;
 import ai.vital.domain.Token;
 import ai.vital.aspen.groovy.nlp.domain.rdf.DocumentExtractor;
-import ai.vital.aspen.groovy.nlp.config.NLPServerConfig;
-import ai.vital.aspen.groovy.nlp.config.OpenNLPConfig;
+
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.models.POSTaggerModel;
 import ai.vital.flow.server.ontology.VitalOntology;

@@ -6,3 +6,5 @@ require 'vitalai.demoapp.BrandEntity' ;
 require 'vitalai.demoapp.Artist' ;
 
 require 'time';
+
+require 'ai.vital.domain.Entity' ;
