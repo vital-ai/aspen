@@ -30,11 +30,12 @@ import ai.vital.domain.TextBlock;
 
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.models.SentenceDetectorModel;
-import ai.vital.flow.server.ontology.VitalOntology;
 import ai.vital.vitalsigns.model.container.Payload;
 
 
 import com.hp.hpl.jena.rdf.model.Model;
+
+import ai.vital.aspen.groovy.ontology.VitalOntology
 
 
 

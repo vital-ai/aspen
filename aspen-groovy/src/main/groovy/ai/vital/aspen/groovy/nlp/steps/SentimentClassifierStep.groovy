@@ -21,13 +21,13 @@ import ai.vital.domain.Token;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.TokenUtils;
 import ai.vital.aspen.groovy.nlp.models.SentimentClassifier;
-import ai.vital.flow.server.ontology.VitalOntology;
 import ai.vital.opennlp.classifier.Classification;
 import ai.vital.opennlp.classifier.Classifier;
 import ai.vital.vitalsigns.model.container.Payload;
 
 import com.hp.hpl.jena.rdf.model.Model;
 
+import ai.vital.aspen.groovy.ontology.VitalOntology
 
 
 class SentimentClassifierStep {

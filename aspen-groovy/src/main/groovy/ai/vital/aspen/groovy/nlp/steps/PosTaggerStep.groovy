@@ -25,14 +25,13 @@ import ai.vital.domain.PosTag;
 import ai.vital.domain.Sentence;
 import ai.vital.domain.TextBlock;
 import ai.vital.domain.Token;
-import ai.vital.aspen.groovy.nlp.domain.rdf.DocumentExtractor;
 
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.models.POSTaggerModel;
-import ai.vital.flow.server.ontology.VitalOntology;
 import ai.vital.vitalsigns.global.GlobalHashTable;
 import ai.vital.vitalsigns.model.container.Payload;
 
+import ai.vital.aspen.groovy.ontology.VitalOntology
 
 
 class PosTaggerStep extends AbstractStep {

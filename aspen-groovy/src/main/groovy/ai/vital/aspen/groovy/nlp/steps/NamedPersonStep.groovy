@@ -32,7 +32,8 @@ import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.TokenUtils;
 import ai.vital.aspen.groovy.nlp.models.NamedPersonModel;
 import ai.vital.vitalsigns.model.container.Payload;
-import ai.vital.flow.server.ontology.VitalOntology;
+
+import ai.vital.aspen.groovy.ontology.VitalOntology
 
 
 class NamedPersonStep {

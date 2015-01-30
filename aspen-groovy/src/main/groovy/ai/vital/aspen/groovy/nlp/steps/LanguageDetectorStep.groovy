@@ -12,8 +12,9 @@ import ai.vital.domain.Document
 import ai.vital.domain.Edge_hasAnnotation;
 import ai.vital.aspen.groovy.nlp.model.DocumentUtils;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
-import ai.vital.flow.server.ontology.VitalOntology;
 import ai.vital.vitalsigns.model.container.Payload;
+
+import ai.vital.aspen.groovy.ontology.VitalOntology
 
 
 class LanguageDetectorStep {

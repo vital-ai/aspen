@@ -23,16 +23,17 @@ import opennlp.tools.util.Span;
 
 import com.hp.hpl.jena.rdf.model.Model;
 
-import ai.vital.aspen.groovy.nlp.domain.Document;
-import ai.vital.aspen.groovy.nlp.domain.Sentence;
-import ai.vital.aspen.groovy.nlp.domain.TextBlock;
-import ai.vital.aspen.groovy.nlp.domain.Token;
-import ai.vital.aspen.groovy.nlp.domain.rdf.DocumentExtractor;
+import ai.vital.domain.Document;
+import ai.vital.domain.Sentence;
+import ai.vital.domain.TextBlock;
+import ai.vital.domain.Token;
 import ai.vital.opennlp.classifier.Classification
 import ai.vital.opennlp.classifier.Classifier;
 import ai.vital.vitalsigns.model.container.Payload;
 
 import ai.vital.aspen.groovy.nlp.models.EnglishTokenizerModel
+
+import ai.vital.aspen.groovy.ontology.VitalOntology
 
 
 

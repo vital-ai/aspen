@@ -5,7 +5,7 @@
  * Vital AI, LLC may be contacted via: legal@vital.ai
  * or via contact information found at the web address: http://vital.ai/contact.html
  ******************************************************************************/
-package ai.vital.flow.server.ontology;
+package ai.vital.aspen.groovy.ontology;
 
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.Resource;

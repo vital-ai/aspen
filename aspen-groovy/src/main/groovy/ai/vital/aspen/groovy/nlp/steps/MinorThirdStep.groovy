@@ -47,10 +47,12 @@ import ai.vital.aspen.groovy.nlp.model.DocumentUtils;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.PosTagsUtils;
 import ai.vital.aspen.groovy.nlp.model.TokenUtils;
-import ai.vital.flow.server.ontology.VitalOntology;
 import ai.vital.aspen.groovy.step.AbstractStep
 import ai.vital.flow.server.utils.JSONUtils;
 import ai.vital.vitalsigns.model.container.Payload;
+
+import ai.vital.aspen.groovy.ontology.VitalOntology
+
 
 
 class MinorThirdStep extends AbstractStep {

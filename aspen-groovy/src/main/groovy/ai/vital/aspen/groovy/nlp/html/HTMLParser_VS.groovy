@@ -1,10 +1,3 @@
-/*******************************************************************************
- * Copyright 2014 by Vital AI, LLC . All rights reserved.
- * 
- * This software may only be used under a commercial license agreement obtained by Vital AI, LLC.
- * Vital AI, LLC may be contacted via: legal@vital.ai
- * or via contact information found at the web address: http://vital.ai/contact.html
- ******************************************************************************/
 package ai.vital.aspen.groovy.nlp.html;
 
 import java.util.List;
@@ -29,7 +22,6 @@ import ai.vital.domain.TagElement;
 import ai.vital.domain.TextBlock;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.TransformationVectorUtils;
-import ai.vital.flow.server.ontology.VitalOntology;
 import ai.vital.vitalsigns.model.container.Payload;
 
 public class HTMLParser_VS {
