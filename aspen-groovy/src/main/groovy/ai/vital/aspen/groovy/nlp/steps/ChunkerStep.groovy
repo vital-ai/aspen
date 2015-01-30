@@ -32,9 +32,6 @@ import ai.vital.aspen.groovy.nlp.model.TokenUtils;
 import ai.vital.aspen.groovy.nlp.models.ChunkerModelWrapper;
 import ai.vital.flow.server.ontology.VitalOntology;
 import ai.vital.vitalsigns.model.container.Payload;
-import ai.vital.workflow.StepInitializationException;
-import ai.vital.workflow.WorkflowConfig.StepName;
-import ai.vital.workflow.impl.WorkflowStepV2Impl;
 
 import com.hp.hpl.jena.rdf.model.Model;
 
@@ -43,7 +40,7 @@ import ai.vital.vitalsigns.global.GlobalHashTable;
 
 class ChunkerStep extends AbstractStep {
 
-	public final static StepName CHUNKER_VS = new StepName("chunker_vs");
+	public final static String CHUNKER_VS = "chunker_vs";
 	
 	private final static Logger log = LoggerFactory.getLogger(ChunkerStep.class);
 	
@@ -71,7 +68,7 @@ class ChunkerStep extends AbstractStep {
 	
 	
 	public String getName() {
-		return CHUNKER_VS.getName();
+		return CHUNKER_VS;
 	}
 
 	

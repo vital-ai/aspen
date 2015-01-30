@@ -32,15 +32,12 @@ import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.TokenUtils;
 import ai.vital.aspen.groovy.nlp.models.NamedPersonModel;
 import ai.vital.vitalsigns.model.container.Payload;
-import ai.vital.workflow.StepInitializationException;
-import ai.vital.workflow.WorkflowConfig.StepName;
-import ai.vital.workflow.impl.WorkflowStepV2Impl;
 import ai.vital.flow.server.ontology.VitalOntology;
 
 
 class NamedPersonStep {
 	
-	public final static StepName NAMEDPERSONTAGGER_VS = new StepName("namedpersontagger_vs");
+	public final static String NAMEDPERSONTAGGER_VS = "namedpersontagger_vs";
 	
 	private final static Logger log = LoggerFactory.getLogger(NamedPersonStep.class);
 	
@@ -48,11 +45,11 @@ class NamedPersonStep {
 	
 	
 	public String getName() {
-		return NAMEDPERSONTAGGER_VS.getName();
+		return NAMEDPERSONTAGGER_VS;
 	}
 	
 	
-	public void init() throws StepInitializationException {
+	public void init()  {
 		
 		File namedPersonModelFile = new File("resources/models/", "en-ner-person.bin");
 		
@@ -65,8 +62,7 @@ class NamedPersonStep {
 	}
 
 	public void processPayload(Payload payload)
-			throws ai.vital.workflow.IWorkflowStep.WorkflowHaltException,
-			ai.vital.workflow.IWorkflowStep.ProcessflowHaltException,
+			throws 
 			Exception {
 
 		for( Document doc : payload.iterator(Document.class) ) {

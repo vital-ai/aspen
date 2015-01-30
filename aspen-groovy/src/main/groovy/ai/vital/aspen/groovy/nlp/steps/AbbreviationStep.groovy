@@ -30,14 +30,12 @@ import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.flow.server.ontology.VitalOntology;
 import ai.vital.vitalsigns.global.GlobalHashTable;
 import ai.vital.vitalsigns.model.container.Payload;
-import ai.vital.workflow.WorkflowConfig.StepName;
-import ai.vital.workflow.impl.WorkflowStepV2Impl;
 
 
 class AbbreviationStep {
 
 	
-	public final static StepName ABBREVIATIONS_VS = new StepName("abbreviations_vs");
+	public final static String ABBREVIATIONS_VS = "abbreviations_vs";
 	
 	private Logger log = LoggerFactory.getLogger(AbbreviationsWorkflowStep_VS.class);
 
@@ -61,14 +59,13 @@ class AbbreviationStep {
 	
 
 	public String getName() {
-		return ABBREVIATIONS_VS.getName();
+		return ABBREVIATIONS_VS;
 	}
 	
 	
 	public void processPayload(Payload payload)
-			throws ai.vital.workflow.IWorkflowStep.WorkflowHaltException,
-			ai.vital.workflow.IWorkflowStep.ProcessflowHaltException,
-			Exception {
+			
+			throws Exception {
 
 		annotationMode = true;
 		

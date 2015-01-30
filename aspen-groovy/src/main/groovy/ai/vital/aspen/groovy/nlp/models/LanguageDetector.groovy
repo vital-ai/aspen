@@ -14,7 +14,6 @@ import org.knallgrau.utils.textcat.TextCategorizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ai.vital.workflow.StepInitializationException;
 
 public class LanguageDetector {
 
@@ -25,7 +24,7 @@ public class LanguageDetector {
 	private LanguageDetector() {		
 	}
 
-	public static void init() throws StepInitializationException {
+	public static void init()  {
 		
 		if(singleton == null) {
 			
@@ -53,8 +52,8 @@ public class LanguageDetector {
 		
 	}
 	
-	public static TextCategorizer getLanguageDetector() throws StepInitializationException {
-		if(singleton == null) throw new StepInitializationException("Language Detector not initialized!");
+	public static TextCategorizer getLanguageDetector()  {
+		if(singleton == null) throw new Exception("Language Detector not initialized!");
 		return singleton;
 	}
 	

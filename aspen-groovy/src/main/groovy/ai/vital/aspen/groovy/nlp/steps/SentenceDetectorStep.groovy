@@ -8,8 +8,6 @@ import ai.vital.aspen.groovy.step.AbstractStep
 import ai.vital.domain.Document;
 import ai.vital.domain.TextBlock;
 import ai.vital.vitalsigns.model.container.Payload;
-import ai.vital.workflow.StepInitializationException;
-import ai.vital.workflow.WorkflowConfig.StepName;
 
 
 import java.io.File;
@@ -34,9 +32,6 @@ import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.models.SentenceDetectorModel;
 import ai.vital.flow.server.ontology.VitalOntology;
 import ai.vital.vitalsigns.model.container.Payload;
-import ai.vital.workflow.StepInitializationException;
-import ai.vital.workflow.WorkflowConfig.StepName;
-import ai.vital.workflow.impl.WorkflowStepV2Impl
 
 
 import com.hp.hpl.jena.rdf.model.Model;
@@ -46,7 +41,7 @@ import com.hp.hpl.jena.rdf.model.Model;
 class SentenceDetectorStep extends AbstractStep {
 	
 	
-	public final static StepName SENTENCEDETECTOR_VS = new StepName("sentencedetector_vs");
+	public final static String  SENTENCEDETECTOR_VS = "sentencedetector_vs";
 	
 	private final static Logger log = LoggerFactory.getLogger(SentenceDetectorStep.class);
 	
@@ -74,15 +69,12 @@ class SentenceDetectorStep extends AbstractStep {
 
 	
 	public String getName() {
-		return SENTENCEDETECTOR_VS.getName();
+		return SENTENCEDETECTOR_VS;
 	}
 
 	
 	public void processDocument(Document doc, List results) {
 
-		//Map<String, Object> context = ai.vital.flow.server.utils.JSONUtils.getContextMap(payload);
-		
-		//boolean singleSentencePerBlock = Boolean.TRUE.equals(context.get("singleSentencePerBlock"));
 		
 		boolean singleSentencePerBlock = false
 		

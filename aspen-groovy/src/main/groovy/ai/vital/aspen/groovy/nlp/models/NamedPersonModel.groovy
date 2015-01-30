@@ -17,8 +17,6 @@ import opennlp.tools.namefind.TokenNameFinderModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ai.vital.workflow.StepInitializationException;
-
 public class NamedPersonModel {
 
 	private final static Logger log = LoggerFactory.getLogger(NamedPersonModel.class);
@@ -28,7 +26,7 @@ public class NamedPersonModel {
 	private NamedPersonModel() {		
 	}
 
-	public static void init(File modelFile) throws StepInitializationException {
+	public static void init(File modelFile)  {
 		
 		if(singleton == null) {
 			
@@ -44,7 +42,7 @@ public class NamedPersonModel {
 						singleton = new NameFinderME(new TokenNameFinderModel(new FileInputStream(modelFile)));
 					} catch (IOException e) {
 						log.error(e.getLocalizedMessage(), e);
-						throw new StepInitializationException(e);
+						throw new Exception(e);
 					}
 					
 					long stop = System.currentTimeMillis();
@@ -61,8 +59,8 @@ public class NamedPersonModel {
 		
 	}
 	
-	public static NameFinderME getNameFinder() throws StepInitializationException {
-		if(singleton == null) throw new StepInitializationException("Name finder not initialized!");
+	public static NameFinderME getNameFinder()  {
+		if(singleton == null) throw new Exception("Name finder not initialized!");
 		return singleton;
 	}
 	

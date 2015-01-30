@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ai.vital.opennlp.classifier.Classifier;
-import ai.vital.workflow.StepInitializationException;
 
 class EnglishTokenizerModel {
 
@@ -40,7 +39,7 @@ class EnglishTokenizerModel {
 						singleton.init(new FileInputStream(modelFile));
 					} catch (IOException e) {
 						log.error(e.getLocalizedMessage(), e);
-						throw new StepInitializationException(e);
+						throw new Exception(e);
 					}
 					
 					long stop = System.currentTimeMillis();

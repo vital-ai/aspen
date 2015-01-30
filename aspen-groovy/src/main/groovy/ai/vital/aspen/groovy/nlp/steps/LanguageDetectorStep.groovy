@@ -14,16 +14,13 @@ import ai.vital.aspen.groovy.nlp.model.DocumentUtils;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.flow.server.ontology.VitalOntology;
 import ai.vital.vitalsigns.model.container.Payload;
-import ai.vital.workflow.StepInitializationException;
-import ai.vital.workflow.WorkflowConfig.StepName;
-import ai.vital.workflow.impl.WorkflowStepV2Impl;
 
 
 class LanguageDetectorStep {
 
 	private final static Logger log = LoggerFactory.getLogger(LanguageDetectorStep.class);
 	
-	public final static StepName LANGUAGEDETECTOR2_VS = new StepName("languagedetector2_vs");
+	public final static String LANGUAGEDETECTOR2_VS = "languagedetector2_vs";
 	
 	public static boolean loaded = false;
 	
@@ -32,12 +29,12 @@ class LanguageDetectorStep {
 		
 		if(loaded) return;
 				
-		log.info("Initializing Language Detector 2 ...");
+		log.info("Initializing Language Detector ...");
 		
 		File profileDir = new File("resources/langdetect-profiles/");
 		
 		
-		if(!profileDir.exists()) throw new StepInitializationException("Language profiles directory not found: ${new File('resources/langdetect-profiles/').absolutePath}");
+		if(!profileDir.exists()) throw new Exception("Language profiles directory not found: ${new File('resources/langdetect-profiles/').absolutePath}");
 		
 		log.info("Loading {} profiles from {}", profileDir.list().length, profileDir.getAbsolutePath());
 
@@ -85,7 +82,7 @@ class LanguageDetectorStep {
 
 	
 	public String getName() {
-		return LANGUAGEDETECTOR2_VS.getName();
+		return LANGUAGEDETECTOR2_VS;
 	}
 
 	

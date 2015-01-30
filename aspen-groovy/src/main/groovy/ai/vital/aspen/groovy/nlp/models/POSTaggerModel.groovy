@@ -17,7 +17,6 @@ import opennlp.tools.postag.POSTaggerME;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ai.vital.workflow.StepInitializationException;
 
 public class POSTaggerModel {
 
@@ -28,7 +27,7 @@ public class POSTaggerModel {
 	private POSTaggerModel() {		
 	}
 
-	public static void init(File modelFile) throws StepInitializationException {
+	public static void init(File modelFile)  {
 		
 		if(singleton == null) {
 			
@@ -44,7 +43,7 @@ public class POSTaggerModel {
 						singleton = new POSTaggerME(new POSModel(new FileInputStream(modelFile)));
 					} catch (IOException e) {
 						log.error(e.getLocalizedMessage(), e);
-						throw new StepInitializationException(e);
+						throw new Exception(e);
 					}
 					
 					long stop = System.currentTimeMillis();
@@ -61,8 +60,8 @@ public class POSTaggerModel {
 		
 	}
 	
-	public static POSTaggerME getTagger() throws StepInitializationException {
-		if(singleton == null) throw new StepInitializationException("POS Tagger not initialized!");
+	public static POSTaggerME getTagger()  {
+		if(singleton == null) throw new Exception("POS Tagger not initialized!");
 		return singleton;
 	}
 	

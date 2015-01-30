@@ -38,20 +38,18 @@ import ai.vital.aspen.groovy.nlp.model.TransformationVectorUtils;
 import ai.vital.flow.server.ontology.VitalOntology;
 import ai.vital.vitalsigns.meta.GraphContext;
 import ai.vital.vitalsigns.model.container.Payload;
-import ai.vital.workflow.WorkflowConfig.StepName;
-import ai.vital.workflow.impl.WorkflowStepV2Impl;
 
 
 
 class TextExtractStep extends AbstractStep {
 	
-	public final static StepName TEXTEXTRACTION_VS = new StepName("textextraction_vs");
+	public final static String TEXTEXTRACTION_VS = "textextraction_vs";
 	
 	private final static Logger log = LoggerFactory.getLogger(TextExtractStep.class);
 	
 	
 	public String getName() {
-		return TEXTEXTRACTION_VS.getName();
+		return TEXTEXTRACTION_VS;
 	}
 
 	

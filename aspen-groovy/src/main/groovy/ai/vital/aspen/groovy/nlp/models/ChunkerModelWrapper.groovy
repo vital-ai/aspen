@@ -17,7 +17,6 @@ import opennlp.tools.chunker.ChunkerModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ai.vital.workflow.StepInitializationException;
 
 public class ChunkerModelWrapper {
 
@@ -28,7 +27,7 @@ public class ChunkerModelWrapper {
 	private ChunkerModelWrapper() {		
 	}
 
-	public static void init(File modelFile) throws StepInitializationException {
+	public static void init(File modelFile)  {
 		
 		if(singleton == null) {
 			
@@ -44,7 +43,7 @@ public class ChunkerModelWrapper {
 						singleton = new ChunkerME(new ChunkerModel(new FileInputStream(modelFile)));
 					} catch (IOException e) {
 						log.error(e.getLocalizedMessage(), e);
-						throw new StepInitializationException(e);
+						throw new Exception(e);
 					}
 					
 					long stop = System.currentTimeMillis();
@@ -61,8 +60,8 @@ public class ChunkerModelWrapper {
 		
 	}
 	
-	public static ChunkerME getChunker() throws StepInitializationException {
-		if(singleton == null) throw new StepInitializationException("Chunker model not initialized!");
+	public static ChunkerME getChunker()  {
+		if(singleton == null) throw new Exception("Chunker model not initialized!");
 		return singleton;
 	}
 	

@@ -25,9 +25,6 @@ import ai.vital.flow.server.ontology.VitalOntology;
 import ai.vital.opennlp.classifier.Classification;
 import ai.vital.opennlp.classifier.Classifier;
 import ai.vital.vitalsigns.model.container.Payload;
-import ai.vital.workflow.StepInitializationException;
-import ai.vital.workflow.WorkflowConfig.StepName;
-import ai.vital.workflow.impl.WorkflowStepV2Impl;
 
 import com.hp.hpl.jena.rdf.model.Model;
 
@@ -35,7 +32,7 @@ import com.hp.hpl.jena.rdf.model.Model;
 
 class SentimentClassifierStep {
 	
-	public final static StepName SENTIMENTCLASSIFIER_VS = new StepName("sentimentclassifier_vs");
+	public final static String SENTIMENTCLASSIFIER_VS = "sentimentclassifier_vs";
 	
 	private final static Logger log = LoggerFactory.getLogger(SentimentClassifierStep.class);
 	
@@ -63,8 +60,7 @@ class SentimentClassifierStep {
 
 	
 	public void processPayload(Payload payload)
-			throws ai.vital.workflow.IWorkflowStep.WorkflowHaltException,
-			ai.vital.workflow.IWorkflowStep.ProcessflowHaltException,
+			throws 
 			Exception {
 
 		for( Document doc : payload.iterator(Document.class) ) {

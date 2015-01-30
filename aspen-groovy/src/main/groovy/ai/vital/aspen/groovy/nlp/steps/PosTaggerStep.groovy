@@ -32,15 +32,12 @@ import ai.vital.aspen.groovy.nlp.models.POSTaggerModel;
 import ai.vital.flow.server.ontology.VitalOntology;
 import ai.vital.vitalsigns.global.GlobalHashTable;
 import ai.vital.vitalsigns.model.container.Payload;
-import ai.vital.workflow.StepInitializationException;
-import ai.vital.workflow.WorkflowConfig.StepName;
-import ai.vital.workflow.impl.WorkflowStepV2Impl;
 
 
 
 class PosTaggerStep extends AbstractStep {
 
-	public final static StepName POSTAGGER_VS = new StepName("postagger_vs");
+	public final static String POSTAGGER_VS = "postagger_vs";
 	
 	private final static Logger log = LoggerFactory.getLogger(PosTaggerStep.class);
 	
@@ -69,7 +66,7 @@ class PosTaggerStep extends AbstractStep {
 	}
 	
 	public String getName() {
-		return POSTAGGER_VS.getName();
+		return POSTAGGER_VS;
 	}
 
 	public void processDocument(Document doc) {

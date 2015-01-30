@@ -17,7 +17,6 @@ import opennlp.tools.sentdetect.SentenceModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ai.vital.workflow.StepInitializationException;
 
 public class SentenceDetectorModel {
 
@@ -28,7 +27,7 @@ public class SentenceDetectorModel {
 	private SentenceDetectorModel() {		
 	}
 
-	public static void init(File modelFile) throws StepInitializationException {
+	public static void init(File modelFile)  {
 		
 		if(singleton == null) {
 			
@@ -46,7 +45,7 @@ public class SentenceDetectorModel {
 						model = new SentenceModel(new FileInputStream(modelFile));
 					} catch (IOException e) {
 						log.error("Error when loading sentence model file: " + e.getLocalizedMessage());
-						throw new StepInitializationException(e);
+						throw new Exception(e);
 					}
 					
 					
@@ -66,8 +65,8 @@ public class SentenceDetectorModel {
 		
 	}
 	
-	public static SentenceDetectorME getDetector() throws StepInitializationException {
-		if(singleton == null) throw new StepInitializationException("Sentence detector model not initialized!");
+	public static SentenceDetectorME getDetector()  {
+		if(singleton == null) throw new Exception("Sentence detector model not initialized!");
 		return singleton;
 	}
 	

@@ -51,9 +51,6 @@ import ai.vital.flow.server.ontology.VitalOntology;
 import ai.vital.aspen.groovy.step.AbstractStep
 import ai.vital.flow.server.utils.JSONUtils;
 import ai.vital.vitalsigns.model.container.Payload;
-import ai.vital.workflow.StepInitializationException;
-import ai.vital.workflow.WorkflowConfig.StepName;
-import ai.vital.workflow.impl.WorkflowStepV2Impl;
 
 
 class MinorThirdStep extends AbstractStep {
@@ -72,14 +69,13 @@ class MinorThirdStep extends AbstractStep {
 	
 	private static final String SENTENCE = "sentence";
 
-	public final static StepName MINORTHIRD_VS = new StepName("minorthird_vs");
+	public final static String MINORTHIRD_VS = "minorthird_vs";
 	
 	private final static Logger log = LoggerFactory.getLogger(MinorThirdStep.class);
 
 	private static final String NS_QUALIFIER = ":";
 	
 	private static final String PROPERTY_QUALIFIER = "#";
-	
 	
 	private MixupInterpreter interpreter;
 	
@@ -91,7 +87,6 @@ class MinorThirdStep extends AbstractStep {
 	
 	private Set<String> inputProps;
 	
-	//private ObjectMapper mapper = new ObjectMapper();
 	
 	public void init()  {
 		
@@ -136,7 +131,7 @@ class MinorThirdStep extends AbstractStep {
 	
 	
 	public String getName() {
-		return MINORTHIRD_VS.getName();
+		return MINORTHIRD_VS;
 	}
 
 	

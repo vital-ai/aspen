@@ -31,11 +31,6 @@ import ai.vital.aspen.groovy.nlp.domain.rdf.DocumentExtractor;
 import ai.vital.opennlp.classifier.Classification
 import ai.vital.opennlp.classifier.Classifier;
 import ai.vital.vitalsigns.model.container.Payload;
-import ai.vital.workflow.StepInitializationException;
-import ai.vital.workflow.IWorkflowStep.ProcessflowHaltException
-import ai.vital.workflow.IWorkflowStep.WorkflowHaltException
-import ai.vital.workflow.WorkflowConfig.StepName;
-import ai.vital.workflow.impl.WorkflowStepImpl;
 
 import ai.vital.aspen.groovy.nlp.models.EnglishTokenizerModel
 
@@ -47,14 +42,14 @@ import ai.vital.aspen.groovy.nlp.models.EnglishTokenizerModel
 
 class EnglishTokenizerStep {
 	
-	public final static StepName ENGLISHTOKENIZER = new StepName("englishtokenizer");
+	public final static String ENGLISHTOKENIZER = "englishtokenizer";
 	
 	private final static Logger log = LoggerFactory.getLogger(EnglishTokenizerStep.class);
 	
 	private Classifier englishtokenClassifier;
 	
 	public String getName() {
-		return ENGLISHTOKENIZER.getName();
+		return ENGLISHTOKENIZER;
 	}
 	
 	
@@ -72,8 +67,7 @@ class EnglishTokenizerStep {
 
 	
 	public void processPayload(Payload payload)
-			throws ai.vital.workflow.IWorkflowStep.WorkflowHaltException,
-			ai.vital.workflow.IWorkflowStep.ProcessflowHaltException,
+			throws 
 			Exception {
 
 		for( Document doc : payload.iterator(Document.class) ) {

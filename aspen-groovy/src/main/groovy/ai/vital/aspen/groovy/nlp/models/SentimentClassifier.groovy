@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ai.vital.opennlp.classifier.Classifier;
-import ai.vital.workflow.StepInitializationException;
 
 public class SentimentClassifier {
 
@@ -27,7 +26,7 @@ public class SentimentClassifier {
 	private SentimentClassifier() {		
 	}
 
-	public static void init(File modelFile) throws StepInitializationException {
+	public static void init(File modelFile) {
 		
 		if(singleton == null) {
 			
@@ -44,7 +43,7 @@ public class SentimentClassifier {
 						singleton.init(new FileInputStream(modelFile));
 					} catch (IOException e) {
 						log.error(e.getLocalizedMessage(), e);
-						throw new StepInitializationException(e);
+						throw new Exception(e);
 					}
 					
 					long stop = System.currentTimeMillis();
@@ -61,8 +60,8 @@ public class SentimentClassifier {
 		
 	}
 	
-	public static Classifier get() throws StepInitializationException {
-		if(singleton == null) throw new StepInitializationException("Sentiment classifier not initialized!");
+	public static Classifier get()  {
+		if(singleton == null) throw new Exception("Sentiment classifier not initialized!");
 		return singleton;
 	}
 	
