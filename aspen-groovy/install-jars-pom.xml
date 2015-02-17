@@ -37,7 +37,7 @@
                 
                 <execution>
                   <id>vitalai-demoapp-groovy-0.0.1.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -55,7 +55,7 @@
                 
                 <execution>
                   <id>m3rd_20120821-vital.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -75,7 +75,7 @@
                 
                 <execution>
                     <id>VitalDomain-groovy-0.1.0.jar</id>
-                    <phase>package</phase>
+                    <phase>validate</phase>
                     <goals>
                         <goal>install-file</goal>
                     </goals>
@@ -92,7 +92,7 @@
 
                 <execution>
                   <id>VitalSigns-0.1.0.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -108,7 +108,7 @@
                 
                 <execution>
                   <id>vital-lucene-0.1.0.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -124,7 +124,7 @@
 
                 <execution>
                   <id>netty-3.4.0.Final.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -140,7 +140,7 @@
 
                 <execution>
                   <id>vital-triplestore-0.1.0.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -156,7 +156,7 @@
 
                 <execution>
                   <id>externalsortinginjava-0.1.8.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -172,7 +172,7 @@
 
                 <execution>
                   <id>json.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -188,7 +188,7 @@
 
                 <execution>
                   <id>agraph-4.13.2.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -204,7 +204,7 @@
 
                 <execution>
                   <id>commons-pool-1.5.6.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -220,7 +220,7 @@
 
                 <execution>
                   <id>openrdf-sesame-2.6.8-onejar.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -236,7 +236,7 @@
 
                 <execution>
                   <id>VitalService-0.1.0.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -252,7 +252,7 @@
 
                 <execution>
                   <id>commons-cli-1.2.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -268,7 +268,7 @@
 
                 <execution>
                   <id>commons-codec-1.5.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -284,7 +284,7 @@
 
                 <execution>
                   <id>jena-arq-2.9.0-incubating.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -300,7 +300,7 @@
 
                 <execution>
                   <id>jena-core-2.7.0-incubating.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -316,7 +316,7 @@
 
                 <execution>
                   <id>commons-collections-3.2.1.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -332,7 +332,7 @@
 
                 <execution>
                   <id>jena-iri-0.9.0-incubating.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -348,7 +348,7 @@
 
                 <execution>
                   <id>commons-httpclient-3.1.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -364,7 +364,7 @@
 
                 <execution>
                   <id>log4j-1.2.16.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -380,7 +380,7 @@
 
                 <execution>
                   <id>commons-io-2.1.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -396,7 +396,7 @@
 
                 <execution>
                   <id>lucene-analyzers-common-4.7.0.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -412,7 +412,7 @@
 
                 <execution>
                   <id>commons-lang3-3.1.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -428,7 +428,7 @@
 
                 <execution>
                   <id>lucene-core-4.7.0.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -444,7 +444,7 @@
 
                 <execution>
                   <id>commons-logging-1.1.1.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -460,7 +460,7 @@
 
                 <execution>
                   <id>owl2vcs-vital.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -476,7 +476,7 @@
 
                 <execution>
                   <id>concurrentlinkedhashmap-lru-1.3.2.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -492,7 +492,7 @@
 
                 <execution>
                   <id>owlapi-3.4.2.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -508,7 +508,7 @@
 
                 <execution>
                   <id>config-1.2.0.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -524,7 +524,7 @@
 
                 <execution>
                   <id>slf4j-api-1.7.5.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -540,7 +540,7 @@
 
                 <execution>
                   <id>slf4j-log4j12-1.7.5.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -556,7 +556,7 @@
 
                 <execution>
                   <id>guava-12.0.1.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -572,7 +572,7 @@
 
                 <execution>
                   <id>trove-3.0.3.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -588,7 +588,7 @@
 
                 <execution>
                   <id>icu4j-3.4.4.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -604,7 +604,7 @@
 
                 <execution>
                   <id>xercesImpl-2.10.0.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -620,7 +620,7 @@
 
                 <execution>
                   <id>jackson-core-lgpl-1.9.6.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -636,7 +636,7 @@
 
                 <execution>
                   <id>xml-apis-1.4.01.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -652,7 +652,7 @@
 
                 <execution>
                   <id>jackson-mapper-lgpl-1.9.6.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
@@ -668,7 +668,7 @@
                 
                 <execution>
                   <id>groovy-all-2.3.6.jar</id>
-                  <phase>package</phase>
+                  <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
