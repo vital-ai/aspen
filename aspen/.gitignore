@@ -2,3 +2,4 @@
 .cache
 classes/
 target/
+.DS_Store
