@@ -1,0 +1,58 @@
+// author: Edoardo Airoldi
+//  email: eairoldi@cs.cmu.edu
+//
+
+
+// define baseline dictionaries for positive/negative reviews
+// from: Pang et al. (2002)
+//
+defDict p1 = dazzling, brilliant, phenomenal, excellent, fantastic;
+defDict n1 = suck, terrible, awful, unwatchable, hideous;
+defDict p2 = gripping, mesmerizing, riveting, spectacular, cool, awesome, thrilling, badass, excellent, moving, exciting;
+defDict n2 = bad, cliched, sucks, boring, stupid, slow;
+defDict p3 = love, wondeful, best, great, superb, still, beautiful, ?, !;
+defDict n3 = bad, worst, stupid, waste, boring;
+
+
+
+// define relevant semantic groups in identifying sentiments
+// from: Airoldi & Cohen (2004)
+//
+defDict OBJECT = atmosphere, artist, artists, action, actions, attempt, film, films, filmmakers, fiction, movie, plot, script, scene, scenes, story, stories, animation, animators, director, character, characters, performance, performance, comedy, dialogue, dramas, drama, idea, ideas, project, sitcom, themes; 
+
+JUDGEMRNT = overall, recap;
+
+defDict POSITIVE = recommend, recommended, beautiful, good, best, better, blast, brilliant, clever, decent, delightful, delivers, effective, enjoy, enjoyed, enthralled, epic, excellent, exquisite, extraordinary, fabulous, fascinating, flawless, finest, fun, gorgeous, great, greatest, greatness, gripping, hilarious, homage, honest, important, impressive, inspirational, intelligent, intense, intensity, inventive, ludicrous, magnificent, marvelous, masterfully, masterpiece, mature, notoriety, outstanding, palpable, passable, pleasant, pleasure, poignant, pure, rare, realistic, refined, refreshing, rewarding, right, seamless, shine, shines, simple, smooth, solid, strength, strongest, subtle, subtly, superb, sweet, talented, talent, terrific, timeless, unexpected, unique, unlike, vividly, well, witty, wonderful, wonderfully;
+
+defDict NEGATIVE = atrocious, asleep, awful, bad, blame, bored, bother, bothered, cheap, cheesy, cliche, complicated, crap, conventional, detract, detracts, disappointment, downside, drawback, dumb, dull, embarrassment, fails , failure, feeble, flaw, flaws, flawed, fumbling, horrible, idiot, idiotic, impossibly, impoverished, incoherent, incompetent, incomprehensible, inept, ineptitude, insubstantial, insult, insulted, junk, lacks, lack, lame, lethal, lifeless, lousy, lurid, moody, mumbo, jumbo, obsessive, offbeat, ominous, painful, pathetic, pitiful, pointless, predictable, regret, ridiculous, shallow, shallowness, sloppy, spoil, steals, steal, stupid, stupidity, sucks, suck, tedious, unassuming, unconvincing, undertones, undeveloped, unfunny, unimpressive, uninspired, waste, wasted, worse, worst, whines, yawn;
+
+defDict AMBIGUOUS = deserves, existent, generic, idea, ideas, ideals, joe, jokes, laugh, laughter, influenced, intimidating, liaisons, lusty, nude, mood, nomination, nominations, officially, oscar, oscars, paced, remake, reprises, seen, sequel, unusual, wily;  
+
+defDict DOUBT = believes, beliefs, guess, guessing, hope, hoping, bet, know, knows, looks, look, supposed, tend, tends, whatsoever;
+
+defDict SUGGESTION = need, needing, should; 
+
+defDict PREPOSITION = anyhow, however, despite, else, equal, may, maybe, nevertheless, nonetheless, often, sometimes, still, though, throughout, towards, why;
+
+defDict AMPLIFIER = already, do, does, did, absent, authentic, bold, full, highly, immensely, least, most, fast, slow, slows, perfect, powerful, pretty, quite, much, several, slightly, smaller, strong, super, questionable, too, very;
+  
+defDict NEGATION = didn, no, not, none, don, wouldn, t, except, shouldn;
+
+defDict IRRELEVANT = starring;
+
+defDict BLE = acceptable, affable, agreeable, believable, enjoyable, horrible, incomprehensible, laughable, memorable, palpable, passable, terrible, unstoppable;
+
+defDict ING = amazing, anything, astounding, boring, breaking, breathtaking, complicating, destroying, disappointing, embarrassing, endearing, ending, entertaining, excruciating, fascinating, fumbling, gaining, gripping, grunting, hoping, ingenious, insulting, intimidating, moving, needing, nothing, outstanding, promising, rambling, redeeming, refreshing, rewarding, riveting, satisfying, shaking, suffering, supporting, surprising, touching, unassuming, unconvincing, understanding, unentertaining, uninteresting, uninvolving, uplifting, winning;
+
+defDict LY = badly, basically, beautifully, blatantly, brilliantly, calmly, chiefly, continuously, darkly, definitely, deliciously, droppingly, easily, elegantly, extremely, embarrassingly, emotionally, especially, eventually, excruciatingly, extremely, fortunately, frankly, highly, immensely, impossibly, laughably, luckily, masterfully, melancholy, nicely, notoriously, obviously, officially, painfully, perfectly, periodically, poorly, potentially, really, respectively, ridiculously, rightfully, sadly, slightly, sorely, subtly, supposedly, surprisingly, terribly, thankfully, timely, unfortunately, unusually, vividly, wily, wondefully;
+
+
+// capture positive/negative feelings
+//
+defSpanType pro = top: ... [a(pos1)] ... || ... [a(amplifier) a(pos1)] ...;
+defSpanType vs = top: ... [a(neg1)] ... || ... [a(amplifier) a(neg1)] ...;
+
+
+// capture al bigrams
+//
+defSpanType bigram = top: ... [ any any ] ... ;
