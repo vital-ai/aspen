@@ -1,0 +1,23 @@
+** Gauss-Newton and Conjugate-Gradient optimization **
+
+This code implements a Gauss-Newton 
+optimization of objective functions that can
+be iteratively approximated by quadratics.
+This approach is particularly appropriate
+for least-squares inversions of moderately
+non-linear transforms.  You will also find
+code for conjugate-gradient and line-search
+optimizations.  
+
+Get documentation of the algorithm here:
+[[papers/inv/]] [[papers/inv.pdf]] [[papers/inv.ps.gz]] 
+
+See the java documentation in the 
+documentation subdirectory [[documentation]].
+
+All files with ``main'' contain test code.
+You can run all tests with ``Test.main().''
+
+Here's some advice on how to formulate your problem:
+  [[papers/regularization.pdf]] [[papers/regularization/]]
+

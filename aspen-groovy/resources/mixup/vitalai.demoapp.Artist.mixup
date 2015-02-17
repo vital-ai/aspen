@@ -7,7 +7,7 @@ require 'npchunks';
 
 provide 'vitalai.demoapp.Artist' ;
 
-defSpanType 'demo:Artist' =~ trie "artists.txt" ;
+defSpanType 'demo:Artist' =~ itrie "artists.txt" ;
 
 //mixup bug for trie implementation - we need to force this as well
 declareSpanType 'demo:Artist' ;
