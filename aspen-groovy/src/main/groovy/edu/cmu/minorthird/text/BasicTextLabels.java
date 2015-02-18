@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
@@ -512,6 +513,46 @@ public class BasicTextLabels implements MutableTextLabels,Serializable,Visible,
 		if(set==null)
 			return Collections.EMPTY_SET;
 		return set;
+	}
+	
+	
+	/**
+	 * Utility method that returns all types associated with a span (exact lo,hi character match)
+	 * @param span
+	 * @return
+	 */
+	public Set<String> getSpanTypes(String documentID, Span span) {
+		
+		Set<String> res = new HashSet<String>();
+		
+		for( Entry<String, SortedMap<String, SortedSet<Span>>> typeDocSpans : typeDocumentSetMap.entrySet() ) {
+			
+			String type = typeDocSpans.getKey();
+			
+			SortedSet<Span> spans = typeDocSpans.getValue().get(documentID);
+			
+			if(spans == null) continue;
+			
+			boolean accept = false;
+			
+			for(Span s : spans) {
+				
+				//match ?
+				if(span.getLoChar() == s.getLoChar() && span.getHiChar() == s.getHiChar() ) {
+					accept = true;
+					break;
+				}
+				
+			}
+			
+			if(accept) {
+				res.add(type);
+			}
+			
+		}
+		
+		return res;
+		
 	}
 
 	private class ObjectStringKey<T extends Comparable<T>> implements Comparable<ObjectStringKey<T>>{

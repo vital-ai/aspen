@@ -301,6 +301,8 @@ class MinorThirdStep extends AbstractStep {
 			
 			List<EntityLocation> entityLocations = new ArrayList<EntityLocation>();
 			
+			
+			
 			//first iteration to collect entity types, and create instances
 			for(String type : types) {
 				
@@ -318,7 +320,6 @@ class MinorThirdStep extends AbstractStep {
 				
 				
 				List<Span> spans = new ArrayList<Span>(labels.getTypeSet(type, docID));
-				
 				
 				
 				spans = filterOutInnerSpans(spans);
@@ -376,7 +377,16 @@ class MinorThirdStep extends AbstractStep {
 					ei.offsetInSentence = sentenceOffset;
 					ei.offset = offset;
 
+					Set<String> spanTypes = labels.getSpanTypes(docID, span)
 					
+					for(Iterator<String> iter = spanTypes.iterator(); iter.hasNext(); ) {
+						String t = iter.next();
+						if(t.contains(":")) {
+							iter.remove()
+						}
+					}
+					
+					ei.spanType = spanTypes
 					
 					
 //					entityInstances.add(ei);
