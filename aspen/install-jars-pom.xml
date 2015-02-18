@@ -1,0 +1,123 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>vital-ai</groupId>
+  <artifactId>install-jars</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <name>Install Vital AI Jars into Local Repo</name>
+  
+  
+  <repositories>
+  
+    <repository>
+      <id>vital-public-mvn-repo-releases</id>
+      <name>Vital AI Public Maven Repo Releases</name>
+      <url>https://github.com/vital-ai/vital-public-mvn-repo/raw/releases/</url>
+    </repository>
+
+    <repository>
+      <id>vital-public-mvn-repo-snapshots</id>
+      <name>Vital AI Public Maven Repo Snapshots</name>
+      <url>https://github.com/vital-ai/vital-public-mvn-repo/raw/snapshots/</url>
+    </repository>
+
+  </repositories>
+  
+
+
+  <build>
+    <plugins>
+
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-install-plugin</artifactId>
+            <executions>
+                
+                <execution>
+                    <id>VitalDomain-groovy-0.1.0.jar</id>
+                    <phase>validate</phase>
+                    <goals>
+                        <goal>install-file</goal>
+                    </goals>
+                    <configuration>
+				      <groupId>vital-ai</groupId>
+				      <artifactId>vital-domain</artifactId>
+				      <version>0.1.0</version>
+				      <packaging>jar</packaging>
+					  <file>${VITAL_HOME}/vital-domain/VitalDomain-groovy-0.1.0.jar</file>
+                    </configuration>
+                    
+                </execution>
+
+
+                <execution>
+                  <id>VitalSigns-0.1.0.jar</id>
+                  <phase>validate</phase>
+                  <goals>
+                    <goal>install-file</goal>
+                  </goals>
+                  <configuration>
+                    <groupId>vital-ai</groupId>
+                    <artifactId>vitalsigns</artifactId>
+                    <version>0.1.0</version>
+                    <packaging>jar</packaging>
+                    <file>${VITAL_HOME}/vitalsigns/command/VitalSigns-0.1.0.jar</file>
+                  </configuration>
+                </execution>
+                
+                
+                <execution>
+                  <id>vital-lucene-0.1.0.jar</id>
+                  <phase>validate</phase>
+                  <goals>
+                    <goal>install-file</goal>
+                  </goals>
+                  <configuration>
+                    <groupId>vital-ai</groupId>
+                    <artifactId>vital-lucene</artifactId>
+                    <version>0.1.0</version>
+                    <packaging>jar</packaging>
+                    <file>${VITAL_HOME}/vital-lucene/vital-lucene-0.1.0.jar</file>
+                  </configuration>
+                </execution>
+
+
+                <execution>
+                  <id>vital-triplestore-0.1.0.jar</id>
+                  <phase>validate</phase>
+                  <goals>
+                    <goal>install-file</goal>
+                  </goals>
+                  <configuration>
+                    <groupId>vital-ai</groupId>
+                    <artifactId>vital-triplestore</artifactId>
+                    <version>0.1.0</version>
+                    <packaging>jar</packaging>
+                    <file>${VITAL_HOME}/vital-triplestore/vital-triplestore-0.1.0.jar</file>
+                  </configuration>
+                </execution>
+
+
+                <execution>
+                  <id>VitalService-0.1.0.jar</id>
+                  <phase>validate</phase>
+                  <goals>
+                    <goal>install-file</goal>
+                  </goals>
+                  <configuration>
+                    <groupId>vital-ai</groupId>
+                    <artifactId>vitalservice</artifactId>
+                    <version>0.1.0</version>
+                    <packaging>jar</packaging>
+                    <file>${VITAL_HOME}/vitalservice/VitalService-0.1.0.jar</file>
+                  </configuration>
+                </execution>
+
+
+            </executions>
+        </plugin>            
+      
+    </plugins>
+  </build>
+  
+
+</project>

@@ -24,10 +24,54 @@
   
   
   <build>
+    <!-- maven plugin -->
+    <!-- http://davidb.github.io/scala-maven-plugin/usage.html -->
+    <pluginManagement>
+      <plugins>
+		<plugin>
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <version>3.2.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.2</version>
+          <configuration>
+            <source>1.7</source>
+            <target>1.7</target>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  
     <plugins>
+    
       <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>scala-compile-first</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>add-source</goal>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>scala-test-compile</id>
+            <phase>process-test-resources</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
         <configuration>
           <source>1.7</source>
           <target>1.7</target>
@@ -68,8 +112,6 @@
             </executions>
         </plugin>
       
-      
-      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -82,7 +124,7 @@
             </goals>
             
             <configuration>
-            <!--
+            <!-- 
               <artifactSet>
                 <includes>
                   <include>vital-ai:aspen-groovy</include>
@@ -90,7 +132,6 @@
                   <include>commons-pool:commons-pool</include>
                 </includes>
               </artifactSet>
-              
               -->
               <filters>
               <filter>
@@ -108,10 +149,6 @@
           </execution>
         </executions>
       </plugin>
-      
-      
-      
-      
       
     </plugins>
   </build>
@@ -186,293 +223,6 @@
   	</dependency>
   	
   	
-  	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>vital-lucene</artifactId>
-      <version>0.1.0</version>
-      <scope>compile</scope>
-    </dependency>
-  
-  
-  <dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>vital-domain</artifactId>
-      <version>0.1.0</version>
-      <scope>compile</scope>
-    </dependency>
-  
-  
- 
-  
-  <dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>vitalsigns</artifactId>
-      <version>0.1.0</version>
-      <scope>compile</scope>
-    </dependency>
-  	
-  	
-  	
-  	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>netty</artifactId>
-      <version>3.4.0</version>
-      <scope>compile</scope>
-    </dependency>
-  	
-  	
-  	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>vital-triplestore</artifactId>
-      <version>0.1.0</version>
-      <scope>compile</scope>
-    </dependency>
-  	
-  	
-  	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>vital-externalsorting</artifactId>
-      <version>0.1.8</version>
-      <scope>compile</scope>
-    </dependency>
-  	
-  	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>json</artifactId>
-      <version>0.1.0</version>
-      <scope>compile</scope>
-    </dependency>
-    
-    
-    <dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>agraph</artifactId>
-      <version>4.13.2</version>
-      <scope>compile</scope>
-    </dependency>
-  	
-  	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>commons-pool</artifactId>
-      <version>1.5.6</version>
-      <scope>compile</scope>
-    </dependency>
-    
-    
-    <dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>openrdf-sesame</artifactId>
-      <version>2.6.8</version>
-      <scope>compile</scope>
-    </dependency>
-  	
-  	
-  	
-  	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>vitalservice</artifactId>
-      <version>0.1.0</version>
-      <scope>compile</scope>
-    </dependency>
-  	
-  	
-  	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>commons-cli</artifactId>
-      <version>1.2.0</version>
-      <scope>compile</scope>
-    </dependency>
-  	
-  	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>1.5.0</version>
-      <scope>compile</scope>
-    </dependency>
-  	
-  	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>jena-arq</artifactId>
-      <version>2.9.0</version>
-      <scope>compile</scope>
-    </dependency>
-  	
-  	
-  	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>jena-core</artifactId>
-      <version>2.7.0</version>
-      <scope>compile</scope>
-    </dependency>
-  				
-		
-	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>commons-collections</artifactId>
-      <version>3.2.1</version>
-      <scope>compile</scope>
-    </dependency>	
-
-	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>jena-iri</artifactId>
-      <version>0.9.0</version>
-      <scope>compile</scope>
-    </dependency>	
-
-<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>commons-httpclient</artifactId>
-      <version>3.1.0</version>
-      <scope>compile</scope>
-    </dependency>	
-		
-
-	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.16</version>
-      <scope>compile</scope>
-    </dependency>	
-
-<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>2.1.0</version>
-      <scope>compile</scope>
-    </dependency>	
-    
- <dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>lucene-analyzers-common</artifactId>
-      <version>4.7.0</version>
-      <scope>compile</scope>
-    </dependency>   		
-		
-	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>commons-lang</artifactId>
-      <version>3.3.1</version>
-      <scope>compile</scope>
-    </dependency>   		
-			
-<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>lucene-core</artifactId>
-      <version>4.7.0</version>
-      <scope>compile</scope>
-    </dependency> 
-			
-
-<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>commons-loggin</artifactId>
-      <version>1.1.1</version>
-      <scope>compile</scope>
-    </dependency> 
-
-
-<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>owl2vcs-vital</artifactId>
-      <version>0.0.1</version>
-      <scope>compile</scope>
-    </dependency> 
-
-	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>concurrentlinkedhashmap-lru</artifactId>
-      <version>1.3.2</version>
-      <scope>compile</scope>
-    </dependency> 	
-
-
-<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>owlapi</artifactId>
-      <version>3.4.2</version>
-      <scope>compile</scope>
-    </dependency> 	
-	
-
-<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>config</artifactId>
-      <version>1.2.0</version>
-      <scope>compile</scope>
-    </dependency>
-
-<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.6.4</version>
-      <scope>compile</scope>
-    </dependency>	
-	
-			
-	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <version>1.6.4</version>
-      <scope>compile</scope>
-    </dependency>	
-	
-<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>guava</artifactId>
-      <version>12.0.1</version>
-      <scope>compile</scope>
-    </dependency>	
-		
-	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>trove</artifactId>
-      <version>3.0.3</version>
-      <scope>compile</scope>
-    </dependency>			
-
-	<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>icu4j</artifactId>
-      <version>3.4.4</version>
-      <scope>compile</scope>
-    </dependency>
-				
-<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>xercesImpl</artifactId>
-      <version>2.10.0</version>
-      <scope>compile</scope>
-    </dependency>
-				
-<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>jackson-core-lgpl</artifactId>
-      <version>1.9.6</version>
-      <scope>compile</scope>
-    </dependency>
-
-<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>xml-apis</artifactId>
-      <version>1.4.01</version>
-      <scope>compile</scope>
-    </dependency>
-		
-
-<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>jackson-mapper-lgpl</artifactId>
-      <version>1.9.6</version>
-      <scope>compile</scope>
-    </dependency>
-    
-<dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>groovy-all</artifactId>
-      <version>2.3.6</version>
-      <scope>compile</scope>
-    </dependency>
   
   </dependencies>
 </project>
