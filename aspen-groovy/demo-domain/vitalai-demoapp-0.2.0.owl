@@ -1,0 +1,490 @@
+<?xml version="1.0"?>
+
+
+<!DOCTYPE rdf:RDF [
+    <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
+    <!ENTITY vital "http://vital.ai/ontology/vital#" >
+    <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
+    <!ENTITY vital-core "http://vital.ai/ontology/vital-core#" >
+    <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
+    <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
+    <!ENTITY vital-service-demo-app "http://vital.ai/ontology/vital-service-demo-app.owl#" >
+]>
+
+
+<rdf:RDF xmlns="http://vital.ai/ontology/vital-service-demo-app.owl#"
+     xml:base="http://vital.ai/ontology/vital-service-demo-app.owl"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:vital="http://vital.ai/ontology/vital#"
+     xmlns:vital-service-demo-app="http://vital.ai/ontology/vital-service-demo-app.owl#"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:vital-core="http://vital.ai/ontology/vital-core#">
+    <owl:Ontology rdf:about="http://vital.ai/ontology/vital-service-demo-app.owl">
+        <vital-core:hasDefaultPackage rdf:datatype="&xsd;string">vitalai.demoapp</vital-core:hasDefaultPackage>
+        <owl:versionInfo>0.2.0</owl:versionInfo>
+        <owl:imports rdf:resource="http://vital.ai/ontology/vital"/>
+    </owl:Ontology>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Data properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#hasLabel -->
+
+    <owl:DatatypeProperty rdf:about="&vital-service-demo-app;hasLabel">
+        <rdfs:range rdf:resource="&xsd;string"/>
+        <rdfs:domain>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="&vital-service-demo-app;Artist"/>
+                    <rdf:Description rdf:about="&vital-service-demo-app;Genre"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:domain>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#hasOrigin -->
+
+    <owl:DatatypeProperty rdf:about="&vital-service-demo-app;hasOrigin">
+        <rdfs:range rdf:resource="&xsd;string"/>
+        <rdfs:domain>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <rdf:Description rdf:about="&vital-service-demo-app;Artist"/>
+                    <rdf:Description rdf:about="&vital-service-demo-app;Genre"/>
+                </owl:unionOf>
+            </owl:Class>
+        </rdfs:domain>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#hasTidbtName -->
+
+    <owl:DatatypeProperty rdf:about="&vital-service-demo-app;hasTidbtName">
+        <rdfs:domain rdf:resource="&vital;NormalizedTopic"/>
+        <rdfs:range rdf:resource="&xsd;string"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#hasTitle -->
+
+    <owl:DatatypeProperty rdf:about="&vital-service-demo-app;hasTitle">
+        <rdfs:comment xml:lang="en">has person title (prefix)</rdfs:comment>
+        <rdfs:domain rdf:resource="&vital-service-demo-app;PersonEntity"/>
+        <rdfs:range rdf:resource="&xsd;string"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Anniversary -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Anniversary">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Artist -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Artist">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#BrandEntity -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;BrandEntity">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#City -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;City">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Company -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Company">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Continent -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Continent">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Country -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Country">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Currency -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Currency">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Edge_hasCurrentMember -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Edge_hasCurrentMember">
+        <rdfs:subClassOf rdf:resource="&vital-core;VITAL_PeerEdge"/>
+        <vital-core:hasEdgeDestDomain rdf:resource="&vital-service-demo-app;Artist"/>
+        <vital-core:hasEdgeSrcDomain rdf:resource="&vital-service-demo-app;Artist"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Edge_hasFormerMember -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Edge_hasFormerMember">
+        <rdfs:subClassOf rdf:resource="&vital-core;VITAL_PeerEdge"/>
+        <vital-core:hasEdgeDestDomain rdf:resource="&vital-service-demo-app;Artist"/>
+        <vital-core:hasEdgeSrcDomain rdf:resource="&vital-service-demo-app;Artist"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Edge_hasGenre -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Edge_hasGenre">
+        <rdfs:subClassOf rdf:resource="&vital-core;VITAL_TaxonomyEdge"/>
+        <vital-core:hasEdgeSrcDomain rdf:resource="&vital-service-demo-app;Artist"/>
+        <vital-core:hasEdgeDestDomain rdf:resource="&vital-service-demo-app;Genre"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#EmailAddress -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;EmailAddress">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#EntertainmentAwardEvent -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;EntertainmentAwardEvent">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Facility -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Facility">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#FaxNumber -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;FaxNumber">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Genre -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Genre">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Holiday -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Holiday">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#IndustryTerm -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;IndustryTerm">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#MarketIndex -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;MarketIndex">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#MedicalCondition -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;MedicalCondition">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#MedicalTreatment -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;MedicalTreatment">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Movie -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Movie">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#MusicAlbum -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;MusicAlbum">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#MusicGroup -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;MusicGroup">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#NamedPerson -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;NamedPerson">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+        <rdfs:comment xml:lang="en">tagged by opennlp name finder</rdfs:comment>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#NaturalFeature -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;NaturalFeature">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#OperatingSystem -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;OperatingSystem">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Organization -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Organization">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Person -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Person">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#PersonEntity -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;PersonEntity">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#PhoneNumber -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;PhoneNumber">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#PoliticalEvent -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;PoliticalEvent">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Position -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Position">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Product -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Product">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#ProgrammingLanguage -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;ProgrammingLanguage">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#ProvinceOrState -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;ProvinceOrState">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#PublishedMedium -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;PublishedMedium">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#RadioProgram -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;RadioProgram">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#RadioStation -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;RadioStation">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Region -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Region">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#SportsEvent -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;SportsEvent">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#SportsGame -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;SportsGame">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#SportsLeague -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;SportsLeague">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#TVShow -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;TVShow">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#TVStation -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;TVStation">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#Technology -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;Technology">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+    
+
+
+    <!-- http://vital.ai/ontology/vital-service-demo-app.owl#URL -->
+
+    <owl:Class rdf:about="&vital-service-demo-app;URL">
+        <rdfs:subClassOf rdf:resource="&vital;Entity"/>
+    </owl:Class>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 3.5.0) http://owlapi.sourceforge.net -->
+
