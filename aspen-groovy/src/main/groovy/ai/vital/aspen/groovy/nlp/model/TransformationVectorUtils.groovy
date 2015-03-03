@@ -31,7 +31,7 @@ class TransformationVectorUtils {
 		
 		List<Integer> vector = new ArrayList<Integer>();
 		
-		String vstring = textBlock.transformationVector;
+		String vstring = textBlock.transformationVector
 		
 		if(vstring != null) {
 			String[] split = vstring.split(",");

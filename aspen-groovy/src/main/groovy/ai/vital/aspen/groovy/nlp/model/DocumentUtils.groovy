@@ -20,7 +20,7 @@ class DocumentUtils {
 				sb.append(' ');
 			}
 			
-			sb.append(b.text);
+			sb.append((String)b.text);
 			
 			
 		}
@@ -39,7 +39,7 @@ class DocumentUtils {
 			
 		for(TextBlock tb : doc.getTextBlocks()) {
 				
-			String text = tb.text;
+			String text = tb.text
 				
 			int length = text.length();
 				
@@ -73,7 +73,7 @@ class DocumentUtils {
 			
 		for(TextBlock tb : doc.getTextBlocks()) {
 				
-			String text = tb.text;
+			String text = tb.text
 				
 			int length = text.length();
 			
@@ -142,7 +142,7 @@ class DocumentUtils {
 		
 		for( TextBlock tb : doc.getTextBlocks() ) {
 			
-			String text = tb.text;
+			String text = tb.text
 			
 			int length = text.length();
 			
@@ -153,8 +153,8 @@ class DocumentUtils {
 				//localize the sentence
 				for(Sentence s : tb.getSentences()) {
 					
-					int start = cursor + s.startPosition;
-					int end = cursor + s.endPosition;
+					int start = cursor + s.startPosition.rawValue();
+					int end = cursor + s.endPosition.rawValue();
 					
 					if(offset >= start && offset <= end) {
 						

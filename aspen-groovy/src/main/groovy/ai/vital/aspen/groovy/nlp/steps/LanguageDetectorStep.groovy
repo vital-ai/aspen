@@ -19,7 +19,6 @@ import ai.vital.domain.Edge_hasAnnotation;
 import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.nlp.model.DocumentUtils;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
-import ai.vital.vitalsigns.model.container.Payload;
 import ai.vital.aspen.groovy.ontology.VitalOntology
 
 

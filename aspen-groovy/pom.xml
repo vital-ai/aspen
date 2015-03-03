@@ -208,7 +208,7 @@
     <dependency>
       <groupId>org.codehaus.groovy</groupId>
       <artifactId>groovy-all</artifactId>
-      <version>2.3.6</version>
+      <version>2.4.0</version>
       <scope>compile</scope>
     </dependency>
     
@@ -352,7 +352,7 @@
     <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
-      <version>12.0.1</version>
+      <version>18.0</version>
       <scope>compile</scope>
     </dependency>	
 		
@@ -423,19 +423,19 @@
    
     <!-- dependencies installed into local repo from vital software --> 
  
-     <dependency>
+  	<dependency>
        <groupId>vital-ai</groupId>
        <artifactId>vitalai-demoapp-groovy</artifactId>
-       <version>0.0.1</version>
+       <version>0.2.0</version>
       <scope>compile</scope>
-   </dependency>
+   	</dependency>
    
    
-   
+    
   <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vital-domain</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.0</version>
       <scope>compile</scope>
     </dependency>
   
@@ -443,7 +443,7 @@
   <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vitalsigns</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.0</version>
       <scope>compile</scope>
     </dependency>
   	
@@ -453,7 +453,7 @@
     <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vitalservice</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.0</version>
       <scope>compile</scope>
     </dependency>
      
@@ -462,7 +462,7 @@
     <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vital-lucene</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.0</version>
       <scope>compile</scope>
     </dependency>
   
@@ -470,7 +470,7 @@
     <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vital-triplestore</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.0</version>
       <scope>compile</scope>
    
     </dependency>

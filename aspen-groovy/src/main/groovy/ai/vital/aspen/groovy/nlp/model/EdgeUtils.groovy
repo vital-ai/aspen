@@ -32,7 +32,7 @@ class EdgeUtils {
 			
 			edge.setURI(edgeURI);
 			
-			edge.setIndex(index++);
+			edge.listIndex = index++;
 			
 			edge.setSourceURI(srcNode.getURI());
 

@@ -4,7 +4,7 @@ package ai.vital.aspen.groovy.test
 import ai.vital.domain.*
 import ai.vital.vitalservice.model.App
 import ai.vital.vitalsigns.*
-import ai.vital.vitalsigns.utils.BlockCompactStringSerializer
+import ai.vital.vitalsigns.block.BlockCompactStringSerializer
 
 import ai.vital.common.uri.URIGenerator
 

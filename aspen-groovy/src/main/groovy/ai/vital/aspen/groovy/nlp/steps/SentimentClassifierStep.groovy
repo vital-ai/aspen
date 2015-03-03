@@ -25,7 +25,7 @@ import ai.vital.aspen.groovy.nlp.model.TokenUtils;
 import ai.vital.aspen.groovy.nlp.models.SentimentClassifier;
 import ai.vital.opennlp.classifier.Classification;
 import ai.vital.opennlp.classifier.Classifier;
-import ai.vital.vitalsigns.model.container.Payload;
+import ai.vital.vitalsigns.model.VITAL_Container;
 
 import com.hp.hpl.jena.rdf.model.Model;
 
@@ -93,7 +93,7 @@ class SentimentClassifierStep {
 	}
 
 	
-	public void processPayload(Payload payload)
+	public void processPayload(VITAL_Container payload)
 			throws 
 			Exception {
 

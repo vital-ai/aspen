@@ -36,7 +36,6 @@ import ai.vital.aspen.groovy.nlp.model.DocumentUtils;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.TransformationVectorUtils;
 import ai.vital.vitalsigns.meta.GraphContext;
-import ai.vital.vitalsigns.model.container.Payload;
 
 import ai.vital.aspen.groovy.ontology.VitalOntology
 
@@ -70,7 +69,7 @@ class TextExtractStep extends AbstractStep {
 			*/
 			
 			
-			String body = doc.body;
+			String body = doc.body
 			
 
 			if(body == null) {

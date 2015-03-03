@@ -3,7 +3,6 @@ package ai.vital.aspen.groovy.nlp.html;
 import java.util.List;
 
 import org.apache.commons.lang3.RandomStringUtils;
-
 import org.htmlparser.Node;
 import org.htmlparser.Parser;
 import org.htmlparser.lexer.Lexer;
@@ -22,13 +21,14 @@ import ai.vital.domain.TagElement;
 import ai.vital.domain.TextBlock;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.TransformationVectorUtils;
-import ai.vital.vitalsigns.model.container.Payload;
+import ai.vital.vitalsigns.model.VITAL_Container;
+
 
 public class HTMLParser_VS {
 
 	private final static Logger log = LoggerFactory.getLogger(HTMLParser_VS.class);
 	
-	public static void muteHTML(Payload payload, List<TextBlock> tb, String inputHTML) {
+	public static void muteHTML(VITAL_Container payload, List<TextBlock> tb, String inputHTML) {
 		
 		
 		for(TextBlock b : tb) {
@@ -60,7 +60,7 @@ public class HTMLParser_VS {
 		}
 	}
 
-	private static void processNode(Payload payload, String html, Node node, List<TextBlock> tb,
+	private static void processNode(VITAL_Container payload, String html, Node node, List<TextBlock> tb,
 			String indent) {
 
 //		System.out.println(indent  + node.getText());

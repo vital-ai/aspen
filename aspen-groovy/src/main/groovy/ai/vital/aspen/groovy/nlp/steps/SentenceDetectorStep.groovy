@@ -8,10 +8,6 @@ import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.step.AbstractStep
 import ai.vital.domain.Document;
 import ai.vital.domain.TextBlock;
-import ai.vital.vitalsigns.model.container.Payload;
-
-
-
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,7 +29,7 @@ import ai.vital.domain.Sentence;
 import ai.vital.domain.TextBlock;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.models.SentenceDetectorModel;
-import ai.vital.vitalsigns.model.container.Payload;
+
 
 import com.hp.hpl.jena.rdf.model.Model;
 

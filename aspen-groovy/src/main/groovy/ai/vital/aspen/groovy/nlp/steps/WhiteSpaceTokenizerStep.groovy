@@ -23,7 +23,7 @@ import ai.vital.domain.TextBlock;
 import ai.vital.domain.Token;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.vitalsigns.global.GlobalHashTable;
-import ai.vital.vitalsigns.model.container.Payload;
+import ai.vital.vitalsigns.model.VITAL_Container;
 import ai.vital.aspen.groovy.ontology.VitalOntology
 
 
@@ -72,7 +72,9 @@ class WhiteSpaceTokenizerStep extends AbstractStep {
 					
 					List<Token> tokens = new ArrayList<Token>();
 					
-					String t = b.text.substring(sentence.startPosition, sentence.endPosition);
+					String btext = b.text
+					
+					String t = btext.substring(sentence.startPosition.rawValue(), sentence.endPosition.rawValue());
 					
 					Span[] tokenizePos = whitespaceTokenizer.tokenizePos(t);
 				

@@ -1,6 +1,5 @@
 package ai.vital.aspen.groovy.nlp.steps
 
-
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -52,10 +51,7 @@ import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.PosTagsUtils;
 import ai.vital.aspen.groovy.nlp.model.TokenUtils;
 import ai.vital.aspen.groovy.step.AbstractStep
-import ai.vital.flow.server.utils.JSONUtils;
-import ai.vital.vitalsigns.model.container.Payload;
 import ai.vital.aspen.groovy.ontology.VitalOntology
-
 
 
 class MinorThirdStep extends AbstractStep {
@@ -644,7 +640,7 @@ class MinorThirdStep extends AbstractStep {
 			
 			int textLength = b.text.length();
 			
-			Integer textBlockLength = b.textBlockLength;
+			Integer textBlockLength = b.textBlockLength.rawValue();
 			
 			Span blockSpan = docSpan.charIndexSubSpan(blockOffset, textLength);
 			
@@ -652,18 +648,18 @@ class MinorThirdStep extends AbstractStep {
 			
 			for( Sentence s : b.getSentences() ) {
 				
-				Span sentenceSpan = docSpan.charIndexSubSpan(blockOffset + s.startPosition, blockOffset + s.endPosition);
+				Span sentenceSpan = docSpan.charIndexSubSpan(blockOffset + s.startPosition.rawValue(), blockOffset + s.endPosition.rawValue());
 				
 				labels.addToType(sentenceSpan, SENTENCE);
 				labels.setProperty(sentenceSpan, SENTENCE_NUMBER, "" + s.sentenceNumber);
 
 				for(EntityInstance ei : s.getSentenceEntityInstances()) {
 					
-					int offsetInSentence = ei.offsetInSentence;
-					int lengthInSentence = ei.lengthInSentence;
+					int offsetInSentence = ei.offsetInSentence.rawValue();
+					int lengthInSentence = ei.lengthInSentence.rawValue();
 					Entity e = instanceToParent.get(ei.getURI());
 					
-					Span entitySpan = docSpan.charIndexSubSpan(blockOffset + s.startPosition + offsetInSentence, blockOffset + s.startPosition + offsetInSentence + lengthInSentence);
+					Span entitySpan = docSpan.charIndexSubSpan(blockOffset + s.startPosition.rawValue() + offsetInSentence, blockOffset + s.startPosition.rawValue() + offsetInSentence + lengthInSentence);
 					
 					String inputType = e.extractSource + ":" + e.category;
 					
@@ -683,15 +679,15 @@ class MinorThirdStep extends AbstractStep {
 				
 				for( NounPhrase np : s.getNounPhrases() ) {
 					
-					Integer startTokenIndex = np.startTokenIndex;
+					Integer startTokenIndex = np.startTokenIndex.rawValue();
 					
-					Integer endTokenIndex = np.endTokenIndex;
+					Integer endTokenIndex = np.endTokenIndex.rawValue();
 					
-					int start = tokens.get(startTokenIndex).startPosition;
+					int start = tokens.get(startTokenIndex).startPosition.rawValue();
 					
-					int end = tokens.get(endTokenIndex).endPosition;
+					int end = tokens.get(endTokenIndex).endPosition.rawValue();
 
-					Span span = docSpan.charIndexSubSpan(blockOffset + s.startPosition + start, blockOffset + s.startPosition + end);
+					Span span = docSpan.charIndexSubSpan(blockOffset + s.startPosition.rawValue() + start, blockOffset + s.startPosition.rawValue() + end);
 
 					labels.addToType(span, NOUN_PHRASE);
 					
@@ -701,15 +697,15 @@ class MinorThirdStep extends AbstractStep {
 				
 				for( VerbPhrase vp : s.getVerbPhrases() ) {
 					
-					Integer startTokenIndex = vp.startTokenIndex;
+					Integer startTokenIndex = vp.startTokenIndex.rawValue();
 					
-					Integer endTokenIndex = vp.endTokenIndex;
+					Integer endTokenIndex = vp.endTokenIndex.rawValue();
 					
-					int start = tokens.get(startTokenIndex).startPosition;
+					int start = tokens.get(startTokenIndex).startPosition.rawValue();
 					
-					int end = tokens.get(endTokenIndex).endPosition;
+					int end = tokens.get(endTokenIndex).endPosition.rawValue();
 					
-					Span span = docSpan.charIndexSubSpan(blockOffset + s.startPosition + start, blockOffset + s.startPosition + end);
+					Span span = docSpan.charIndexSubSpan(blockOffset + s.startPosition.rawValue() + start, blockOffset + s.startPosition.rawValue() + end);
 					
 					labels.addToType(span, VERB_PHRASE);
 					

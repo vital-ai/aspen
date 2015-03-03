@@ -53,12 +53,12 @@ public class PosAnnotator_VS extends StringAnnotator {
 					PosTag posTag = posTags.get(i);
 					Token token = tokens.get(i);
 					
-					String tag = posTag.tagValue;
+					String tag = posTag.tagValue
 					
-					int tokenOffset = blockOffset + s.startPosition + token.startPosition;
+					int tokenOffset = blockOffset + s.startPosition.rawValue() + token.startPosition.rawValue();
 					
 					//put into list
-					CharAnnotation ca = new CharAnnotation(tokenOffset, token.endPosition - token.startPosition, tag);
+					CharAnnotation ca = new CharAnnotation(tokenOffset, token.endPosition.rawValue() - token.startPosition.rawValue(), tag);
 					
 					list.add(ca);
 					

@@ -30,7 +30,6 @@ import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.PosTagsUtils;
 import ai.vital.aspen.groovy.nlp.model.TokenUtils;
 import ai.vital.aspen.groovy.nlp.models.ChunkerModelWrapper;
-import ai.vital.vitalsigns.model.container.Payload;
 import ai.vital.aspen.groovy.ontology.VitalOntology
 
 import com.hp.hpl.jena.rdf.model.Model;

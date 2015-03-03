@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-
 import ai.vital.domain.Category;
+
 
 
 
@@ -20,7 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import opennlp.tools.tokenize.TokenizerME;
-
 import opennlp.tools.tokenize.TokenizerModel;
 import opennlp.tools.util.Span;
 
@@ -32,8 +31,8 @@ import ai.vital.domain.TextBlock;
 import ai.vital.domain.Token;
 import ai.vital.opennlp.classifier.Classification
 import ai.vital.opennlp.classifier.Classifier;
-import ai.vital.vitalsigns.model.container.Payload;
 import ai.vital.aspen.groovy.AspenGroovyConfig;
+import ai.vital.vitalsigns.model.VITAL_Container;
 import ai.vital.aspen.groovy.nlp.models.EnglishTokenizerModel
 import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.ontology.VitalOntology
@@ -102,7 +101,7 @@ class EnglishTokenizerStep {
 	}
 
 	
-	public void processPayload(Payload payload)
+	public void processPayload(VITAL_Container payload)
 			throws 
 			Exception {
 

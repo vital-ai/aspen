@@ -28,8 +28,7 @@ import ai.vital.domain.TextBlock;
 import ai.vital.aspen.groovy.nlp.model.DocumentUtils;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.vitalsigns.global.GlobalHashTable;
-import ai.vital.vitalsigns.model.container.Payload;
-
+import ai.vital.vitalsigns.model.VITAL_Container;
 import ai.vital.aspen.groovy.ontology.VitalOntology
 
 
@@ -38,7 +37,7 @@ class AbbreviationStep {
 	
 	public final static String ABBREVIATIONS_VS = "abbreviations_vs";
 	
-	private Logger log = LoggerFactory.getLogger(AbbreviationsWorkflowStep_VS.class);
+	private Logger log = LoggerFactory.getLogger(AbbreviationStep.class);
 
 	/** The type asserted for extracted acronyms */
 	public static final String SHORT_FORM_TYPE = "abbrevShort";
@@ -64,7 +63,7 @@ class AbbreviationStep {
 	}
 	
 	
-	public void processPayload(Payload payload)
+	public void processPayload(VITAL_Container payload)
 			
 			throws Exception {
 

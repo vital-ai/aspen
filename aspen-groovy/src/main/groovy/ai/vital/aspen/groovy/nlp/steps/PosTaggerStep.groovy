@@ -30,7 +30,6 @@ import ai.vital.domain.Token;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.models.POSTaggerModel;
 import ai.vital.vitalsigns.global.GlobalHashTable;
-import ai.vital.vitalsigns.model.container.Payload;
 import ai.vital.aspen.groovy.ontology.VitalOntology
 
 

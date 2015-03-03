@@ -76,15 +76,15 @@ public class DocumentTokenizer_VS implements Tokenizer {
 			
 			for(Sentence s : sentences) {
 				
-				int sentenceOffset = s.startPosition;
+				int sentenceOffset = s.startPosition.rawValue();
 				
 				List<Token> tokens = TokenUtils.getTokens(s);//s.getTokens();
 				
 				for(Token t : tokens) {
 					
-					int tokenAbsoluteOffset = blockOffset + sentenceOffset + t.startPosition;
+					int tokenAbsoluteOffset = blockOffset + sentenceOffset + t.startPosition.rawValue();
 					
-					res.add(new TextToken(_d, tokenAbsoluteOffset, t.endPosition - t.startPosition));
+					res.add(new TextToken(_d, tokenAbsoluteOffset, t.endPosition.rawValue() - t.startPosition.rawValue()));
 					
 				}
 				

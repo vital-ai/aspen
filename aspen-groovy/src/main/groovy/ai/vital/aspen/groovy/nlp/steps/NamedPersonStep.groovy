@@ -16,11 +16,7 @@ import org.slf4j.LoggerFactory;
 // changed from namedperson
 
 
-
 import ai.vital.domain.Person;
-
-
-
 import ai.vital.domain.Document;
 import ai.vital.domain.Edge_hasEntity;
 import ai.vital.domain.Edge_hasEntityInstance;
@@ -30,12 +26,12 @@ import ai.vital.domain.EntityInstance;
 import ai.vital.domain.Sentence;
 import ai.vital.domain.TextBlock;
 import ai.vital.domain.Token;
+import ai.vital.vitalsigns.model.VITAL_Container;
 import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.nlp.model.DocumentUtils;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.TokenUtils;
 import ai.vital.aspen.groovy.nlp.models.NamedPersonModel;
-import ai.vital.vitalsigns.model.container.Payload;
 import ai.vital.aspen.groovy.ontology.VitalOntology
 
 
@@ -110,7 +106,7 @@ class NamedPersonStep {
 		
 	}
 
-	public void processPayload(Payload payload)
+	public void processPayload(VITAL_Container payload)
 			throws 
 			Exception {
 
