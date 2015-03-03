@@ -4,10 +4,13 @@ import opennlp.tools.sentdetect.SentenceDetectorME;
 
 import org.slf4j.Logger;
 
+import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.step.AbstractStep
 import ai.vital.domain.Document;
 import ai.vital.domain.TextBlock;
 import ai.vital.vitalsigns.model.container.Payload;
+
+
 
 
 import java.io.File;
@@ -20,6 +23,7 @@ import java.util.Map;
 
 import opennlp.tools.sentdetect.SentenceDetectorME;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,11 +31,9 @@ import ai.vital.domain.Document;
 import ai.vital.domain.Edge_hasSentence;
 import ai.vital.domain.Sentence;
 import ai.vital.domain.TextBlock;
-
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.models.SentenceDetectorModel;
 import ai.vital.vitalsigns.model.container.Payload;
-
 
 import com.hp.hpl.jena.rdf.model.Model;
 
@@ -51,20 +53,47 @@ class SentenceDetectorStep extends AbstractStep {
 	
 	public void init()  {
 		
+		try {
+			detector = SentenceDetectorModel.getDetector()
+		} catch(Exception e){}
+		
+		if(detector == null) {
+			
+			InputStream inputStream = null
+			
+			try {
 				
-		File modelFile = new File("resources/models", "en-sent.bin");
-		
-		log.info("Initializing sentences model from file: {} ...", modelFile.getAbsolutePath());
-		
-		SentenceDetectorModel.init(modelFile);
-		
-		long start = System.currentTimeMillis();
-		
-		detector = SentenceDetectorModel.getDetector();
-		
-		long stop = System.currentTimeMillis();
-	
-		log.info("Sentences detector obtained, {}ms", (stop-start));
+				if( AspenGroovyConfig.get().loadResourcesFromClasspath ) {
+					
+					String path = "/resources/models/en-sent.bin"
+					
+					log.info("Initializing sentences model from path: {}", path);
+					
+					inputStream = AspenGroovyConfig.class.getResourceAsStream(path)
+					
+					if(inputStream == null) throw new Exception("Model not found: ${path}")
+					
+				} else {
+				
+					File modelFile = new File("resources/models", "en-sent.bin");
+				
+					log.info("Initializing sentences model from file: {}", modelFile.getAbsolutePath());
+				
+					if(!modelFile.exists()) throw new Exception("Model not found: ${modelFile.absolutePath}")
+				
+					inputStream = new FileInputStream(modelFile)
+						
+				}
+				
+				SentenceDetectorModel.init(inputStream);
+				
+				detector = SentenceDetectorModel.getDetector()
+				
+			} finally {
+				IOUtils.closeQuietly(inputStream)
+			}
+			
+		}
 		
 	}
 

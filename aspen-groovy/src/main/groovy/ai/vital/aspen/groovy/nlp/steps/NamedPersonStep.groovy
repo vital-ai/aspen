@@ -9,10 +9,13 @@ import java.util.Map;
 import opennlp.tools.namefind.NameFinderME;
 import opennlp.tools.util.Span;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 // changed from namedperson
+
+
 
 import ai.vital.domain.Person;
 
@@ -27,12 +30,12 @@ import ai.vital.domain.EntityInstance;
 import ai.vital.domain.Sentence;
 import ai.vital.domain.TextBlock;
 import ai.vital.domain.Token;
+import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.nlp.model.DocumentUtils;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.TokenUtils;
 import ai.vital.aspen.groovy.nlp.models.NamedPersonModel;
 import ai.vital.vitalsigns.model.container.Payload;
-
 import ai.vital.aspen.groovy.ontology.VitalOntology
 
 
@@ -51,12 +54,57 @@ class NamedPersonStep {
 	
 	
 	public void init()  {
+
+		try {
+			nameFinder = NamedPersonModel.getNameFinder()
+		} catch(Exception e) {
+		}
+				
 		
-		File namedPersonModelFile = new File("resources/models/", "en-ner-person.bin");
+		if(nameFinder == null) {
+			
+			InputStream inputStream = null
+			
+			try {
+			
+				if( AspenGroovyConfig.get().loadResourcesFromClasspath ) {
+					
+					String path = "resources/models/en-ner-person.bin"
+					
+					log.info("Initializing named person model from classpath: {}", path);
+					
+					inputStream = AspenGroovyConfig.class.getResourceAsStream(path)
+					
+					if(inputStream == null) throw new RuntimeException("Model file not found: ${path}")
+					
+				} else {
+				
+					File namedPersonModelFile = new File("resources/models/", "en-ner-person.bin")
+					log.info("Initializing named person model from file: {}", namedPersonModelFile.getAbsolutePath());
+					
+					if(!namedPersonModelFile.exists()) {
+						throw new RuntimeException("Model file not found: ${namedPersonModelFile.absolutePath}")
+					}
+					
+					
+				}
+			
+				NamedPersonModel.init(inputStream);
+				
+				nameFinder = NamedPersonModel.getNameFinder()
+				
+			} finally {
+			
+				IOUtils.closeQuietly(inputStream)
+			
+			}
+			
+						
+		}
 		
-		log.info("Initializing named person model from file: {} ...", namedPersonModelFile.getAbsolutePath());
+			
 		
-		NamedPersonModel.init(namedPersonModelFile);
+		
 		
 		nameFinder = NamedPersonModel.getNameFinder();
 		

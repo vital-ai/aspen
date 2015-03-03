@@ -19,7 +19,7 @@ public class NamedPersonModel {
 	private NamedPersonModel() {		
 	}
 
-	public static void init(File modelFile)  {
+	public static void init(InputStream inputStream)  {
 		
 		if(singleton == null) {
 			
@@ -27,12 +27,10 @@ public class NamedPersonModel {
 				
 				if(singleton == null) {
 					
-					log.info("Initializing Person Name model from file: {}", modelFile.getAbsolutePath());
-					
 					long start = System.currentTimeMillis();
 					
 					try {
-						singleton = new NameFinderME(new TokenNameFinderModel(new FileInputStream(modelFile)));
+						singleton = new NameFinderME(new TokenNameFinderModel(inputStream));
 					} catch (IOException e) {
 						log.error(e.getLocalizedMessage(), e);
 						throw new Exception(e);
@@ -55,6 +53,10 @@ public class NamedPersonModel {
 	public static NameFinderME getNameFinder()  {
 		if(singleton == null) throw new Exception("Name finder not initialized!");
 		return singleton;
+	}
+	
+	public static void purge() {
+		singleton = null
 	}
 	
 }

@@ -20,7 +20,7 @@ public class ChunkerModelWrapper {
 	private ChunkerModelWrapper() {		
 	}
 
-	public static void init(File modelFile)  {
+	public static void init(InputStream inputStream)  {
 		
 		if(singleton == null) {
 			
@@ -28,12 +28,12 @@ public class ChunkerModelWrapper {
 				
 				if(singleton == null) {
 					
-					log.info("Initializing Chunkder model from file: {}", modelFile.getAbsolutePath());
+					log.info("Initializing Chunker model from stream...");
 					
 					long start = System.currentTimeMillis();
 					
 					try {
-						singleton = new ChunkerME(new ChunkerModel(new FileInputStream(modelFile)));
+						singleton = new ChunkerME(new ChunkerModel(inputStream));
 					} catch (IOException e) {
 						log.error(e.getLocalizedMessage(), e);
 						throw new Exception(e);
@@ -48,7 +48,7 @@ public class ChunkerModelWrapper {
 			}
 			
 		} else {
-			log.warn("Sentence detector model already initialized!");
+			log.warn("Chunker model already initialized!");
 		}
 		
 	}
@@ -57,5 +57,8 @@ public class ChunkerModelWrapper {
 		if(singleton == null) throw new Exception("Chunker model not initialized!");
 		return singleton;
 	}
-	
+
+	public static void purge() {
+		singleton = null
+	}	
 }

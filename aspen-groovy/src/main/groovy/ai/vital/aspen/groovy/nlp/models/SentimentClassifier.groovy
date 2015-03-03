@@ -19,7 +19,7 @@ public class SentimentClassifier {
 	private SentimentClassifier() {		
 	}
 
-	public static void init(File modelFile) {
+	public static void init(InputStream inputStream) {
 		
 		if(singleton == null) {
 			
@@ -27,13 +27,11 @@ public class SentimentClassifier {
 				
 				if(singleton == null) {
 					
-					log.info("Initializing Sentiment classifier from file: {}", modelFile.getAbsolutePath());
-					
 					long start = System.currentTimeMillis();
 					
 					try {
 						singleton = new Classifier();
-						singleton.init(new FileInputStream(modelFile));
+						singleton.init(inputStream);
 					} catch (IOException e) {
 						log.error(e.getLocalizedMessage(), e);
 						throw new Exception(e);
@@ -56,6 +54,10 @@ public class SentimentClassifier {
 	public static Classifier get()  {
 		if(singleton == null) throw new Exception("Sentiment classifier not initialized!");
 		return singleton;
+	}
+	
+	public static void purge() {
+		singleton = null
 	}
 	
 }

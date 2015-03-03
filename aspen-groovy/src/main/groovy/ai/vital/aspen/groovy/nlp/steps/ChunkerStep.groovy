@@ -1,5 +1,6 @@
 package ai.vital.aspen.groovy.nlp.steps
 
+import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.step.AbstractStep
 
 import java.io.File;
@@ -12,6 +13,7 @@ import java.util.Map;
 
 import opennlp.tools.chunker.ChunkerME;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,15 +26,12 @@ import ai.vital.domain.Sentence;
 import ai.vital.domain.TextBlock;
 import ai.vital.domain.Token;
 import ai.vital.domain.VerbPhrase;
-
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.PosTagsUtils;
 import ai.vital.aspen.groovy.nlp.model.TokenUtils;
 import ai.vital.aspen.groovy.nlp.models.ChunkerModelWrapper;
 import ai.vital.vitalsigns.model.container.Payload;
-
 import ai.vital.aspen.groovy.ontology.VitalOntology
-
 
 import com.hp.hpl.jena.rdf.model.Model;
 
@@ -49,22 +48,54 @@ class ChunkerStep extends AbstractStep {
 	
 	
 	public void init()  {
+
+		try {
+			chunker = ChunkerModelWrapper.getChunker();
+		} catch(Exception e) {
+		}	
 		
-		File modelFile = new File("resources/models", "en-chunker.bin");
-		
-		log.info("Initializing Chunkder model from file: {}", modelFile.getAbsolutePath());
-		
-		long start = System.currentTimeMillis();
-		
-		ChunkerModelWrapper.init(modelFile);
-		
-		chunker = ChunkerModelWrapper.getChunker();
-		
-		long stop = System.currentTimeMillis();
-		
-		log.info("Chunker model obtained, {}ms", stop - start);
-		
-		
+
+		if(chunker == null) {
+			
+			long start = System.currentTimeMillis();
+			
+			InputStream inputStream = null
+					
+			try {
+						
+				if(AspenGroovyConfig.get().loadResourcesFromClasspath) {
+							
+					String path = "/resources/models/en-chunker.bin"
+									
+					log.info("Initializing chunker model from classpath path: {}", path)
+					
+					inputStream = AspenGroovyConfig.class.getResourceAsStream(path)				
+					
+				} else {
+							
+					File modelFile = new File("resources/models", "en-chunker.bin");
+							
+					log.info("Initializing Chunker model from file: {}", modelFile.getAbsolutePath());
+				
+					inputStream = new FileInputStream(modelFile)			
+				}
+						
+				ChunkerModelWrapper.init(inputStream);
+						
+				chunker = ChunkerModelWrapper.getChunker();
+						
+				long stop = System.currentTimeMillis();
+						
+				log.info("Chunker model obtained, {}ms", stop - start);
+						
+			} finally {
+						
+				IOUtils.closeQuietly(inputStream)
+				
+			}
+			
+		}
+				
 	}
 	
 	

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,7 @@ import ai.vital.domain.Edge_hasCategory;
 import ai.vital.domain.Sentence;
 import ai.vital.domain.TextBlock;
 import ai.vital.domain.Token;
+import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.TokenUtils;
 import ai.vital.aspen.groovy.nlp.models.SentimentClassifier;
@@ -46,15 +48,47 @@ class SentimentClassifierStep {
 	
 	public void init()  {
 		
+		try {
+			sentimentClassifier = SentimentClassifier.get()
+		} catch(Exception e) {}
 		
+		if(sentimentClassifier == null) {
+			
+			InputStream inputStream = null
+			
+			try {
+				
+				if( AspenGroovyConfig.get().loadResourcesFromClasspath ) {
+					
+					String path = "/resources/models/en-sentiment.bin"
+					
+					log.info("Initializing named person model from path: {} ...", path);
+					
+					inputStream = AspenGroovyConfig.class.getResourceAsStream(path)
+					
+					if(inputStream == null) throw new Exception("model file not found: ${path}")
+					
+				} else {
+				
+					File sentimentModelFile = new File("resources/models/", "en-sentiment.bin");
+					
+					log.info("Initializing named person model from file: {} ...", sentimentModelFile.getAbsolutePath());
+					
+					if(!sentimentModelFile.exists()) throw new Exception("model file not found: ${sentimentModelFile.absolutePath}")
+					
+					inputStream = new FileInputStream(sentimentModelFile)
+				}
+				
+				SentimentClassifier.init(inputStream);
+				
+				sentimentClassifier = SentimentClassifier.get();
+				
+			} finally {
+				IOUtils.closeQuietly(inputStream)
+			}
+			
+		}
 		
-		File sentimentModelFile = new File("resources/models/", "en-sent.bin");
-		
-		log.info("Initializing named person model from file: {} ...", sentimentModelFile.getAbsolutePath());
-		
-		SentimentClassifier.init(sentimentModelFile);
-		
-		sentimentClassifier = SentimentClassifier.get();
 		
 	}
 

@@ -8,16 +8,19 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import java.util.Map.Entry;
+
 
 import ai.vital.domain.Category;
 
 
+
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import opennlp.tools.tokenize.TokenizerME;
+
 import opennlp.tools.tokenize.TokenizerModel;
 import opennlp.tools.util.Span;
 
@@ -30,9 +33,9 @@ import ai.vital.domain.Token;
 import ai.vital.opennlp.classifier.Classification
 import ai.vital.opennlp.classifier.Classifier;
 import ai.vital.vitalsigns.model.container.Payload;
-
+import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.nlp.models.EnglishTokenizerModel
-
+import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.ontology.VitalOntology
 
 
@@ -56,13 +59,45 @@ class EnglishTokenizerStep {
 	
 	public void init()  {
 		
-		File englishtokenizerModelFile = new File("resources/models/", "en-token.bin");
+		try {
+			englishtokenClassifier = EnglishTokenizerModel.get()
+		} catch(Exception e) {
+		}
 		
-		log.info("Initializing English Tokenizer model from file: {} ...", englishtokenizerModelFile.getAbsolutePath());
-		
-		englishtokenClassifier.init(englishtokenizerModelFile);
-		
-		englishtokenClassifier = EnglishTokenizerModel.get();
+		if(englishtokenClassifier == null) {
+			
+			InputStream inputStream = null
+			
+			try {
+				
+				if( AspenGroovyConfig.get().loadResourcesFromClasspath) {
+					
+					String path = "/resources/models/en-token.bin"
+					
+					log.info("Initializing English Tokenizer model from classpath: {} ...", path);
+					
+					inputStream = AspenGroovyConfig.class.getResourceAsStream(path)
+					
+				} else {
+				
+					File englishtokenizerModelFile = new File("resources/models/", "en-token.bin");
+					
+					log.info("Initializing English Tokenizer model from file: {} ...", englishtokenizerModelFile.getAbsolutePath());
+					
+					inputStream = new FileInputStream(englishtokenizerModelFile)
+					
+				}
+				
+				EnglishTokenizerModel.init(inputStream);
+				
+				
+			} finally {
+				IOUtils.closeQuietly(inputStream)
+			}
+			
+			englishtokenClassifier = EnglishTokenizerModel.get();
+		}
+
 		
 	}
 

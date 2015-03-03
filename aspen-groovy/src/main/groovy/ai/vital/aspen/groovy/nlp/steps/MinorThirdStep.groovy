@@ -11,12 +11,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.rdf.model.Model;
 
+import edu.cmu.minorthird.text.AnnotatorLoader
 import edu.cmu.minorthird.text.BasicTextBase;
 import edu.cmu.minorthird.text.BasicTextLabels;
 import edu.cmu.minorthird.text.CharAnnotation;
@@ -39,10 +42,11 @@ import ai.vital.domain.Sentence;
 import ai.vital.domain.TextBlock;
 import ai.vital.domain.Token;
 import ai.vital.domain.VerbPhrase;
-
+import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.nlp.m3rd.DocumentTokenizer_VS;
 import ai.vital.aspen.groovy.nlp.m3rd.PosAnnotator_VS;
 import ai.vital.aspen.groovy.nlp.m3rd.VitalAnnotatorLoader;
+import ai.vital.aspen.groovy.nlp.m3rd.VitalClasspathAnnotatorLoader
 import ai.vital.aspen.groovy.nlp.model.DocumentUtils;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.PosTagsUtils;
@@ -50,7 +54,6 @@ import ai.vital.aspen.groovy.nlp.model.TokenUtils;
 import ai.vital.aspen.groovy.step.AbstractStep
 import ai.vital.flow.server.utils.JSONUtils;
 import ai.vital.vitalsigns.model.container.Payload;
-
 import ai.vital.aspen.groovy.ontology.VitalOntology
 
 
@@ -81,7 +84,7 @@ class MinorThirdStep extends AbstractStep {
 	
 	private MixupInterpreter interpreter;
 	
-	private VitalAnnotatorLoader annotatorLoader;
+	private AnnotatorLoader annotatorLoader;
 	
 	private String docID = "doc01";
 	
@@ -100,14 +103,22 @@ class MinorThirdStep extends AbstractStep {
 		inputProps = new HashSet<String>(Arrays.asList(SENTENCE_NUMBER));
 		
 		
+		if( AspenGroovyConfig.get().loadResourcesFromClasspath ) {
+			
+			String path = "/resources/mixup/"
+			log.info("Using classpath annotator loader")
+			
+			annotatorLoader = new VitalClasspathAnnotatorLoader(path);
+			
+		} else {
 		
-		File mixupFile = new File("resources/mixup/", "main.mixup");
+			File mixupDir = new File("resources/mixup/");
+			
+			log.info("Using directory annotator loader, dir: {}", mixupDir.absolutePath)
+			
+			annotatorLoader = new VitalAnnotatorLoader(mixupDir);
 		
-		File mixupDir = new File("resources/mixup/");
-		
-		log.info("Mixup dir: {}", mixupDir.getAbsolutePath());
-		
-		annotatorLoader = new VitalAnnotatorLoader(mixupDir);
+		}
 		
 		try {
 			reloadMainMixup();
@@ -122,12 +133,36 @@ class MinorThirdStep extends AbstractStep {
 		
 	}
 	
-	private void reloadMainMixup()  {
+	private void reloadMainMixup() throws Exception {
 
-		File mixupFile = new File("resources/mixup/", "main.mixup");
+		if(AspenGroovyConfig.get().loadResourcesFromClasspath) {
+
+			String path = "/resources/mixup/main.mixup"
+			
+			log.info("Setting up interpreter with main mixup from classpath location: {}", path)
+
+			String program = null			
+			InputStream is = null
+			try {
+				is = AspenGroovyConfig.class.getResourceAsStream(path)
+				program = IOUtils.toString(is, 'UTF-8')
+			} finally {
+				IOUtils.closeQuietly(is)
+			}
+			
+			interpreter = new MixupInterpreter(new MixupProgram(program))
+						
+		} else {
+		
+			File mixupFile = new File("resources/mixup/", "main.mixup");
+			
+			log.info("Setting up interpreter with main mixup file: {}", mixupFile.getAbsolutePath());
+			
+			interpreter = new MixupInterpreter(new MixupProgram(mixupFile));
+		
+		}
+		
 				
-		log.info("Setting up interpreter with main mixup file: {}", mixupFile.getAbsolutePath());
-		interpreter = new MixupInterpreter(new MixupProgram(mixupFile));
 		
 	}
 	

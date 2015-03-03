@@ -20,7 +20,7 @@ public class POSTaggerModel {
 	private POSTaggerModel() {		
 	}
 
-	public static void init(File modelFile)  {
+	public static void init(InputStream inputStream)  {
 		
 		if(singleton == null) {
 			
@@ -28,12 +28,10 @@ public class POSTaggerModel {
 				
 				if(singleton == null) {
 					
-					log.info("Initializing POS tagger model from file: {}", modelFile.getAbsolutePath());
-					
 					long start = System.currentTimeMillis();
 					
 					try {
-						singleton = new POSTaggerME(new POSModel(new FileInputStream(modelFile)));
+						singleton = new POSTaggerME(new POSModel(inputStream));
 					} catch (IOException e) {
 						log.error(e.getLocalizedMessage(), e);
 						throw new Exception(e);
@@ -56,6 +54,10 @@ public class POSTaggerModel {
 	public static POSTaggerME getTagger()  {
 		if(singleton == null) throw new Exception("POS Tagger not initialized!");
 		return singleton;
+	}
+	
+	public static void purge() {
+		singleton = null
 	}
 	
 }

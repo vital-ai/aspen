@@ -1,5 +1,6 @@
 package ai.vital.aspen.groovy.nlp.steps
 
+import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.step.AbstractStep
 
 import java.io.File;
@@ -14,6 +15,7 @@ import java.util.Map;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,12 +27,10 @@ import ai.vital.domain.PosTag;
 import ai.vital.domain.Sentence;
 import ai.vital.domain.TextBlock;
 import ai.vital.domain.Token;
-
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.models.POSTaggerModel;
 import ai.vital.vitalsigns.global.GlobalHashTable;
 import ai.vital.vitalsigns.model.container.Payload;
-
 import ai.vital.aspen.groovy.ontology.VitalOntology
 
 
@@ -46,21 +46,49 @@ class PosTaggerStep extends AbstractStep {
 	
 	public void init() {
 	
+		try {
+			posTagger = POSTaggerModel.getTagger()
+		} catch(Exception e) {}
 		
-		File modelFile = new File("resources/models", "en-pos-maxent.bin");
+		if(posTagger == null) {
+			
+			InputStream inputStream = null
+			
+			try {
+				
+				if( AspenGroovyConfig.get().loadResourcesFromClasspath ) {
+					
+					String path = "/resources/models/en-pos-maxent.bin"
+					
+					log.info("Initializing POS tagger model from classpath: {}", path);
+					
+					inputStream = AspenGroovyConfig.class.getResourceAsStream(path)
+					
+					if(inputStream == null) throw new RuntimeException("Model file not found: ${path}")
+					
+				} else {
+				
+					File modelFile = new File("resources/models", "en-pos-maxent.bin");
+					
+					log.info("Initializing POS tagger model from file: {}", modelFile.getAbsolutePath());
+				
+					if(!modelFile.exists()) throw new RuntimeException("Model file not found: ${modelFile.absolutePath}")
+					
+					inputStream = new FileInputStream(modelFile) 
+						
+				}
+				
+				POSTaggerModel.init(inputStream);
+				
+				posTagger = POSTaggerModel.getTagger();
+				
+			} finally {
+				IOUtils.closeQuietly(inputStream)
+			}
+			
+		}
 		
-		log.info("Initializing POS tagger model from file: {}", modelFile.getAbsolutePath());
 		
-		long start = System.currentTimeMillis();
-		
-		POSTaggerModel.init(modelFile);
-		
-		
-		posTagger = POSTaggerModel.getTagger();
-		
-		long stop = System.currentTimeMillis();
-		
-		log.info("POS tagger obtained, {}ms", stop - start);
 		
 	}
 	

@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sun.nio.ch.IOUtil;
+import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.opennlp.classifier.Classifier;
 
 class EnglishTokenizerModel {
@@ -20,7 +22,7 @@ class EnglishTokenizerModel {
 	private EnglishTokenizerModel() {
 	}
 
-	public static void init(File modelFile) {
+	public static void init(InputStream inputStream) throws Exception {
 		
 		if(singleton == null) {
 			
@@ -28,17 +30,10 @@ class EnglishTokenizerModel {
 				
 				if(singleton == null) {
 					
-					log.info("Initializing EnglishTokenizer classifier from file: {}", modelFile.getAbsolutePath());
-					
 					long start = System.currentTimeMillis();
 					
-					try {
-						singleton = new Classifier();
-						singleton.init(new FileInputStream(modelFile));
-					} catch (IOException e) {
-						log.error(e.getLocalizedMessage(), e);
-						throw new Exception(e);
-					}
+					singleton = new Classifier();
+					singleton.init(inputStream);
 					
 					long stop = System.currentTimeMillis();
 					
@@ -54,13 +49,15 @@ class EnglishTokenizerModel {
 		
 	}
 	
-	public static Classifier get()  {
+	public static Classifier get() throws Exception {
 		if(singleton == null) throw new Exception("English Tokenizer classifier not initialized!");
 		return singleton;
 	}
 	
 	
-	
+	public static void purge() {
+		singleton = null
+	}
 	
 	
 }

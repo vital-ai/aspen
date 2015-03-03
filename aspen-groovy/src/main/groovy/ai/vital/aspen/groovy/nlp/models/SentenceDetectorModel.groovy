@@ -20,7 +20,7 @@ public class SentenceDetectorModel {
 	private SentenceDetectorModel() {		
 	}
 
-	public static void init(File modelFile)  {
+	public static void init(InputStream inputStream)  {
 		
 		if(singleton == null) {
 			
@@ -28,19 +28,11 @@ public class SentenceDetectorModel {
 				
 				if(singleton == null) {
 					
-					log.info("Initializing sentence detector model from file: {}", modelFile.getAbsolutePath());
-					
 					SentenceModel model = null;
 					
 					long start = System.currentTimeMillis();
 					
-					try {
-						model = new SentenceModel(new FileInputStream(modelFile));
-					} catch (IOException e) {
-						log.error("Error when loading sentence model file: " + e.getLocalizedMessage());
-						throw new Exception(e);
-					}
-					
+					model = new SentenceModel(inputStream);
 					
 					singleton = new SentenceDetectorME(model);
 					
@@ -61,6 +53,10 @@ public class SentenceDetectorModel {
 	public static SentenceDetectorME getDetector()  {
 		if(singleton == null) throw new Exception("Sentence detector model not initialized!");
 		return singleton;
+	}
+	
+	public static void purge() {
+		singleton = null
 	}
 	
 }
