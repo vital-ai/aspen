@@ -13,9 +13,6 @@ import edu.cmu.minorthird.classify.BinaryClassifier;
 import edu.cmu.minorthird.classify.Explanation;
 import edu.cmu.minorthird.classify.Feature;
 import edu.cmu.minorthird.classify.Instance;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * A decision tree.
@@ -24,7 +21,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  */
 
 /* package */abstract class DecisionTree extends BinaryClassifier implements
-		Serializable,Visible{
+		Serializable{
 
 	static final long serialVersionUID=20080609L;
 
@@ -52,7 +49,7 @@ import edu.cmu.minorthird.util.gui.Visible;
 	/**
 	 * An internal node of a decision tree.
 	 */
-	public static class InternalNode extends DecisionTree implements Visible{
+	public static class InternalNode extends DecisionTree {
 
 		static final long serialVersionUID=20080609L;
 
@@ -120,17 +117,12 @@ import edu.cmu.minorthird.util.gui.Visible;
 			return ifFalse;
 		}
 
-		public Viewer toGUI(){
-			Viewer v=new TreeViewer();
-			v.setContent(this);
-			return v;
-		}
 	}
 
 	/**
 	 * A decision tree leaf.
 	 */
-	public static class Leaf extends DecisionTree implements Visible{
+	public static class Leaf extends DecisionTree{
 
 		static final long serialVersionUID=20080609L;
 
@@ -158,45 +150,6 @@ import edu.cmu.minorthird.util.gui.Visible;
 			return myScore;
 		}
 
-		public Viewer toGUI(){
-			Viewer v=new TreeViewer();
-			v.receiveContent(this);
-			return v;
-		}
 	}
 
-	public static class TreeViewer extends ComponentViewer{
-
-		static final long serialVersionUID=20080609L;
-		
-		public JComponent componentFor(Object o){
-			DecisionTree dtree=(DecisionTree)o;
-			DefaultMutableTreeNode top=createNodes(dtree);
-			final JTree jtree=new JTree(top);
-			jtree.addTreeSelectionListener(new TreeSelectionListener(){
-
-				public void valueChanged(TreeSelectionEvent e){
-					DefaultMutableTreeNode node=
-							(DefaultMutableTreeNode)jtree.getLastSelectedPathComponent();
-					Object nodeInfo=node.getUserObject();
-					if(nodeInfo instanceof InternalNode){
-						sendSignal(OBJECT_SELECTED,((InternalNode)nodeInfo).test);
-					}
-				}
-			});
-			return new JScrollPane(jtree);
-		}
-
-		private DefaultMutableTreeNode createNodes(DecisionTree dtree){
-			if(dtree instanceof Leaf){
-				return new DefaultMutableTreeNode(dtree);
-			}else{
-				InternalNode internal=(InternalNode)dtree;
-				DefaultMutableTreeNode n=new DefaultMutableTreeNode(internal);
-				n.add(createNodes(internal.ifTrue));
-				n.add(createNodes(internal.ifFalse));
-				return n;
-			}
-		}
-	}
 }

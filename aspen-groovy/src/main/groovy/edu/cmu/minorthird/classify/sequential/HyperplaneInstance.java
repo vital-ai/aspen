@@ -8,8 +8,6 @@ import javax.swing.JComponent;
 import edu.cmu.minorthird.classify.Feature;
 import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.classify.algorithms.linear.Hyperplane;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
 
 
 /**
@@ -30,18 +28,6 @@ public class HyperplaneInstance implements Instance
 		this.hyperplane = hyperplane; 
 		this.subpopulationId = subpopulationId;
 		this.source = source;
-	}
-	public Viewer toGUI() 
-	{ 
-		Viewer v = new ComponentViewer() {
-			static final long serialVersionUID=20080202L;
-				public JComponent componentFor(Object o) {
-					HyperplaneInstance hi = (HyperplaneInstance)o;
-					return hi.hyperplane.toGUI(); 
-				}
-			};
-		v.setContent(this);
-		return v;
 	}
 	public double getWeight(Feature f) { return hyperplane.featureScore(f); }
 	public Iterator<Feature> binaryFeatureIterator() { return Collections.EMPTY_SET.iterator(); }

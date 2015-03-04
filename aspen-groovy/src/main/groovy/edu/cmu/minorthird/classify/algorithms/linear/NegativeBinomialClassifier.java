@@ -20,12 +20,6 @@ import edu.cmu.minorthird.classify.Feature;
 import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.classify.algorithms.random.Arithmetic;
 import edu.cmu.minorthird.util.MathUtil;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.Controllable;
-import edu.cmu.minorthird.util.gui.ControlledViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.ViewerControls;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /** A generative Model for word-counts based on the Negative-Binomial Distribution.
  *
@@ -34,7 +28,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  */
 
 public class NegativeBinomialClassifier extends BinaryClassifier implements
-		Visible,Serializable{
+		Serializable{
 
 	static final long serialVersionUID=20080130L;
 	
@@ -198,103 +192,6 @@ public class NegativeBinomialClassifier extends BinaryClassifier implements
 		return pmsFeatureGivenPos.keySet().iterator();
 	}
 
-	//
-	// GUI related Methods
-	//
-
-	public Viewer toGUI(){
-		Viewer gui=new ControlledViewer(new MyViewer(),new NegBinControls());
-		gui.setContent(this);
-		return gui;
-	}
-
-	static private class NegBinControls extends ViewerControls{
-
-		static final long serialVersionUID=20080130L;
-		
-		// how to sort
-		//private JRadioButton absoluteValueButton;
-		private JRadioButton valueButton;
-		private JRadioButton nameButton;
-		//private JRadioButton noneButton;
-
-		public void initialize(){
-			add(new JLabel("Sort by"));
-			ButtonGroup group=new ButtonGroup();
-			;
-			nameButton=addButton("name",group,true);
-			valueButton=addButton("weight",group,false);
-			//absoluteValueButton=addButton("|weight|",group,false);
-		}
-
-		private JRadioButton addButton(String s,ButtonGroup group,boolean selected){
-			JRadioButton button=new JRadioButton(s,selected);
-			group.add(button);
-			add(button);
-			button.addActionListener(this);
-			return button;
-		}
-	}
-
-	static private class MyViewer extends ComponentViewer implements Controllable{
-
-		static final long serialVersionUID=20080130L;
-		
-		private NegBinControls controls=null;
-
-		private NegativeBinomialClassifier h=null;
-
-		public void applyControls(ViewerControls controls){
-			this.controls=(NegBinControls)controls;
-			setContent(h,true);
-			revalidate();
-		}
-
-		public boolean canReceive(Object o){
-			return o instanceof Hyperplane;
-		}
-
-		public JComponent componentFor(Object o){
-			h=(NegativeBinomialClassifier)o;
-			//
-			// Note: if transorming batch learner is used only
-			//       tableData[.][1] gets displayed.
-			//
-			Object[] keys=h.pmsFeatureGivenNeg.keySet().toArray();
-			Object[][] tableData=new Object[keys.length][5];
-			int k=0;
-			for(Iterator<Feature> i=h.featureIterator();i.hasNext();){
-				Feature f=i.next();
-				tableData[k][0]=f;
-				tableData[k][1]=new Double(h.featureScore(f,"mu","NEG"));
-				tableData[k][2]=new Double(h.featureScore(f,"delta","NEG"));
-				tableData[k][3]=new Double(h.featureScore(f,"mu","POS"));
-				tableData[k][4]=new Double(h.featureScore(f,"delta","POS"));
-				k++;
-			}
-			if(controls!=null){
-				Arrays.sort(tableData,new Comparator<Object[]>(){
-
-					public int compare(Object[] ra,Object[] rb){
-						if(controls.nameButton.isSelected())
-							return ra[0].toString().compareTo(rb[0].toString());
-						Double da=(Double)ra[1];
-						Double db=(Double)rb[1];
-						if(controls.valueButton.isSelected())
-							return MathUtil.sign(db.doubleValue()-da.doubleValue());
-						else
-							return MathUtil.sign(Math.abs(db.doubleValue())-
-									Math.abs(da.doubleValue()));
-					}
-				});
-			}
-			String[] columnNames=
-					{"Feature Name","mu Neg","delta Neg","mu Pos","delta Pos"};
-			JTable table=new JTable(tableData,columnNames);
-			monitorSelections(table,0);
-			return new JScrollPane(table);
-		}
-	}
 
 	public String toString(){
 		String a=pmsFeatureGivenNeg.toString();

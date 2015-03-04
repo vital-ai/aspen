@@ -7,12 +7,9 @@ import java.util.Set;
 import edu.cmu.minorthird.classify.ClassLabel;
 import edu.cmu.minorthird.classify.Example;
 import edu.cmu.minorthird.classify.Feature;
-import edu.cmu.minorthird.classify.GUI;
 import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.classify.MutableInstance;
 import edu.cmu.minorthird.util.UnionIterator;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
 
 /** 
  * An instance that appears as part of a sequence.
@@ -80,11 +77,6 @@ public class InstanceFromSequence implements Instance,SequenceConstants
 		return "[instFromSeq "+history+" "+instance+"]";
 	}
 
-	final public Viewer toGUI()
-	{
-		return new GUI.InstanceViewer(this);
-	}
-
 	/** Utility to create history from a sequence of examples, starting at positive j-1. */
 	static public void fillHistory(String[] history, Example[] sequence, int j)
 	{
@@ -113,15 +105,4 @@ public class InstanceFromSequence implements Instance,SequenceConstants
 	}
 
 
-	static public void main(String[] argv)
-	{
-		MutableInstance instance = new MutableInstance("William Cohen");
-		instance.addBinary( new Feature("token lc william") );
-		instance.addBinary( new Feature("token lc cohen") );
-		instance.addNumeric( new Feature("iq"), 250);
-		instance.addNumeric( new Feature("office"), 5317);
-		InstanceFromSequence inseq = 
-			new InstanceFromSequence(instance, new String[] { "dweeb","cool", "cool" }); 
-		new ViewerFrame("TestInstance Viewer", inseq.toGUI());
-	}
 }

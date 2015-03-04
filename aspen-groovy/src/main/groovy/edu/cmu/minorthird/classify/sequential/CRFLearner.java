@@ -19,10 +19,6 @@ import edu.cmu.minorthird.classify.Feature;
 import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.classify.algorithms.linear.Hyperplane;
 import edu.cmu.minorthird.util.ProgressCounter;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Sequential learner based on the CRF algorithm.  Source for the iitb.CRF
@@ -32,7 +28,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  */
 
 public class CRFLearner 
-implements BatchSequenceClassifierLearner,SequenceConstants,SequenceClassifier,Visible,Serializable{
+implements BatchSequenceClassifierLearner,SequenceConstants,SequenceClassifier,Serializable{
 	static private final long serialVersionUID = 1;
 
 	int histsize = 1;
@@ -347,28 +343,6 @@ implements BatchSequenceClassifierLearner,SequenceConstants,SequenceClassifier,V
 		top.add(cmmEx);
 		Explanation ex = new Explanation(top);
 		return ex;
-	}
-
-	public Viewer toGUI()
-	{
-		Viewer v = new ComponentViewer() {
-			static final long serialVersionUID=20080207L;
-			public JComponent componentFor(Object o) {
-//				CRFLearner cmm = (CRFLearner)o;
-				JPanel mainPanel = new JPanel();
-				mainPanel.setLayout(new BorderLayout());
-				mainPanel.add(
-						new JLabel("CRFLearner: historySize=1"),
-						BorderLayout.NORTH);
-				Viewer subView = new SmartVanillaViewer(toMinorthirdClassifier());
-				subView.setSuperView(this);
-				mainPanel.add(subView,BorderLayout.SOUTH);
-				mainPanel.setBorder(new TitledBorder("CRFLearner"));
-				return new JScrollPane(mainPanel);
-			}
-		};
-		v.setContent(this);
-		return v;
 	}
 
 }

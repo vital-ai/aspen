@@ -18,10 +18,6 @@ import edu.cmu.minorthird.classify.Classifier;
 import edu.cmu.minorthird.classify.ExampleSchema;
 import edu.cmu.minorthird.classify.Explanation;
 import edu.cmu.minorthird.classify.Instance;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /** 
  * A conditional markov model classifier.
@@ -29,7 +25,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  * @author William Cohen
  */
 
-public class CMM implements ConfidenceReportingSequenceClassifier,SequenceConstants,Visible,Serializable
+public class CMM implements ConfidenceReportingSequenceClassifier,SequenceConstants,Serializable
 {
     private static final long serialVersionUID = 20080207L;
 
@@ -102,25 +98,4 @@ public class CMM implements ConfidenceReportingSequenceClassifier,SequenceConsta
 	return ex;
     }
 
-    public Viewer toGUI()
-    {
-        Viewer v = new ComponentViewer() {
-        	static final long serialVersionUID=20080207L;
-                public JComponent componentFor(Object o) {
-                    CMM cmm = (CMM)o;
-                    JPanel mainPanel = new JPanel();
-                    mainPanel.setLayout(new BorderLayout());
-                    mainPanel.add(
-                                  new JLabel("CMM: historySize="+cmm.historySize+" beamSize="+beamSize),
-                                  BorderLayout.NORTH);
-                    Viewer subView = new SmartVanillaViewer(cmm.classifier);
-                    subView.setSuperView(this);
-                    mainPanel.add(subView,BorderLayout.SOUTH);
-                    mainPanel.setBorder(new TitledBorder("Conditional Markov Model"));
-                    return new JScrollPane(mainPanel);
-                }
-            };
-        v.setContent(this);
-        return v;
-    }
 }

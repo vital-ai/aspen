@@ -7,7 +7,6 @@ import java.util.Set;
 import edu.cmu.minorthird.classify.Feature;
 import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.util.UnionIterator;
-import edu.cmu.minorthird.util.gui.Viewer;
 
 /** 
  * An instance that has predicted values from each dimension added as features
@@ -81,10 +80,6 @@ public class InstanceFromPrediction implements Instance{
 
 	public String toString(){
 		return "[instFromPrediction "+history+" "+instance+"]";
-	}
-
-	final public Viewer toGUI(){
-		return new GUI.InstanceViewer((Instance)this);
 	}
 
 }

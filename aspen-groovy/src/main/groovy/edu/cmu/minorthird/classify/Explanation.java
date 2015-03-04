@@ -1,10 +1,7 @@
 package edu.cmu.minorthird.classify;
 
-import edu.cmu.minorthird.util.gui.*;
-
-import javax.swing.*;
 import javax.swing.JTree;
-import javax.swing.tree.*;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  * Provides a facitlity for constructing and displaying explanations for classification. 
@@ -27,18 +24,6 @@ public class Explanation {
 	public Explanation(Explanation.Node top) {
 		this.top = top;
 		treeEx = new JTree(top);
-	}
-
-	/** Returns the component to be displayed in the Explanation Panel of the Result.
-	 *  A simple VanillaViewer if only the String explanation is defined or a Tree if 
-	 *  a tree is defined */
-	public JComponent getExplanation() {
-		if(stringEx != null) {
-			VanillaViewer viewer = new VanillaViewer();
-			viewer.setContent(stringEx);
-			return viewer;
-		}
-		return treeEx;
 	}
 
 	/** Returns the top node of the explanation tree or creates a Node from the string explanation */

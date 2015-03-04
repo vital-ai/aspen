@@ -13,10 +13,6 @@ import edu.cmu.minorthird.classify.ClassLabel;
 import edu.cmu.minorthird.classify.Classifier;
 import edu.cmu.minorthird.classify.Explanation;
 import edu.cmu.minorthird.classify.Instance;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Interface for a multi label classifier.
@@ -24,7 +20,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  * @author Cameron Williams
  */
 
-public class MultiClassifier implements Classifier,Visible,Serializable{
+public class MultiClassifier implements Classifier,Serializable{
 	
 	static final long serialVersionUID=20080130L;
 
@@ -91,30 +87,5 @@ public class MultiClassifier implements Classifier,Visible,Serializable{
 		}
 		buf.append("end MultiClassifier]\n");
 		return buf.toString();
-	}
-
-	public Viewer toGUI(){
-		final Viewer v=new ComponentViewer(){
-			
-			static final long serialVersionUID=20080130L;
-
-			public JComponent componentFor(Object o){
-				MultiClassifier c=(MultiClassifier)o;
-				JPanel panel=new JPanel();
-				panel.setLayout(new BoxLayout(panel,BoxLayout.Y_AXIS));
-				for(int i=0;i<c.classifiers.length;i++){
-					JLabel label=new JLabel("Dimension: "+i);
-					label.setAlignmentX(Component.CENTER_ALIGNMENT);
-					panel.add(label);
-					Viewer subView=new SmartVanillaViewer();
-					subView.setContent(c.classifiers[i]);
-					subView.setSuperView(this);
-					panel.add(subView);
-				}
-				return new JScrollPane(panel);
-			}
-		};
-		v.setContent(this);
-		return v;
 	}
 }

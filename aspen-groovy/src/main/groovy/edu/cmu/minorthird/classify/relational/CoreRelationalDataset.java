@@ -16,7 +16,6 @@ import edu.cmu.minorthird.classify.SGMExample;
 import edu.cmu.minorthird.classify.SGMFeatureFactory;
 import edu.cmu.minorthird.classify.SampleDatasets;
 import edu.cmu.minorthird.util.Saveable;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * A core set of examples for stached graphical learning -- dataset + linksmap.
@@ -24,7 +23,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  * @author Zhenzhen Kou
  */
 
-public class CoreRelationalDataset extends BasicDataset implements Visible,
+public class CoreRelationalDataset extends BasicDataset implements 
 		Saveable,Dataset,Serializable{
 	
 	static final long serialVersionUID=20080128L;

@@ -15,10 +15,7 @@ import edu.cmu.minorthird.classify.Dataset;
 import edu.cmu.minorthird.classify.Example;
 import edu.cmu.minorthird.classify.ExampleSchema;
 import edu.cmu.minorthird.classify.FeatureFactory;
-import edu.cmu.minorthird.classify.GUI;
 import edu.cmu.minorthird.classify.Splitter;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.ZoomedViewer;
 
 /**
  * A SequenceDataset that additionally includes examples for 'sliding
@@ -204,15 +201,6 @@ public class SegmentDataset implements Dataset{
 			copy.addCandidateSegmentGroup(o);
 		}
 		return copy;
-	}
-
-	/** A GUI view of the dataset. */
-	public Viewer toGUI(){
-		//return new VanillaViewer(this);
-		Viewer dbGui=new BasicDataset.SimpleDatasetViewer();
-		dbGui.setContent(this);
-		Viewer instGui=GUI.newSourcedExampleViewer();
-		return new ZoomedViewer(dbGui,instGui);
 	}
 
 	public int getNumPosExamples(){

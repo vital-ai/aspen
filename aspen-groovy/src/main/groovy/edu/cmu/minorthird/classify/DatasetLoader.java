@@ -5,7 +5,6 @@ package edu.cmu.minorthird.classify;
 import edu.cmu.minorthird.classify.multi.*;
 import edu.cmu.minorthird.classify.sequential.SequenceDataset;
 import edu.cmu.minorthird.util.*;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
 import org.apache.log4j.Logger;
 import edu.cmu.minorthird.classify.relational.*;
 
@@ -498,23 +497,5 @@ public class DatasetLoader{
 		return loadFile(f);
 	}
 
-	static public void main(String[] args){
-		try{
-			boolean sequential=args[0].startsWith("-seq");
-			boolean regression=args[0].startsWith("-reg");
-			String dbName=(sequential||regression)?args[1]:args[0];
-			Dataset d=null;
-			if(sequential)
-				d=DatasetLoader.loadSequence(new File(dbName));
-			else if(regression)
-				d=DatasetLoader.loadRegression(new File(dbName));
-			else
-				d=DatasetLoader.loadFile(new File(dbName));
-			new ViewerFrame("Data from "+dbName,d.toGUI());
-		}catch(Exception e){
-			e.printStackTrace();
-			System.out.println("usage: file");
-		}
-	}
 
 }

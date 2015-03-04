@@ -11,10 +11,6 @@ import edu.cmu.minorthird.classify.Feature;
 import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.classify.MutableInstance;
 import edu.cmu.minorthird.classify.OnlineBinaryClassifierLearner;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.TransformedViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Created on Sep 22, 2005
@@ -169,7 +165,7 @@ public class BalancedWinnow extends OnlineBinaryClassifierLearner implements
 		return "BalancedWinnow, voted="+voted;
 	}
 
-	public class MyClassifier implements Classifier,Serializable,Visible{
+	public class MyClassifier implements Classifier,Serializable{
 
 		static private final long serialVersionUID=20080128L;
 
@@ -222,17 +218,6 @@ public class BalancedWinnow extends OnlineBinaryClassifierLearner implements
 			return ex;
 		}
 
-		public Viewer toGUI(){
-			Viewer v=new TransformedViewer(new SmartVanillaViewer()){
-				static final long serialVersionUID=20080128L;
-				public Object transform(Object o){
-					MyClassifier mycl=(MyClassifier)o;
-					return (Classifier)mycl.pos_h;//bug!
-				}
-			};
-			v.setContent(this);
-			return v;
-		}
 	}
 
 	//main unit test routine

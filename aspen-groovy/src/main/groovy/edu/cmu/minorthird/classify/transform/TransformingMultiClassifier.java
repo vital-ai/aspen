@@ -13,10 +13,6 @@ import edu.cmu.minorthird.classify.Explanation;
 import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.classify.multi.MultiClassLabel;
 import edu.cmu.minorthird.classify.multi.MultiClassifier;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * @author Cameron Williams
@@ -26,7 +22,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  */
 
 public class TransformingMultiClassifier extends MultiClassifier implements
-		Visible,Serializable{
+		Serializable{
 
 	static final long serialVersionUID=20080201L;
 
@@ -90,21 +86,4 @@ public class TransformingMultiClassifier extends MultiClassifier implements
 		return ex;
 	}
 
-	public Viewer toGUI(){
-		Viewer gui=new ComponentViewer(){
-			static final long serialVersionUID=20080201L;
-			public JComponent componentFor(Object o){
-				TransformingMultiClassifier tc=(TransformingMultiClassifier)o;
-				JPanel panel=new JPanel();
-				panel.setBorder(new TitledBorder("TransformingMultiClassifier"));
-				//panel.add(new JLabel(tc.transformer.toString()));
-				SmartVanillaViewer subview=new SmartVanillaViewer(tc.multiClassifier);
-				subview.setSuperView(this);
-				panel.add(subview);
-				return(new JScrollPane(panel));
-			}
-		};
-		gui.setContent(this);
-		return gui;
-	}
 }

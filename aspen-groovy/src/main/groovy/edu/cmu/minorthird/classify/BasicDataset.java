@@ -14,17 +14,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.swing.JComponent;
-import javax.swing.JList;
-import javax.swing.JScrollPane;
-import javax.swing.ListCellRenderer;
-
 import edu.cmu.minorthird.util.Saveable;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
-import edu.cmu.minorthird.util.gui.Visible;
-import edu.cmu.minorthird.util.gui.ZoomedViewer;
 
 /**
  * A set of examples for learning.
@@ -32,7 +22,7 @@ import edu.cmu.minorthird.util.gui.ZoomedViewer;
  * @author William Cohen
  */
 
-public class BasicDataset implements Dataset,Serializable,Visible,Saveable{
+public class BasicDataset implements Dataset,Serializable,Saveable{
 
 	static final long serialVersionUID=20080118L;
 
@@ -181,43 +171,6 @@ public class BasicDataset implements Dataset,Serializable,Visible,Saveable{
 		return buf.toString();
 	}
 
-	/** A GUI view of the dataset. */
-	public Viewer toGUI(){
-		Viewer dbGui=new SimpleDatasetViewer();
-		dbGui.setContent(this);
-		Viewer instGui=GUI.newSourcedExampleViewer();
-		return new ZoomedViewer(dbGui,instGui);
-	}
-
-	public static class SimpleDatasetViewer extends ComponentViewer{
-
-		static final long serialVersionUID=20071015;
-
-		public boolean canReceive(Object o){
-			return o instanceof Dataset;
-		}
-
-		public JComponent componentFor(Object o){
-			final Dataset d=(Dataset)o;
-			final Example[] tmp=new Example[d.size()];
-			int k=0;
-			for(Iterator<Example> i=d.iterator();i.hasNext();){
-				tmp[k++]=i.next();
-			}
-			final JList jList=new JList(tmp);
-			jList.setCellRenderer(new ListCellRenderer(){
-
-				public Component getListCellRendererComponent(JList el,Object v,
-						int index,boolean sel,boolean focus){
-					return GUI
-					.conciseExampleRendererComponent((Example)tmp[index],60,sel);
-				}
-			});
-			monitorSelections(jList);
-			return new JScrollPane(jList);
-		}
-	}
-
 	//
 	// splitter
 	//
@@ -245,21 +198,6 @@ public class BasicDataset implements Dataset,Serializable,Visible,Saveable{
 		while(i.hasNext())
 			copy.add(i.next());
 		return copy;
-	}
-
-	//
-	// test routine
-	//
-
-	/** Simple test routine */
-	static public void main(String[] args){
-		try{
-			BasicDataset data=(BasicDataset)SampleDatasets.sampleData("toy",false);
-			new ViewerFrame("Toy Dataset",data.toGUI());
-			System.out.println(data.getSchema());
-		}catch(Exception e){
-			e.printStackTrace();
-		}
 	}
 
 }

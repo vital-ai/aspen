@@ -28,12 +28,6 @@ import edu.cmu.minorthird.classify.Feature;
 import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.classify.WeightedSet;
 import edu.cmu.minorthird.util.MathUtil;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.Controllable;
-import edu.cmu.minorthird.util.gui.ControlledViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.ViewerControls;
-import edu.cmu.minorthird.util.gui.Visible;
 import gnu.trove.TObjectDoubleHashMap;
 import gnu.trove.TObjectDoubleIterator;
 
@@ -43,7 +37,7 @@ import gnu.trove.TObjectDoubleIterator;
  */
 
 public class MultinomialClassifier implements SemiSupervisedClassifier,
-		Classifier,Visible,Serializable{
+		Classifier,Serializable{
 	
 	static final long serialVersionUID=20080207L;
 
@@ -326,102 +320,6 @@ public class MultinomialClassifier implements SemiSupervisedClassifier,
 		return map.keys();
 	}
 
-	//
-	// GUI related stuff
-	//
-	public Viewer toGUI(){
-		Viewer gui=
-				new ControlledViewer(new MyViewer(),new MultinomialClassifierControls());
-		gui.setContent(this);
-		return gui;
-	}
-
-	static private class MultinomialClassifierControls extends ViewerControls{
-
-		static final long serialVersionUID=20080207L;
-		
-		// how to sort
-//		private JRadioButton absoluteValueButton;
-		private JRadioButton valueButton;
-		private JRadioButton nameButton;
-//		private JRadioButton noneButton;
-
-		public void initialize(){
-			add(new JLabel("Sort by"));
-			ButtonGroup group=new ButtonGroup();
-			;
-			nameButton=addButton("name",group,true);
-			valueButton=addButton("weight",group,false);
-//			absoluteValueButton=addButton("|weight|",group,false);
-		}
-
-		private JRadioButton addButton(String s,ButtonGroup group,boolean selected){
-			JRadioButton button=new JRadioButton(s,selected);
-			group.add(button);
-			add(button);
-			button.addActionListener(this);
-			return button;
-		}
-	}
-
-	static private class MyViewer extends ComponentViewer implements Controllable{
-		
-		static final long serialVersionUID=20080207L;
-
-		private MultinomialClassifierControls controls=null;
-
-		private MultinomialClassifier h=null;
-
-		public void applyControls(ViewerControls controls){
-			this.controls=(MultinomialClassifierControls)controls;
-			setContent(h,true);
-			revalidate();
-		}
-
-		public boolean canReceive(Object o){
-			return o instanceof MultinomialClassifier;
-		}
-
-		public JComponent componentFor(Object o){
-			h=(MultinomialClassifier)o;
-			Object[] keys=h.keys();
-			Object[][] tableData=new Object[keys.length][(h.classNames.size()+1)];
-			int k=0;
-			for(Iterator<Feature> i=h.featureIterator();i.hasNext();){
-				Feature f=i.next();
-				tableData[k][0]=f;
-				for(int l=0;l<h.classNames.size();l++){
-					tableData[k][(l+1)]=
-							new Double(h.featureGivenClassParameters.get(l).getWeight(f));
-					;
-				}
-				k++;
-			}
-			if(controls!=null){
-				Arrays.sort(tableData,new Comparator<Object[]>(){
-					public int compare(Object[] ra,Object[] rb){
-						if(controls.nameButton.isSelected())
-							return ra[0].toString().compareTo(rb[0].toString());
-						Double da=(Double)ra[1];
-						Double db=(Double)rb[1];
-						if(controls.valueButton.isSelected())
-							return MathUtil.sign(db.doubleValue()-da.doubleValue());
-						else
-							return MathUtil.sign(Math.abs(db.doubleValue())-
-									Math.abs(da.doubleValue()));
-					}
-				});
-			}
-			String[] columnNames=new String[(h.classNames.size()+1)];
-			columnNames[0]="Feature Name";
-			for(int i=0;i<h.classNames.size();i++){
-				columnNames[(i+1)]="Wgt "+h.classNames.get(i);
-			}
-			JTable table=new JTable(tableData,columnNames);
-			monitorSelections(table,0);
-			return new JScrollPane(table);
-		}
-	}
 
 	public String toString(){
 		return null;

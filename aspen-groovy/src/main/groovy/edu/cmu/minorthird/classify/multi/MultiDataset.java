@@ -33,10 +33,6 @@ import edu.cmu.minorthird.classify.Splitter;
 import edu.cmu.minorthird.classify.algorithms.linear.VotedPerceptron;
 import edu.cmu.minorthird.classify.experiments.CrossValSplitter;
 import edu.cmu.minorthird.util.Saveable;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
-import edu.cmu.minorthird.util.gui.ZoomedViewer;
 
 /**
  * A set of examples for learning.
@@ -44,7 +40,7 @@ import edu.cmu.minorthird.util.gui.ZoomedViewer;
  * @author Cameron Williams
  */
 
-public class MultiDataset implements Dataset,Visible,Saveable{
+public class MultiDataset implements Dataset,Saveable{
 
 	static final long serialVersionUID=20080130L;
 
@@ -273,43 +269,6 @@ public class MultiDataset implements Dataset,Visible,Saveable{
 			annotatedDataset.addMulti(newEx);
 		}
 		return annotatedDataset;
-	}
-
-	/** A GUI view of the dataset. */
-	public Viewer toGUI(){
-		Viewer dbGui=new SimpleDatasetViewer();
-		dbGui.setContent(this);
-		Viewer instGui=GUI.newSourcedMultiExampleViewer();
-		return new ZoomedViewer(dbGui,instGui);
-	}
-
-	public static class SimpleDatasetViewer extends ComponentViewer{
-
-		static final long serialVersionUID=20080130L;
-		
-		public boolean canReceive(Object o){
-			return o instanceof Dataset;
-		}
-
-		public JComponent componentFor(Object o){
-			final MultiDataset d=(MultiDataset)o;
-			final MultiExample[] tmp=new MultiExample[d.size()];
-			int k=0;
-			for(Iterator<MultiExample> i=d.multiIterator();i.hasNext();){
-				tmp[k++]=i.next();
-			}
-			final JList jList=new JList(tmp);
-			jList.setCellRenderer(new ListCellRenderer(){
-
-				public Component getListCellRendererComponent(JList el,Object v,
-						int index,boolean sel,boolean focus){
-					return GUI.conciseMultiExampleRendererComponent(
-							(MultiExample)tmp[index],60,sel);
-				}
-			});
-			monitorSelections(jList);
-			return new JScrollPane(jList);
-		}
 	}
 
 	//

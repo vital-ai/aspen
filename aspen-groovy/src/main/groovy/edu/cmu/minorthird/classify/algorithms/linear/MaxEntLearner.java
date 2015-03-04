@@ -15,10 +15,6 @@ import edu.cmu.minorthird.classify.sequential.BeamSearcher;
 import edu.cmu.minorthird.classify.sequential.CMM;
 import edu.cmu.minorthird.classify.sequential.CRFLearner;
 import edu.cmu.minorthird.classify.sequential.SequenceDataset;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.TransformedViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Maximum entropy learner.  Based on calling the CRFLearner with
@@ -86,7 +82,7 @@ public class MaxEntLearner extends BatchClassifierLearner
 		return new MyClassifier(c.getClassifier(),seqData.getSchema(),scaleScores);
 	}
     
-	public static class MyClassifier implements Classifier,Serializable,Visible
+	public static class MyClassifier implements Classifier,Serializable
 	{
 		static private final long serialVersionUID = 20080128L;
 	
@@ -192,18 +188,5 @@ public class MaxEntLearner extends BatchClassifierLearner
 		}
 
 		public Classifier getRawClassifier() { return c; }
-
-		public Viewer toGUI()
-		{
-	    Viewer v = new TransformedViewer(new SmartVanillaViewer()) {
-	    	static final long serialVersionUID=20080128L;
-					public Object transform(Object o) {
-						MyClassifier mycl = (MyClassifier)o;
-						return mycl.c;
-					}
-				};
-	    v.setContent(this);
-	    return v;
-		}
 	}
 }

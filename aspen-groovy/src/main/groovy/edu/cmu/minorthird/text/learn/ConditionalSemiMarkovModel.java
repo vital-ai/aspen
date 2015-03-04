@@ -43,11 +43,6 @@ import edu.cmu.minorthird.text.MonotonicTextLabels;
 import edu.cmu.minorthird.text.Span;
 import edu.cmu.minorthird.text.TextLabels;
 import edu.cmu.minorthird.util.ProgressCounter;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Learn to annotate based on a conditional semi-markov model, learned from
@@ -285,11 +280,6 @@ public class ConditionalSemiMarkovModel{
 
 				}// epoch
 
-				if(DEBUG){
-					new ViewerFrame("classifier after epoch "+i,new SmartVanillaViewer(
-							classifierLearner.getBinaryClassifier()));
-				}
-
 				pc.finished();
 
 			}// all epochs
@@ -331,7 +321,7 @@ public class ConditionalSemiMarkovModel{
 
 	// annotate a document using a learned model
 	static public class CSMMAnnotator extends AbstractAnnotator implements
-			Visible,ExtractorAnnotator,Serializable{
+			ExtractorAnnotator,Serializable{
 
 		static private final long serialVersionUID=20080306L;
 
@@ -342,29 +332,6 @@ public class ConditionalSemiMarkovModel{
 		private String annotationType;
 
 		private int maxSegSize;
-
-		public Viewer toGUI(){
-			Viewer v=new ComponentViewer(){
-
-				static final long serialVersionUID=20080306L;
-
-				public JComponent componentFor(Object o){
-					CSMMAnnotator ann=(CSMMAnnotator)o;
-					JPanel mainPanel=new JPanel();
-					mainPanel.setLayout(new BorderLayout());
-					mainPanel.add(new JLabel("CSMM: segsize "+maxSegSize),
-							BorderLayout.NORTH);
-					Viewer subView=new SmartVanillaViewer(ann.classifier);
-					subView.setSuperView(this);
-					mainPanel.add(subView,BorderLayout.SOUTH);
-					mainPanel
-							.setBorder(new TitledBorder("Conditional Semi-Markov-Model"));
-					return new JScrollPane(mainPanel);
-				}
-			};
-			v.setContent(this);
-			return v;
-		}
 
 		public CSMMAnnotator(SpanFeatureExtractor fe,BinaryClassifier classifier,
 				String annotationType,int maxSegSize){

@@ -18,7 +18,6 @@ import edu.cmu.minorthird.util.BasicCommandLineProcessor;
 import edu.cmu.minorthird.util.CommandLineProcessor;
 import edu.cmu.minorthird.util.IOUtil;
 import edu.cmu.minorthird.util.StringUtil;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
 
 /** Simple experiment on a classifier.
  *
@@ -232,54 +231,6 @@ public class Expt implements CommandLineProcessor.Configurable
       }
    }
 
-   static public void main(String[] args)
-   {
-      try {
-         Expt expt = new Expt(args);
-         int pos = 0;
-         Serializable toSave = null;
-         File saveFile = null;
-         while (pos<args.length) {
-            String opt = args[pos++];
-            if (opt.startsWith("-show")) {
-               String what = args[pos++];
-               if (what.startsWith("eval")) {
-                  Evaluation v = expt.evaluation();
-                  new ViewerFrame("Evaluation", v.toGUI());
-               } else if (what.startsWith("all")) {
-                  boolean saveTrain = "all+".equals(what);
-                  CrossValidatedDataset cdv = expt.crossValidatedDataset(saveTrain);
-                  new ViewerFrame("CrossValidatedDataset", cdv.toGUI());
-               } else {
-                  throw new IllegalArgumentException("can't show '"+what+"'");
-               }
-            } else if (opt.startsWith("-save")) {
-               String what = args[pos++];
-               if (what.startsWith("eval")) {
-                  toSave = expt.evaluation();
-               } else if (what.startsWith("cla")) {
-                  toSave = (Serializable) expt.getClassifier();
-               } else {
-                  throw new IllegalArgumentException("can't save '"+what+"'");
-               }
-            } else if (opt.startsWith("-file")) {
-               saveFile = new File(args[pos++]);
-            } else if (opt.startsWith("-")) {
-               pos++;
-            }
-         }
-         if (saveFile!=null && toSave!=null)	{
-            IOUtil.saveSerialized(toSave,saveFile);
-         }
-         if ((saveFile==null) != (toSave==null)) {
-            throw new IllegalArgumentException("must specify -file FILE with -save WHAT");
-         }
-      } catch (Exception e) {
-         e.printStackTrace();
-         System.out.println(
-             "usage: -learn L -train D1 [-split S] [-test D] [-show eval|all|all+] [-save eval|classifier]");
-      }
-   }
 }
 
 

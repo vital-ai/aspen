@@ -22,16 +22,10 @@ import edu.cmu.minorthird.classify.DatasetLoader;
 import edu.cmu.minorthird.classify.Example;
 import edu.cmu.minorthird.classify.ExampleSchema;
 import edu.cmu.minorthird.classify.FeatureFactory;
-import edu.cmu.minorthird.classify.GUI;
 import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.classify.SampleDatasets;
 import edu.cmu.minorthird.classify.Splitter;
 import edu.cmu.minorthird.util.Saveable;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
-import edu.cmu.minorthird.util.gui.Visible;
-import edu.cmu.minorthird.util.gui.ZoomedViewer;
 
 /**
  * @author Edoardo Airoldi
@@ -39,7 +33,7 @@ import edu.cmu.minorthird.util.gui.ZoomedViewer;
  */
 
 public class SemiSupervisedDataset implements Dataset,SemiSupervisedActions,
-		Visible,Saveable{
+		Saveable{
 
 	protected List<Example> examples=new ArrayList<Example>();
 
@@ -178,42 +172,6 @@ public class SemiSupervisedDataset implements Dataset,SemiSupervisedActions,
 		return buf.toString();
 	}
 
-	/** A GUI view of the dataset. */
-	public Viewer toGUI(){
-		Viewer dbGui=new BasicDataset.SimpleDatasetViewer();
-		dbGui.setContent(this);
-		Viewer instGui=GUI.newSourcedExampleViewer();
-		return new ZoomedViewer(dbGui,instGui);
-	}
-
-	public static class SimpleDatasetViewer extends ComponentViewer{
-		
-		static final long serialVersionUID=20080207L;
-
-		public boolean canReceive(Object o){
-			return o instanceof Dataset;
-		}
-
-		public JComponent componentFor(Object o){
-			final Dataset d=(Dataset)o;
-			final Example[] tmp=new Example[d.size()];
-			int k=0;
-			for(Iterator<Example> i=d.iterator();i.hasNext();){
-				tmp[k++]=i.next();
-			}
-			final JList jList=new JList(tmp);
-			jList.setCellRenderer(new ListCellRenderer(){
-
-				public Component getListCellRendererComponent(JList el,Object v,
-						int index,boolean sel,boolean focus){
-					return GUI
-							.conciseExampleRendererComponent((Example)tmp[index],60,sel);
-				}
-			});
-			monitorSelections(jList);
-			return new JScrollPane(jList);
-		}
-	}
 
 	//
 	// splitter
@@ -247,17 +205,6 @@ public class SemiSupervisedDataset implements Dataset,SemiSupervisedActions,
 	//
 	// test routine
 	//
-
-	/** Simple test routine */
-	static public void main(String[] args){
-		try{
-			BasicDataset data=(BasicDataset)SampleDatasets.sampleData("toy",false);
-			new ViewerFrame("Toy Dataset",data.toGUI());
-			System.out.println(data.getSchema());
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-	}
 
 	public int getNumPosExamples(){
 		return -1;

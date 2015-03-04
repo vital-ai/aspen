@@ -22,10 +22,7 @@ import java.util.TreeSet;
 
 import org.apache.log4j.Logger;
 
-import edu.cmu.minorthird.text.gui.ZoomingTextLabelsViewer;
 import edu.cmu.minorthird.util.Saveable;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Maintains assertions about 'types' and 'properties' of contiguous Spans of
@@ -34,7 +31,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  * @author William Cohen
  */
 
-public class BasicTextLabels implements MutableTextLabels,Serializable,Visible,
+public class BasicTextLabels implements MutableTextLabels,Serializable,
 		Saveable{
 
 	static private final long serialVersionUID=20080303L;
@@ -725,10 +722,6 @@ public class BasicTextLabels implements MutableTextLabels,Serializable,Visible,
 			buf.append("\n");
 		}
 		return buf.toString();
-	}
-
-	public Viewer toGUI(){
-		return new ZoomingTextLabelsViewer(this);
 	}
 
 	//

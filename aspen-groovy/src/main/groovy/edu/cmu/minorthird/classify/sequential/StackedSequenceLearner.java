@@ -17,11 +17,6 @@ import edu.cmu.minorthird.classify.experiments.CrossValSplitter;
 import edu.cmu.minorthird.classify.transform.AugmentedInstance;
 import edu.cmu.minorthird.util.MathUtil;
 import edu.cmu.minorthird.util.ProgressCounter;
-import edu.cmu.minorthird.util.gui.ParallelViewer;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.TransformedViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * @author William Cohen
@@ -210,7 +205,7 @@ public class StackedSequenceLearner implements BatchSequenceClassifierLearner
 		else return "pred.here."+predictedClassName;
 	}
 
-	private class StackedSequenceClassifier implements SequenceClassifier,Visible
+	private class StackedSequenceClassifier implements SequenceClassifier
 	{
 		private SequenceClassifier[] m; 
 //		private ExampleSchema schema;
@@ -247,23 +242,6 @@ public class StackedSequenceLearner implements BatchSequenceClassifierLearner
 		return ex;
 	    }
 
-		public Viewer toGUI()
-		{
-			ParallelViewer v = new ParallelViewer();
-			for (int i=0; i<m.length; i++) {
-				final int k = i;
-				v.addSubView( 
-					"Level "+k+" classifier",
-					new TransformedViewer( new SmartVanillaViewer(m[k]) ) {
-						static final long serialVersionUID=20080207L;
-						public Object transform(Object o) {
-							StackedSequenceClassifier s = (StackedSequenceClassifier)o;
-							return s.m[k];
-						}});
-			}
-			v.setContent(this);
-			return v;
-		}
 	}
 }
 

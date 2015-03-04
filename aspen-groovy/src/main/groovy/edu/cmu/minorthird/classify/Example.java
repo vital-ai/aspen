@@ -3,9 +3,6 @@ package edu.cmu.minorthird.classify;
 import java.io.Serializable;
 import java.util.Iterator;
 
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
-
 /** An instance that is associated with a ClassLabel.  Implements the
  * Instance interface by delegating to a wrapped Instance, so
  * subclasses just need to attach the right label construct.
@@ -13,7 +10,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  * @author William Cohen
  */
 
-public class Example implements Instance,Visible,Serializable
+public class Example implements Instance,Serializable
 {
 	static final long serialVersionUID = 20080125L;
 
@@ -67,8 +64,5 @@ public class Example implements Instance,Visible,Serializable
 	final public Instance asInstance() { return instance; }
 
 	public String toString() { return "[example: "+getLabel()+" "+asInstance().toString()+"]"; }
-
-	/** Create a viewer */
-	public Viewer toGUI() { return new GUI.ExampleViewer(this);	}
 
 }

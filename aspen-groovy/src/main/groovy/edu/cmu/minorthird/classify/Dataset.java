@@ -5,15 +5,13 @@ package edu.cmu.minorthird.classify;
 import java.util.Iterator;
 import java.util.Random;
 
-import edu.cmu.minorthird.util.gui.Visible;
-
 /**
  * A set of examples for learning.
  *
  * @author William Cohen
  */
 
-public interface Dataset extends Visible{
+public interface Dataset {
 	
 	/** Get the FeatureFactory associated with the dataset */
 	public FeatureFactory getFeatureFactory();

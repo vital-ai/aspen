@@ -1,6 +1,5 @@
 package edu.cmu.minorthird.classify;
 
-import java.awt.BorderLayout;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,21 +7,11 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.border.TitledBorder;
-
 import org.apache.log4j.Logger;
 
 import edu.cmu.minorthird.classify.algorithms.linear.NaiveBayes;
 import edu.cmu.minorthird.classify.experiments.Evaluation.Matrix;
 import edu.cmu.minorthird.util.MathUtil;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /** 
  * A Tweaked Learner, with an optimization of the precision vs. recall
@@ -495,7 +484,7 @@ public class TweakedLearner extends BatchBinaryClassifierLearner{
 	 ******************************************************************** 
 	 */
 	public static class TweakedClassifier extends BinaryClassifier implements
-			Serializable,Visible{
+			Serializable {
 
 		static private final long serialVersionUID=20080128L;
 
@@ -510,35 +499,6 @@ public class TweakedLearner extends BatchBinaryClassifierLearner{
 
 		public double score(Instance instance){
 			return m_classifier.score(instance)-m_threshold;
-		}
-
-		/* (non-Javadoc)
-		 * @see edu.cmu.minorthird.util.gui.Visible#toGUI()
-		 * 
-		 * Shows the original (untweaked) classifier, and the threshold 
-		 * that was found
-		 * Code was copied from file CMM.java and adjusted 
-		 */
-		public Viewer toGUI(){
-			final Viewer v=new ComponentViewer(){
-				static final long serialVersionUID=20080128L;
-				public JComponent componentFor(Object o){
-					TweakedClassifier c=(TweakedClassifier)o;
-					JPanel mainPanel=new JPanel();
-					mainPanel.setLayout(new BorderLayout());
-					mainPanel.add(new JLabel("Optimal threshold for TweakedClassifier="+
-							c.m_threshold),BorderLayout.NORTH);
-					mainPanel.add(new JLabel("Original classifier before tweaking:"),
-							BorderLayout.CENTER);
-					Viewer subView=new SmartVanillaViewer(c.m_classifier);
-					subView.setSuperView(this);
-					mainPanel.add(subView,BorderLayout.SOUTH);
-					mainPanel.setBorder(new TitledBorder("TweakedClassifier class"));
-					return new JScrollPane(mainPanel);
-				}
-			};
-			v.setContent(this);
-			return v;
 		}
 
 		/* (non-Javadoc)

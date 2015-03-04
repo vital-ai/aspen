@@ -16,7 +16,6 @@ import edu.cmu.minorthird.classify.Example;
 import edu.cmu.minorthird.classify.SGMExample;
 import edu.cmu.minorthird.classify.Splitter;
 import edu.cmu.minorthird.util.Saveable;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * A real set of examples for stacked graphical learning -- coreset + relational
@@ -26,7 +25,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  */
 
 public class RealRelationalDataset extends CoreRelationalDataset implements
-		Visible,Saveable,Dataset,Serializable{
+		Saveable,Dataset,Serializable{
 
 	static final long serialVersionUID=20080128L;
 

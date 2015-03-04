@@ -2,7 +2,6 @@ package edu.cmu.minorthird.classify.transform;
 
 import edu.cmu.minorthird.classify.*;
 import edu.cmu.minorthird.util.*;
-import edu.cmu.minorthird.util.gui.*;
 
 import java.util.*;
 
@@ -78,10 +77,6 @@ public class AugmentedInstance implements Instance{
 	public String toString(){
 		return "[AugmentedInstance: "+instance+StringUtil.toString(newFeatures)+
 				StringUtil.toString(newValues)+"]";
-	}
-
-	final public Viewer toGUI(){
-		return new GUI.InstanceViewer(this);
 	}
 
 	public class MyIterator implements Iterator<Feature>{

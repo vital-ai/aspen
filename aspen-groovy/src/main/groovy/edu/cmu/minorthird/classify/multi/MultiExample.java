@@ -3,7 +3,6 @@ package edu.cmu.minorthird.classify.multi;
 import edu.cmu.minorthird.classify.ClassLabel;
 import edu.cmu.minorthird.classify.Example;
 import edu.cmu.minorthird.classify.Instance;
-import edu.cmu.minorthird.util.gui.Viewer;
 
 /**
  * An instance that is associated with a ClassLabel. Implements the Instance
@@ -47,11 +46,6 @@ public class MultiExample extends Example{
 			examples[i]=new Example(instance,labels[i],weight);
 		}
 		return examples;
-	}
-
-	/** Create a viewer */
-	public Viewer toGUI(){
-		return new GUI.MultiExampleViewer(this);
 	}
 
 }

@@ -2,7 +2,6 @@
 
 package edu.cmu.minorthird.classify;
 
-import edu.cmu.minorthird.util.gui.*;
 import javax.swing.*;
 import java.io.Serializable;
 
@@ -13,7 +12,7 @@ import java.io.Serializable;
  * @author William Cohen
  */
 
-public class OneVsAllClassifier implements Classifier,Visible,Serializable
+public class OneVsAllClassifier implements Classifier,Serializable
 {
 	static private final long serialVersionUID = 1;
 
@@ -76,25 +75,5 @@ public class OneVsAllClassifier implements Classifier,Visible,Serializable
 		return buf.toString();
 	}
 
-	public Viewer toGUI()
-	{
-		final Viewer v = new ComponentViewer() {
-			static final long serialVersionUID=20071015;
-			public JComponent componentFor(Object o) {
-				OneVsAllClassifier c = (OneVsAllClassifier)o;
-				JPanel panel = new JPanel();
-				for (int i=0; i<c.classNames.length; i++) {
-					panel.add(new JLabel(c.classNames[i]));
-					Viewer subView = new SmartVanillaViewer();
-					subView.setContent( c.binaryClassifiers[i] );
-					subView.setSuperView(this);
-					panel.add(subView);
-				}
-				return new JScrollPane(panel);
-			}
-		};
-		v.setContent(this);
-		return v;
-	}
 }
 

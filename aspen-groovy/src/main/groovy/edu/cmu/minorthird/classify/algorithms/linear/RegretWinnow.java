@@ -15,10 +15,6 @@ import edu.cmu.minorthird.classify.Feature;
 import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.classify.MutableInstance;
 import edu.cmu.minorthird.classify.OnlineBinaryClassifierLearner;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.TransformedViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Created on Sep 22, 2005
@@ -303,7 +299,7 @@ public class RegretWinnow extends OnlineBinaryClassifierLearner implements
 		return "RegretWinnow: voted="+voted+", regret="+mode;
 	}
 
-	public class MyClassifier implements Classifier,Serializable,Visible{
+	public class MyClassifier implements Classifier,Serializable{
 
 		static private final long serialVersionUID=20080130L;
 
@@ -356,18 +352,6 @@ public class RegretWinnow extends OnlineBinaryClassifierLearner implements
 			Explanation.Node top=new Explanation.Node("BalancedWinnow Explanation");
 			Explanation ex=new Explanation(top);
 			return ex;
-		}
-
-		public Viewer toGUI(){
-			Viewer v=new TransformedViewer(new SmartVanillaViewer()){
-				static final long serialVersionUID=20080130L;
-				public Object transform(Object o){
-					MyClassifier mycl=(MyClassifier)o;
-					return (Classifier)mycl.lpos_h;//bug!
-				}
-			};
-			v.setContent(this);
-			return v;
 		}
 	}
 }

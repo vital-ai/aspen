@@ -4,16 +4,12 @@ import java.io.Serializable;
 
 import org.apache.log4j.Logger;
 
-import edu.cmu.minorthird.text.gui.SpanViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
-
 /** Implements the Span interface.
  *
  * @author William Cohen
  */
 
-public class BasicSpan implements Span,Serializable,Visible{
+public class BasicSpan implements Span,Serializable {
 
 	static private Logger log=Logger.getLogger(BasicSpan.class);
 
@@ -300,8 +296,4 @@ public class BasicSpan implements Span,Serializable,Visible{
 		return(i>=j?i-j:j-i);
 	}
 
-	public Viewer toGUI(){
-		return new SpanViewer.ControlledTextViewer(this);
-		//return new SpanViewer.TextViewer(this);
-	}
 }

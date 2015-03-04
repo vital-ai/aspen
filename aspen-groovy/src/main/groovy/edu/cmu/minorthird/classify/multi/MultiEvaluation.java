@@ -9,10 +9,6 @@ import edu.cmu.minorthird.classify.Dataset;
 import edu.cmu.minorthird.classify.ExampleSchema;
 import edu.cmu.minorthird.classify.experiments.Evaluation;
 import edu.cmu.minorthird.util.ProgressCounter;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.ParallelViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /** 
  * Stores some detailed results of evaluating a classifier on data with multiple labels.
@@ -20,7 +16,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  * @author Cameron Williams
  */
 
-public class MultiEvaluation implements Visible{
+public class MultiEvaluation {
 
 	Evaluation[] evals;
 
@@ -67,34 +63,6 @@ public class MultiEvaluation implements Visible{
 				System.out.println(stats[j]);
 			}
 		}
-	}
-
-	static public class EvaluationViewer extends ComponentViewer{
-		
-		static final long serialVersionUID=20080130L;
-
-		private int eval_num;
-
-		public EvaluationViewer(int eval_num){
-			this.eval_num=eval_num;
-		}
-
-		public JComponent componentFor(Object o){
-			MultiEvaluation me=(MultiEvaluation)o;
-			Evaluation e=me.evals[eval_num];
-			return e.toGUI();
-		}
-	}
-
-	public Viewer toGUI(){
-		ParallelViewer main=new ParallelViewer();
-
-		for(int i=0;i<evals.length;i++){
-			main.addSubView("Dimension: "+i,new EvaluationViewer(i));
-		}
-		main.setContent((Object)this);
-
-		return main;
 	}
 
 }

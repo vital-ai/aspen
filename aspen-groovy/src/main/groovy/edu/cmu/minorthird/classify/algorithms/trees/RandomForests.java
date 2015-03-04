@@ -33,10 +33,6 @@ import edu.cmu.minorthird.classify.Feature;
 import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.util.ProgressCounter;
 import edu.cmu.minorthird.util.StringUtil;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.VanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Random Forests implementation. See http://www.stat.berkeley.edu/~breiman/RandomForests/
@@ -363,7 +359,7 @@ public class RandomForests extends BatchBinaryClassifierLearner{
 	 * minor modifications
 	 */
 	public static class VotingClassifier extends BinaryClassifier implements
-			Serializable,Visible{
+			Serializable {
 
 		static final long serialVersionUID=20080609L;
 		
@@ -432,11 +428,6 @@ public class RandomForests extends BatchBinaryClassifierLearner{
 			return buf.toString();
 		}
 
-		public Viewer toGUI(){
-			Viewer v=new VotingClassifierViewer();
-			v.setContent(this);
-			return v;
-		}
 	}
 
 	/**
@@ -466,31 +457,4 @@ public class RandomForests extends BatchBinaryClassifierLearner{
 
 	}
 
-	private static class VotingClassifierViewer extends ComponentViewer{
-
-		static final long serialVersionUID=20080609L;
-		
-		public JComponent componentFor(Object o){
-			VotingClassifier bc=(VotingClassifier)o;
-			JPanel panel=new JPanel();
-			panel.setLayout(new GridBagLayout());
-			int ypos=0;
-			for(Iterator<Classifier> i=bc.classifiers.iterator();i.hasNext();){
-				Classifier c=i.next();
-				GridBagConstraints gbc=new GridBagConstraints();
-				gbc.fill=GridBagConstraints.HORIZONTAL;
-				gbc.weightx=gbc.weighty=0;
-				gbc.gridx=0;
-				gbc.gridy=ypos++;
-				Viewer subview=
-						(c instanceof Visible)?((Visible)c).toGUI():new VanillaViewer(c);
-				subview.setSuperView(this);
-				panel.add(subview,gbc);
-			}
-			JScrollPane scroller=new JScrollPane(panel);
-			scroller
-					.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-			return scroller;
-		}
-	}
 }

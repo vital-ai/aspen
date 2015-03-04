@@ -2,14 +2,11 @@ package edu.cmu.minorthird.classify;
 
 import java.util.Iterator;
 
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
-
 /**
  * Common code for all instance implementations
  * @author ksteppe
  */
-public abstract class AbstractInstance implements Instance,Visible{
+public abstract class AbstractInstance implements Instance {
 	
   protected Object source;
   protected String subpopulationId;
@@ -34,9 +31,4 @@ public abstract class AbstractInstance implements Instance,Visible{
 		return buf.toString();
 	}
 
-  /** Retrieve Viewer for the instance */
-  public Viewer toGUI(){ 
-		return new GUI.InstanceViewer(this);
-	}
-  
 }

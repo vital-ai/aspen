@@ -16,7 +16,6 @@ import edu.cmu.minorthird.classify.Example;
 import edu.cmu.minorthird.classify.Feature;
 import edu.cmu.minorthird.classify.algorithms.linear.Hyperplane;
 import edu.cmu.minorthird.util.ProgressCounter;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
 
 /**
  * A boosted version for ranking.
@@ -87,7 +86,6 @@ public class RankingBoosted extends BatchRankingLearner
 			pc.progress();
 		}
 		pc.finished();
-		new ViewerFrame("hyperplane", s.toGUI());
 		return s;
 	}
 

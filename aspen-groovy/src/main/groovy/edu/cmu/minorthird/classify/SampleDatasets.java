@@ -11,8 +11,6 @@ import org.apache.log4j.Logger;
 import edu.cmu.minorthird.classify.semisupervised.SemiSupervisedDataset;
 import edu.cmu.minorthird.classify.sequential.SequenceDataset;
 import edu.cmu.minorthird.util.MathUtil;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /** Some sample inputs for learners.
  *
@@ -427,33 +425,6 @@ public class SampleDatasets{
 		}
 	}
 
-	public static void main(String[] args){
-		try{
-			Dataset train=sampleData(args[0],false);
-			Dataset test=sampleData(args[0],true);
-			log.debug("Train dataset is: ");
-			log.debug(train.toString());
-			log.debug("Test dataset is:");
-			log.debug(test.toString());
-			if(args.length>0){
-				ClassifierLearner learner=
-					(ClassifierLearner)Class.forName(args[1]).newInstance();
-				boolean active=args.length>=3&&"active".equals(args[2]);
-				ClassifierTeacher teacher=new DatasetClassifierTeacher(train,active);
-				Classifier c=teacher.train(learner);
-				log.info("Classifier: "+c);
-				traceClassifier("Train",c,train);
-				traceClassifier("Test",c,test);
-				if(c instanceof Visible){
-					new ViewerFrame(args[1]+" on "+args[0],((Visible)c).toGUI());
-				}
-			}
-		}catch(Exception e){
-			System.out
-			.println("usage: [toy|num] edu.cmu.minorthird.classify.SomeLearner [active]");
-			e.printStackTrace();
-		}
-	}
 
 	static private void traceClassifier(String datasetName,Classifier c,Dataset d){
 		log.info("");

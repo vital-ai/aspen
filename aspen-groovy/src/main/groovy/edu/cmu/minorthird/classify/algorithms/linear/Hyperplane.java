@@ -7,7 +7,6 @@ import edu.cmu.minorthird.classify.BinaryClassifier;
 import edu.cmu.minorthird.classify.Feature;
 import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.util.MathUtil;
-import edu.cmu.minorthird.util.gui.*;
 import gnu.trove.TObjectDoubleHashMap;
 import gnu.trove.TObjectDoubleIterator;
 
@@ -24,7 +23,7 @@ import java.util.Iterator;
  * @author William Cohen
  */
 
-public class Hyperplane extends BinaryClassifier implements Visible,
+public class Hyperplane extends BinaryClassifier implements 
 		Serializable{
 
 	static private final long serialVersionUID=20080128L;
@@ -224,152 +223,6 @@ public class Hyperplane extends BinaryClassifier implements Visible,
 			}
 		};
 		return i;
-	}
-
-	//
-	// UI stuff
-	//
-
-	public Viewer toGUI(){
-		Viewer gui=new ControlledViewer(new MyViewer(),new HyperplaneControls());
-		gui.setContent(this);
-		return gui;
-	}
-
-	static private class HyperplaneControls extends ViewerControls{
-
-		static final long serialVersionUID=20080128L;
-		
-		// how to sort
-		//private JRadioButton absoluteValueButton;
-		private JRadioButton valueButton;
-		private JRadioButton nameButton;
-		private JRadioButton treeButton;
-		//private JRadioButton noneButton;
-
-		public void initialize(){
-			ButtonGroup group=new ButtonGroup();
-			;
-			treeButton=addButton("Tree view",group,false);
-			add(new JLabel("   OR  "));
-			add(new JLabel("   Sort by"));
-			nameButton=addButton("name",group,true);
-			valueButton=addButton("weight",group,false);
-			//absoluteValueButton=addButton("|weight|",group,false);
-		}
-
-		private JRadioButton addButton(String s,ButtonGroup group,boolean selected){
-			JRadioButton button=new JRadioButton(s,selected);
-			group.add(button);
-			add(button);
-			button.addActionListener(this);
-			return button;
-		}
-	}
-
-	static private class MyViewer extends ComponentViewer implements Controllable{
-		
-		static final long serialVersionUID=20080128L;
-
-		private HyperplaneControls controls=null;
-
-		private Hyperplane h=null;
-
-		//private Vector features = new Vector();
-
-		public void applyControls(ViewerControls controls){
-			this.controls=(HyperplaneControls)controls;
-			setContent(h,true);
-			revalidate();
-		}
-
-		public boolean canReceive(Object o){
-			return o instanceof Hyperplane;
-		}
-
-		public void createNodes(DefaultMutableTreeNode top,Object[][] data,
-				int start,int len,int level){
-			//DefaultMutableTreeNode node = top;
-			int size=((Feature)data[start][0]).size();
-			//String whole=((Feature)data[start][0]).toString();
-			double max=((Double)data[start][1]).doubleValue();
-
-			if(level<=size){
-				String tok=((Feature)data[start][0]).getPart(level);
-
-				int i=start+1;
-				String nextTok=((Feature)data[i][0]).getPart(level);
-				double weight=((Double)data[i][1]).doubleValue();
-				int flag=0;
-				while(nextTok.equals(tok)&&i<len-1){
-					if(weight>max)
-						max=weight;
-					i++;
-					nextTok=((Feature)data[i][0]).getPart(level);
-					weight=((Double)data[i][1]).doubleValue();
-					flag=1;
-				}
-
-				DefaultMutableTreeNode node=
-						new DefaultMutableTreeNode(tok+" ("+max+")");
-				top.add(node);
-				if(flag==1){
-					createNodes(node,data,start,i,level+1);
-				}
-				if(i<len-1){
-					createNodes(top,data,i,len,level);
-				}
-			}
-		}
-
-		public JTree createTree(Object[][] data,int len){
-			JTree tree;
-			DefaultMutableTreeNode top=new DefaultMutableTreeNode("Features Tree");
-			createNodes(top,data,0,len,0);
-			tree=new JTree(top);
-
-			return tree;
-		}
-
-		public JComponent componentFor(Object o){
-			h=(Hyperplane)o;
-			Object[] keys=h.hyperplaneWeights.keys();
-			Object[][] tableData=new Object[keys.length][2];
-			int k=0;
-			for(Iterator<Feature> i=h.featureIterator();i.hasNext();){
-				Feature f=i.next();
-				tableData[k][0]=f;
-				tableData[k][1]=new Double(h.featureScore(f));
-				k++;
-			}
-			if(controls!=null){
-				Arrays.sort(tableData,new Comparator<Object[]>(){
-
-					public int compare(Object[] ra,Object[] rb){
-						if(controls.nameButton.isSelected()||
-								controls.treeButton.isSelected())
-							return ra[0].toString().compareTo(rb[0].toString());
-						Double da=(Double)ra[1];
-						Double db=(Double)rb[1];
-						if(controls.valueButton.isSelected())
-							return MathUtil.sign(db.doubleValue()-da.doubleValue());
-						else
-							return MathUtil.sign(Math.abs(db.doubleValue())-
-									Math.abs(da.doubleValue()));
-					}
-				});
-
-				JTree tree;
-				if(controls.treeButton.isSelected()){
-					tree=createTree(tableData,keys.length);
-					return new JScrollPane(tree);
-				}
-			}
-			String[] columnNames={"Feature Name","Weight"};
-			JTable table=new JTable(tableData,columnNames);
-			monitorSelections(table,0);
-			return new JScrollPane(table);
-		}
 	}
 
 	public String toString(){

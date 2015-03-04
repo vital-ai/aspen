@@ -14,10 +14,6 @@ import edu.cmu.minorthird.classify.Explanation;
 import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.classify.OneVsAllClassifier;
 import edu.cmu.minorthird.classify.OnlineClassifierLearner;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.VanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 public class SequenceUtils
 {
@@ -58,7 +54,7 @@ public class SequenceUtils
       }
       return result;
     }
-    static private class MyBinaryClassifier extends BinaryClassifier implements Visible
+    static private class MyBinaryClassifier extends BinaryClassifier
     {
     	static final long serialVersionUID=20080207L;
       private Classifier c;
@@ -70,19 +66,7 @@ public class SequenceUtils
 	    Explanation ex = new Explanation(top);
 	    return ex;
 	}
-      public Viewer toGUI() { 
-        Viewer v = new ComponentViewer() {
-        	static final long serialVersionUID=20080207L;
-            public JComponent componentFor(Object o) {
-              MyBinaryClassifier b = (MyBinaryClassifier)o;
-              return (b.c instanceof Visible)?((Visible)b.c).toGUI():new VanillaViewer(c);				
-            }
-          };
-        v.setContent(this);
-        return v;
-      }
-      public String toString() { return "[MyBC "+c+"]"; }
-    };
+    }
   }
 }
 

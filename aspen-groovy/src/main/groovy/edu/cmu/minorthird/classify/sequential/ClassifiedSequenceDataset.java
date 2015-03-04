@@ -4,7 +4,6 @@ package edu.cmu.minorthird.classify.sequential;
 
 import edu.cmu.minorthird.classify.*;
 import edu.cmu.minorthird.classify.experiments.ClassifiedDataset;
-import edu.cmu.minorthird.util.gui.*;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,7 +16,7 @@ import java.util.Map;
  * @author William Cohen
  */
 
-public class ClassifiedSequenceDataset implements Visible
+public class ClassifiedSequenceDataset
 {
 //	private SequenceClassifier sequenceClassifier;
 	private SequenceDataset sequenceDataset;
@@ -33,25 +32,12 @@ public class ClassifiedSequenceDataset implements Visible
 	{
 		return adaptedClassifier;
 	}
-	public Viewer toGUI()
-	{
-		Viewer cdv = new ClassifiedDataset(adaptedClassifier,sequenceDataset).toGUI();
-		Viewer v = new TransformedViewer(cdv) {
-			static final long serialVersionUID=20080207L;
-				public Object transform(Object o) {
-					ClassifiedSequenceDataset csd = (ClassifiedSequenceDataset)o;
-					return new ClassifiedDataset(csd.adaptedClassifier,csd.sequenceDataset);
-				}
-			};
-		v.setContent(this);
-		return v;
-	}
 
 	/** Classifies examples from the sequenceDataset, by (a) mapping an
 	 * example to it position in the containing sequence (b) classifying the
 	 * containing sequence - caching it if necessary.
 	 */
-	private static class AdaptedSequenceClassifier implements Classifier, Visible
+	private static class AdaptedSequenceClassifier implements Classifier
 	{
 		private SequenceClassifier sequenceClassifier;
 		private class Place {
@@ -102,9 +88,5 @@ public class ClassifiedSequenceDataset implements Visible
 		Explanation ex = sequenceClassifier.getExplanation(place.seq);
 		return ex;
 	    }
-		public Viewer toGUI()
-		{
-			return new SmartVanillaViewer(sequenceClassifier);
-		}
 	}
 }

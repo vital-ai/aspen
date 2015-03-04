@@ -24,10 +24,6 @@ import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.classify.MutableInstance;
 import edu.cmu.minorthird.classify.sequential.Segmentation.Segment;
 import edu.cmu.minorthird.util.ProgressCounter;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  *
@@ -303,7 +299,7 @@ public class SegmentCollinsPerceptronLearner implements BatchSegmenterLearner,Se
 		}
 	}
 
-	public static class ViterbiSegmenter implements Segmenter,Visible,Serializable
+	public static class ViterbiSegmenter implements Segmenter,Serializable
 	{
 		static private final long serialVersionUID = 20080207L;
 
@@ -324,25 +320,6 @@ public class SegmentCollinsPerceptronLearner implements BatchSegmenterLearner,Se
 		public String explain(CandidateSegmentGroup g)
 		{
 			return "not implemented yet";
-		}
-		public Viewer toGUI()
-		{
-			Viewer v = new ComponentViewer() {
-				static final long serialVersionUID=20080207L;
-					public JComponent componentFor(Object o) {
-						ViterbiSegmenter vs = (ViterbiSegmenter)o;
-						JPanel mainPanel = new JPanel();
-						mainPanel.setLayout(new BorderLayout());
-						mainPanel.add(new JLabel("ViterbiSegmenter: maxSegSize="+vs.maxSegSize),BorderLayout.NORTH);
-						Viewer subView = new SmartVanillaViewer(vs.c);
-						subView.setSuperView(this);
-						mainPanel.add(subView,BorderLayout.SOUTH);
-						mainPanel.setBorder(new TitledBorder("ViterbiSegmenter"));
-						return new JScrollPane(mainPanel);
-					}
-				};
-			v.setContent(this);
-			return v;
 		}
 	}
 }

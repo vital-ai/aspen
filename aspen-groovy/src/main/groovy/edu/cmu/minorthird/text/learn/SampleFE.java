@@ -15,7 +15,6 @@ import edu.cmu.minorthird.text.EmptyLabels;
 import edu.cmu.minorthird.text.Span;
 import edu.cmu.minorthird.text.TextLabels;
 import edu.cmu.minorthird.util.StringUtil;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
 
 /**
  * Some sample feature extractors.
@@ -205,31 +204,5 @@ public class SampleFE{
 	public static abstract class AnnotatedSpanFE extends SpanFE{
 	}
 
-	/**
-	 * Test case to try out the feature extractors
-	 */
-	public static void main(String[] args){
-		try{
-			SpanFeatureExtractor fe=BAG_OF_LC_WORDS;
-			BasicTextBase base=new BasicTextBase();
-			for(int i=0;i<SampleDatasets.posTrain.length;i++){
-				base.loadDocument("pos"+i,SampleDatasets.posTrain[i]);
-			}
-			for(int i=0;i<SampleDatasets.negTrain.length;i++){
-				base.loadDocument("neg"+i,SampleDatasets.negTrain[i]);
-			}
-			Dataset dataset=new BasicDataset();
-			for(Iterator<Span> i=base.documentSpanIterator();i.hasNext();){
-				Span s=i.next();
-				String id=s.getDocumentId();
-				ClassLabel label=ClassLabel.binaryLabel(id.startsWith("pos")?+1:-1);
-				TextLabels textLabels=new EmptyLabels();
-				dataset.add(new Example(fe.extractInstance(textLabels,s),label));
-			}
-			new ViewerFrame("Toy data",dataset.toGUI());
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-	}
 
 }

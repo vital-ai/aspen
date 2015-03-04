@@ -55,20 +55,13 @@ import edu.cmu.minorthird.util.MathUtil;
 import edu.cmu.minorthird.util.ProgressCounter;
 import edu.cmu.minorthird.util.Saveable;
 import edu.cmu.minorthird.util.StringUtil;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.LineCharter;
-import edu.cmu.minorthird.util.gui.ParallelViewer;
-import edu.cmu.minorthird.util.gui.VanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /** Stores some detailed results of evaluating a classifier on data.
  *
  * @author William Cohen
  */
 
-public class Evaluation implements Visible,Serializable,Saveable{
+public class Evaluation implements Serializable,Saveable{
 
 	private static Logger log=Logger.getLogger(Evaluation.class);
 
@@ -1007,153 +1000,6 @@ public class Evaluation implements Visible,Serializable,Saveable{
 		return buf.toString();
 	}
 
-	static public class PropertyViewer extends ComponentViewer{
-
-		static final long serialVersionUID=20080130L;
-		
-		public JComponent componentFor(Object o){
-			final Evaluation e=(Evaluation)o;
-			final JPanel panel=new JPanel();
-			final JTextField propField=new JTextField(10);
-			final JTextField valField=new JTextField(10);
-			final JTable table=makePropertyTable(e);
-			final JScrollPane tableScroller=new JScrollPane(table);
-			final JButton addButton=
-					new JButton(new AbstractAction("Insert Property"){
-						static final long serialVersionUID=20080130L;
-						public void actionPerformed(ActionEvent event){
-							e.setProperty(propField.getText(),valField.getText());
-							tableScroller.getViewport().setView(makePropertyTable(e));
-							tableScroller.revalidate();
-							panel.revalidate();
-						}
-					});
-			panel.setLayout(new GridBagLayout());
-			GridBagConstraints gbc=fillerGBC();
-			//gbc.fill = GridBagConstraints.HORIZONTAL;
-			gbc.gridwidth=3;
-			panel.add(tableScroller,gbc);
-			panel.add(addButton,myGBC(0));
-			panel.add(propField,myGBC(1));
-			panel.add(valField,myGBC(2));
-			return panel;
-		}
-
-		private GridBagConstraints myGBC(int col){
-			GridBagConstraints gbc=fillerGBC();
-			gbc.fill=GridBagConstraints.HORIZONTAL;
-			gbc.gridx=col;
-			gbc.gridy=1;
-			return gbc;
-		}
-
-		private JTable makePropertyTable(final Evaluation e){
-			Object[][] table=new Object[e.propertyKeyList.size()][2];
-			for(int i=0;i<e.propertyKeyList.size();i++){
-				table[i][0]=e.propertyKeyList.get(i);
-				table[i][1]=e.properties.get(e.propertyKeyList.get(i));
-			}
-			String[] colNames=new String[]{"Property","Property's Value"};
-			return new JTable(table,colNames);
-		}
-	}
-
-	public class SummaryViewer extends ComponentViewer{
-		static final long serialVersionUID=20080130L;
-		public JComponent componentFor(Object o){
-			Evaluation e=(Evaluation)o;
-			double[] ss=e.summaryStatistics();
-			String[] ssn=e.summaryStatisticNames();
-			Object[][] oss=new Object[ss.length][2];
-			for(int i=0;i<ss.length;i++){
-				oss[i][0]=ssn[i];
-				oss[i][1]=new Double(ss[i]);
-			}
-			JTable jtable=new JTable(oss,new String[]{"Statistic","Value"});
-			jtable.setDefaultRenderer(Object.class,new MyTableCellRenderer());
-			jtable.setVisible(true);
-			return new JScrollPane(jtable);
-		}
-	}
-
-	static public class ElevenPointPrecisionViewer extends ComponentViewer{
-		static final long serialVersionUID=20080130L;
-		public JComponent componentFor(Object o){
-			Evaluation e=(Evaluation)o;
-			double[] p=e.elevenPointPrecision();
-			LineCharter lc=new LineCharter();
-			lc.startCurve("Interpolated Precision");
-			for(int i=0;i<p.length;i++){
-				lc.addPoint(i/10.0,p[i]);
-			}
-			return lc.getPanel("11-Pt Interpolated Precision vs. Recall","Recall",
-					"Precision");
-		}
-	}
-
-	static public class ROCViewer extends ComponentViewer{
-		static final long serialVersionUID=20080130L;
-		public JComponent componentFor(Object o){
-			Evaluation e=(Evaluation)o;
-
-			Matrix p=e.thousandPointROC();
-			LineCharter lc=new LineCharter();
-			lc.startCurve("Actual ROC");
-
-			for(int i=0;i<p.values.length;i++){
-				lc.addPoint(p.values[i][1],p.values[i][0]);
-				//System.out.println(p.values[i][0]+" "+p.values[i][1]);  // Uncomment for MATLAB
-			}
-			// compute area under the curve
-			double area=0.0;
-			for(int i=0;i<(p.values.length-1);i++){
-				area+=
-						(p.values[i][0]+p.values[i+1][0])*
-								(p.values[i+1][1]-p.values[i][1])/2.0;
-				//System.out.println("("+p.values[i][0]+"+"+p.values[i+1][0]+") * ("+p.values[i+1][1]+"-"+p.values[i][1]+") /2.0");
-			}
-			return lc.getPanel("Actual ROC Curve",
-					"False Positive / All Negative   (AUC = "+area+")",
-					"True Positive / All Positive");
-
-		}
-	}
-
-	static public class ConfusionMatrixViewer extends ComponentViewer{
-		static final long serialVersionUID=20080130L;
-		public JComponent componentFor(Object o){
-			Evaluation e=(Evaluation)o;
-			JPanel panel=new JPanel();
-			Matrix m=e.confusionMatrix();
-			String[] classes=e.getClasses();
-			panel.setLayout(new GridBagLayout());
-			//add( new JLabel("Actual class"), cmGBC(0,0) );
-			GridBagConstraints gbc=cmGBC(0,1);
-			gbc.gridwidth=classes.length;
-			panel.add(new JLabel("Predicted Class"),gbc);
-			for(int i=0;i<classes.length;i++){
-				panel.add(new JLabel(classes[i]),cmGBC(1,i+1));
-			}
-			for(int i=0;i<classes.length;i++){
-				panel.add(new JLabel(classes[i]),cmGBC(i+2,0));
-				for(int j=0;j<classes.length;j++){
-					panel.add(new JLabel(Double.toString(m.values[i][j])),cmGBC(i+2,j+1));
-				}
-			}
-			return panel;
-		}
-
-		private GridBagConstraints cmGBC(int i,int j){
-			GridBagConstraints gbc=new GridBagConstraints();
-			//gbc.fill = GridBagConstraints.BOTH;
-			gbc.weightx=gbc.weighty=0;
-			gbc.gridy=i;
-			gbc.gridx=j;
-			gbc.ipadx=gbc.ipady=20;
-			return gbc;
-		}
-	}
-
 	/** Print summary statistics
 	 */
 	public void summarize(){
@@ -1169,22 +1015,6 @@ public class Evaluation implements Visible,Serializable,Saveable{
 				System.out.print(" ");
 			System.out.println(stats[i]);
 		}
-	}
-
-	public Viewer toGUI(){
-		ParallelViewer main=new ParallelViewer();
-
-		main.addSubView("Summary",new SummaryViewer());
-		main.addSubView("Properties",new PropertyViewer());
-		if(isBinary)
-			main.addSubView("11Pt Precision/Recall",new ElevenPointPrecisionViewer());
-		if(isBinary)
-			main.addSubView(" ROC & AUC ",new ROCViewer());
-		main.addSubView("Confusion Matrix",new ConfusionMatrixViewer());
-		main.addSubView("Debug",new VanillaViewer());
-		main.setContent(this);
-
-		return main;
 	}
 
 	//
@@ -1403,19 +1233,4 @@ public class Evaluation implements Visible,Serializable,Saveable{
 		}
 	}
 
-	//
-	// test routine
-	//
-	static public void main(String[] args){
-		try{
-			Evaluation v=Evaluation.load(new File(args[0]));
-			if(args.length>1)
-				v.save(new File(args[1]));
-			new ViewerFrame("From file "+args[0],v.toGUI());
-		}catch(Exception e){
-			System.out
-					.println("usage: Evaluation [serializedFile|evaluationFile] [evaluationFile]");
-			e.printStackTrace();
-		}
-	}
 }

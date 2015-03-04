@@ -4,8 +4,6 @@ package edu.cmu.minorthird.classify;
 
 import java.util.Iterator;
 
-import edu.cmu.minorthird.util.gui.Visible;
-
 /** 
  * A single instance for a learner. 
  * This is basically a weighted set of features.
@@ -13,7 +11,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  * @author William Cohen
  */
 
-public interface Instance extends HasSubpopulationId,Visible{
+public interface Instance extends HasSubpopulationId {
 	
 	/** Get the weight assigned to a feature in this instance. */
 	public double getWeight(Feature f);

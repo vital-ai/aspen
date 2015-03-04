@@ -23,11 +23,6 @@ import edu.cmu.minorthird.text.MonotonicTextLabels;
 import edu.cmu.minorthird.text.Span;
 import edu.cmu.minorthird.text.TextLabels;
 import edu.cmu.minorthird.util.ProgressCounter;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Learn an annotation model using a sequence dataset and a
@@ -112,7 +107,7 @@ public class SequenceAnnotatorLearner extends AbstractBatchAnnotatorLearner{
 		}
 		seqLearner.setSchema(schema);
 		if(displayDatasetBeforeLearning)
-			new ViewerFrame("Sequential Dataset",seqData.toGUI());
+			throw new RuntimeException("GUI disconnected!");
 		SequenceClassifier seqClassifier=seqLearner.batchTrain(seqData);
 		if(DEBUG)
 			log.debug("learned classifier: "+seqClassifier);
@@ -158,7 +153,7 @@ public class SequenceAnnotatorLearner extends AbstractBatchAnnotatorLearner{
 	//
 
 	public static class SequenceAnnotator extends AbstractAnnotator implements
-			Serializable,Visible,ExtractorAnnotator{
+			Serializable,ExtractorAnnotator{
 
 		private static final long serialVersionUID=2;
 
@@ -230,22 +225,6 @@ public class SequenceAnnotatorLearner extends AbstractBatchAnnotatorLearner{
 			return "[SequenceAnnotator "+annotationType+":\n"+seqClassifier+"]";
 		}
 
-		public Viewer toGUI(){
-			Viewer v=new ComponentViewer(){
-				static final long serialVersionUID=20080306L;
-				public JComponent componentFor(Object o){
-					SequenceAnnotator sa=(SequenceAnnotator)o;
-					JPanel mainPanel=new JPanel();
-					mainPanel.setBorder(new TitledBorder("Sequence Annotator"));
-					Viewer subView=new SmartVanillaViewer(sa.seqClassifier);
-					subView.setSuperView(this);
-					mainPanel.add(subView);
-					return new JScrollPane(mainPanel);
-				}
-			};
-			v.setContent(this);
-			return v;
-		}
 	}
 
 	static public void main(String[] args){

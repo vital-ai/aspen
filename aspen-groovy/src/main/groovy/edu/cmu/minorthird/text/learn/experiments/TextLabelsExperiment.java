@@ -25,7 +25,6 @@ import edu.cmu.minorthird.text.Span;
 import edu.cmu.minorthird.text.SpanDifference;
 import edu.cmu.minorthird.text.TextLabels;
 import edu.cmu.minorthird.text.TextLabelsLoader;
-import edu.cmu.minorthird.text.gui.TextBaseViewer;
 import edu.cmu.minorthird.text.learn.AnnotatorLearner;
 import edu.cmu.minorthird.text.learn.AnnotatorTeacher;
 import edu.cmu.minorthird.text.learn.Extraction2TaggingReduction;
@@ -35,12 +34,6 @@ import edu.cmu.minorthird.text.learn.SequenceAnnotatorLearner;
 import edu.cmu.minorthird.text.learn.TextLabelsAnnotatorTeacher;
 import edu.cmu.minorthird.util.ProgressCounter;
 import edu.cmu.minorthird.util.StringUtil;
-import edu.cmu.minorthird.util.gui.ParallelViewer;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.TransformedViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Run an annotation-learning experiment based on pre-labeled text.
@@ -48,7 +41,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  * @author William Cohen
  */
 
-public class TextLabelsExperiment implements Visible{
+public class TextLabelsExperiment {
 
 	private SampleFE.ExtractionFE fe=new SampleFE.ExtractionFE();
 
@@ -240,49 +233,6 @@ public class TextLabelsExperiment implements Visible{
 		return extractionEval;
 	}
 
-	public Viewer toGUI(){
-		ParallelViewer v=new ParallelViewer();
-		for(int i=0;i<annotators.length;i++){
-			final int index=i;
-			v.addSubView("Annotator "+(i+1),new TransformedViewer(
-					new SmartVanillaViewer()){
-
-				static final long serialVersionUID=20080306L;
-
-				public Object transform(Object o){
-					return annotators[index];
-				}
-			});
-			v.addSubView("Test set "+(i+1),new TransformedViewer(
-					new SmartVanillaViewer()){
-
-				static final long serialVersionUID=20080306L;
-
-				public Object transform(Object o){
-					return testLabels[index];
-				}
-			});
-		}
-		v.addSubView("Full test set",
-				new TransformedViewer(new SmartVanillaViewer()){
-
-					static final long serialVersionUID=20080306L;
-
-					public Object transform(Object o){
-						return fullTestLabels;
-					}
-				});
-		v.addSubView("Evaluation",new TransformedViewer(new SmartVanillaViewer()){
-
-			static final long serialVersionUID=20080306L;
-
-			public Object transform(Object o){
-				return extractionEval;
-			}
-		});
-		v.setContent(this);
-		return v;
-	}
 
 // private void measurePrecisionRecall(String tag,TextLabels labels){
 // measurePrecisionRecall(tag,labels,false);
@@ -396,115 +346,6 @@ public class TextLabelsExperiment implements Visible{
 
 	public TextLabels getTestLabels(){
 		return fullTestLabels;
-	}
-
-	public static void main(String[] args){
-		Splitter<Span> splitter=new RandomSplitter<Span>(0.7);
-		String outputLabel="_prediction";
-		String learnerName="new CollinsPerceptronLearner()";
-		TextLabels labels=null;
-		String spanType=null,spanProp=null,saveFileName=null,show=null,annotationNeeded=
-				null;
-		List<String> featureMods=new ArrayList<String>();
-		Extraction2TaggingReduction reduction=null;
-
-		try{
-			int pos=0;
-			while(pos<args.length){
-				String opt=args[pos++];
-				if(opt.startsWith("-lab")){
-					labels=FancyLoader.loadTextLabels(args[pos++]);
-				}else if(opt.startsWith("-lea")){
-					learnerName=args[pos++];
-				}else if(opt.startsWith("-split")){
-					splitter=Expt.toSplitter(args[pos++],Span.class);
-				}else if(opt.startsWith("-in")){
-					spanType=args[pos++];
-				}else if(opt.startsWith("-spanT")){
-					spanType=args[pos++];
-				}else if(opt.startsWith("-spanP")){
-					spanProp=args[pos++];
-				}else if(opt.startsWith("-out")){
-					outputLabel=args[pos++];
-				}else if(opt.startsWith("-save")){
-					saveFileName=args[pos++];
-				}else if(opt.startsWith("-show")){
-					show=args[pos++];
-				}else if(opt.startsWith("-mix")){
-					annotationNeeded=args[pos++];
-				}else if(opt.startsWith("-fe")){
-					featureMods.add(args[pos++]);
-				}else if(opt.startsWith("-reduction")){
-					try{
-						bsh.Interpreter interp=new bsh.Interpreter();
-						interp.eval("import edu.cmu.minorthird.text.learn.*;");
-						reduction=(Extraction2TaggingReduction)interp.eval(args[pos++]);
-					}catch(bsh.EvalError e){
-						throw new IllegalArgumentException("error parsing reductionName '"+
-								args[pos-1]+"':\n"+e);
-					}
-				}else{
-					usage();
-					return;
-				}
-			}
-			if(labels==null||learnerName==null||splitter==null||
-					(spanProp==null&&spanType==null)||outputLabel==null){
-				usage();
-				return;
-			}
-			if(spanProp!=null&&spanType!=null){
-				usage();
-				return;
-			}
-			TextLabelsExperiment expt=
-					new TextLabelsExperiment(labels,splitter,learnerName,spanType,
-							spanProp,outputLabel,reduction);
-			if(annotationNeeded!=null){
-				expt.getFE().setRequiredAnnotation(annotationNeeded);
-				expt.getFE().setAnnotationProvider(annotationNeeded+".mixup");
-				expt.getFE().setTokenPropertyFeatures("*"); // use all defined
-				// properties
-				labels.require(annotationNeeded,annotationNeeded+".mixup");
-			}
-			for(Iterator<String> i=featureMods.iterator();i.hasNext();){
-				String mod=i.next();
-				if(mod.startsWith("window=")){
-					expt.getFE().setFeatureWindowSize(
-							StringUtil.atoi(mod.substring("window=".length())));
-					System.out.println("fe windowSize => "+
-							expt.getFE().getFeatureWindowSize());
-				}else if(mod.startsWith("charType")){
-					expt.getFE().setUseCharType(
-							mod.substring("charType".length(),1).equals("+"));
-					System.out.println("fe windowSize => "+expt.getFE().getUseCharType());
-				}else if(mod.startsWith("charPattern")){
-					expt.getFE().setUseCompressedCharType(
-							mod.substring("charPattern".length(),1).equals("+"));
-					System.out.println("fe windowSize => "+
-							expt.getFE().getUseCompressedCharType());
-				}else{
-					usage();
-					return;
-				}
-			}
-
-			expt.doExperiment();
-			if(saveFileName!=null){
-				new TextLabelsLoader().saveTypesAsOps(expt.getTestLabels(),new File(
-						saveFileName));
-			}
-			if(show!=null){
-				TextBaseViewer.view(expt.getTestLabels());
-				if(show.startsWith("all")){
-					new ViewerFrame("Experiment",expt.toGUI());
-				}
-			}
-		}catch(Exception e){
-			e.printStackTrace();
-			usage();
-			return;
-		}
 	}
 
 	private static void usage(){

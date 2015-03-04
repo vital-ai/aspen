@@ -2,9 +2,6 @@ package edu.cmu.minorthird.text;
 
 import java.util.*;
 
-import edu.cmu.minorthird.util.gui.*;
-import edu.cmu.minorthird.text.gui.*;
-
 import org.apache.log4j.*;
 
 /** A TextLabels which is defined by two TextLabels's.
@@ -24,7 +21,7 @@ import org.apache.log4j.*;
  * @author William Cohen
  */
 
-public class NestedTextLabels implements MonotonicTextLabels,Visible{
+public class NestedTextLabels implements MonotonicTextLabels{
 
 	private static final Logger log=Logger.getLogger(NestedTextLabels.class);
 
@@ -333,9 +330,6 @@ public class NestedTextLabels implements MonotonicTextLabels,Visible{
 		}
 	}
 
-	public Viewer toGUI(){
-		return new ZoomingTextLabelsViewer(this);
-	}
 
 	public String toString(){
 		return "[NestedLabels: outer="+outer+"; inner="+inner+"]";

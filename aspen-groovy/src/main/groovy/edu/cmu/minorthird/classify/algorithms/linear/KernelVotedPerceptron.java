@@ -12,10 +12,6 @@ import edu.cmu.minorthird.classify.Example;
 import edu.cmu.minorthird.classify.Explanation;
 import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.classify.OnlineBinaryClassifierLearner;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.TransformedViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Voted perceptron algorithm.  As described in "Large Margin
@@ -156,7 +152,7 @@ public class KernelVotedPerceptron extends OnlineBinaryClassifierLearner
 		return new MyClassifier(listVK,listCK);
 	}
 
-	public class MyClassifier implements Classifier,Serializable,Visible{
+	public class MyClassifier implements Classifier,Serializable{
 
 		static private final long serialVersionUID=1;
 
@@ -232,20 +228,6 @@ public class KernelVotedPerceptron extends OnlineBinaryClassifierLearner
 			return ex;
 		}
 
-		public Viewer toGUI(){
-			Viewer v=new TransformedViewer(new SmartVanillaViewer()){
-				static final long serialVersionUID=20080128L;
-				public Object transform(Object o){
-					MyClassifier mycl=(MyClassifier)o;
-
-					//dummy hyperplane: return last perceptron
-					Hyperplane hh=(Hyperplane)mycl.listVK.get(listVK.size()-1);
-					return (Classifier)hh;
-				}
-			};
-			v.setContent(this);
-			return v;
-		}
 	}
 
 	public String toString(){

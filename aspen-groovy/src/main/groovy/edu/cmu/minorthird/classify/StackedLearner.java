@@ -15,10 +15,6 @@ import org.apache.log4j.Logger;
 import edu.cmu.minorthird.classify.algorithms.linear.MaxEntLearner;
 import edu.cmu.minorthird.classify.algorithms.trees.AdaBoost;
 import edu.cmu.minorthird.classify.experiments.CrossValSplitter;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Stacked generalization.  This implementation is based on Wolpert,
@@ -180,7 +176,7 @@ public class StackedLearner extends BatchClassifierLearner
 		return buf.toString();
 	}
 
-	static private class StackedClassifier implements Classifier,Visible
+	static private class StackedClassifier implements Classifier
 	{
 		private ExampleSchema schema;
 		private Classifier[] innerClassifiers;
@@ -212,34 +208,6 @@ public class StackedLearner extends BatchClassifierLearner
 		public Explanation getExplanation(Instance instance) {
 			Explanation ex = new Explanation(explain(instance));
 			return ex;
-		}
-		public Viewer toGUI()
-		{
-			Viewer v = new ComponentViewer() {
-				static final long serialVersionUID=20071015;
-				public JComponent componentFor(Object o) {
-					StackedClassifier sc = (StackedClassifier)o;
-					JPanel mainPanel = new JPanel();
-					mainPanel.setLayout(new BorderLayout());
-					mainPanel.setBorder(new TitledBorder("Stacked Classifier"));
-					JPanel finalPanel = new JPanel();
-					finalPanel.setBorder(new TitledBorder("Final classifier"));
-					Viewer w = new SmartVanillaViewer(sc.finalClassifier);
-					finalPanel.add(w);
-					w.setSuperView(this);
-					mainPanel.add(finalPanel,BorderLayout.NORTH);
-					JPanel innerPanel = new JPanel();
-					innerPanel.setBorder(new TitledBorder("Inner classifier(s)"));
-					for (int i=0; i<innerClassifiers.length; i++) {
-						Viewer u = new SmartVanillaViewer(innerClassifiers[i]);
-						innerPanel.add(u);
-						u.setSuperView(this);
-					}
-					mainPanel.add(innerPanel,BorderLayout.SOUTH);
-					return new JScrollPane(mainPanel);
-				}
-			};
-			return v;
 		}
 	}
 }

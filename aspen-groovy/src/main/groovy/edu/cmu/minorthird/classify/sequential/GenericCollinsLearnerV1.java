@@ -18,10 +18,6 @@ import edu.cmu.minorthird.classify.Instance;
 import edu.cmu.minorthird.classify.OnlineBinaryClassifierLearner;
 import edu.cmu.minorthird.classify.algorithms.linear.VotedPerceptron;
 import edu.cmu.minorthird.util.ProgressCounter;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Generic version of Collin's voted perceptron learner.
@@ -151,7 +147,7 @@ public class GenericCollinsLearnerV1 implements BatchSequenceClassifierLearner,S
 		return new CMM(c, historySize, schema );
 	}
 
-	public static class MultiClassClassifier implements Classifier,Visible,Serializable
+	public static class MultiClassClassifier implements Classifier,Serializable
 	{
 		static private final long serialVersionUID = 1;
 		private ExampleSchema schema;
@@ -202,28 +198,6 @@ public class GenericCollinsLearnerV1 implements BatchSequenceClassifierLearner,S
 		Explanation ex = new Explanation(top);
 		return ex;
 	    }
-
-		public Viewer toGUI()
-		{
-			Viewer gui = new ComponentViewer() {
-				static final long serialVersionUID=20080207L;
-					public JComponent componentFor(Object o) {
-						MultiClassClassifier c = (MultiClassClassifier)o;
-						JPanel main = new JPanel();
-						for (int i=0; i<numClasses; i++) {
-							JPanel classPanel = new JPanel();
-							classPanel.setBorder(new TitledBorder("Class "+c.schema.getClassName(i)));
-							Viewer subviewer = new SmartVanillaViewer( c.innerClassifier[i] );
-							subviewer.setSuperView( this );
-							classPanel.add( subviewer );
-							main.add(classPanel);
-						}
-						return new JScrollPane(main);
-					}
-				};
-			gui.setContent(this);
-			return gui;
-		}
 	}
 }
 

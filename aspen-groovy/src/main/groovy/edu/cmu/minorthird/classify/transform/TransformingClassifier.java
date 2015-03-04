@@ -11,12 +11,8 @@ import edu.cmu.minorthird.classify.ClassLabel;
 import edu.cmu.minorthird.classify.Classifier;
 import edu.cmu.minorthird.classify.Explanation;
 import edu.cmu.minorthird.classify.Instance;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
-public class TransformingClassifier implements Classifier,Visible,Serializable{
+public class TransformingClassifier implements Classifier,Serializable{
 
 	static final long serialVersionUID=20080201L;
 
@@ -51,21 +47,4 @@ public class TransformingClassifier implements Classifier,Visible,Serializable{
 		return ex;
 	}
 
-	public Viewer toGUI(){
-		Viewer gui=new ComponentViewer(){
-			static final long serialVersionUID=20080201L;
-			public JComponent componentFor(Object o){
-				TransformingClassifier tc=(TransformingClassifier)o;
-				JPanel panel=new JPanel();
-				panel.setBorder(new TitledBorder("TransformingClassifier"));
-				panel.add(new JLabel(tc.transformer.toString()));
-				SmartVanillaViewer subview=new SmartVanillaViewer(tc.classifier);
-				subview.setSuperView(this);
-				panel.add(subview);
-				return panel;
-			}
-		};
-		gui.setContent(this);
-		return gui;
-	}
 }

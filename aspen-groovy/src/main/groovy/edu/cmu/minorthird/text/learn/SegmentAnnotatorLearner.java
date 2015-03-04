@@ -26,11 +26,6 @@ import edu.cmu.minorthird.text.Span;
 import edu.cmu.minorthird.text.TextLabels;
 import edu.cmu.minorthird.ui.Recommended;
 import edu.cmu.minorthird.util.ProgressCounter;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Learn an annotation model using a SegmentDataset dataset and a
@@ -197,7 +192,7 @@ public class SegmentAnnotatorLearner extends AnnotatorLearner{
 	public Annotator getAnnotator(){
 		learner.setSchema(ExampleSchema.BINARY_EXAMPLE_SCHEMA);
 		if(displayDatasetBeforeLearning)
-			new ViewerFrame("Sequential Dataset",dataset.toGUI());
+			throw new RuntimeException("GUI disconnected!");
 		Segmenter segmenter=learner.batchTrain(dataset);
 		if(DEBUG)
 			log.debug("learned segmenter: "+segmenter);
@@ -209,7 +204,7 @@ public class SegmentAnnotatorLearner extends AnnotatorLearner{
 	//
 
 	public static class SegmentAnnotator extends AbstractAnnotator implements
-			Serializable,Visible,ExtractorAnnotator{
+			Serializable,ExtractorAnnotator{
 
 		private static final long serialVersionUID=1;
 
@@ -276,23 +271,6 @@ public class SegmentAnnotatorLearner extends AnnotatorLearner{
 
 		public String toString(){
 			return "[SegmentAnnotator "+annotationType+":\n"+segmenter+"]";
-		}
-
-		public Viewer toGUI(){
-			Viewer v=new ComponentViewer(){
-				static final long serialVersionUID=20080306L;
-				public JComponent componentFor(Object o){
-					SegmentAnnotator sa=(SegmentAnnotator)o;
-					JPanel mainPanel=new JPanel();
-					mainPanel.setBorder(new TitledBorder("Segmenter Annotator"));
-					Viewer subView=new SmartVanillaViewer(sa.segmenter);
-					subView.setSuperView(this);
-					mainPanel.add(subView);
-					return new JScrollPane(mainPanel);
-				}
-			};
-			v.setContent(this);
-			return v;
 		}
 
 	}

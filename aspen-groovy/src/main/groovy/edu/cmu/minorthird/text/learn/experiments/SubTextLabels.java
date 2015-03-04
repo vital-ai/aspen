@@ -12,9 +12,6 @@ import edu.cmu.minorthird.text.Span;
 import edu.cmu.minorthird.text.TextBase;
 import edu.cmu.minorthird.text.TextLabels;
 import edu.cmu.minorthird.text.Token;
-import edu.cmu.minorthird.text.gui.ZoomingTextLabelsViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * A subset of another TextLabels.
@@ -22,7 +19,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  * @author William Cohen
  */
 
-public class SubTextLabels implements TextLabels,Visible{
+public class SubTextLabels implements TextLabels{
 
 	protected SubTextBase subBase;
 
@@ -153,7 +150,4 @@ public class SubTextLabels implements TextLabels,Visible{
 		System.out.println("Not used");
 	}
 
-	public Viewer toGUI(){
-		return new ZoomingTextLabelsViewer(this);
-	}
 }

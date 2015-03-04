@@ -4,7 +4,6 @@ package edu.cmu.minorthird.classify;
 
 import edu.cmu.minorthird.classify.algorithms.svm.*;
 import edu.cmu.minorthird.classify.algorithms.linear.*;
-import edu.cmu.minorthird.util.gui.*;
 
 import org.apache.log4j.*;
 
@@ -95,11 +94,10 @@ public class OnlineVersion extends OnlineClassifierLearner
 
 	final public void completeTraining()
 	{
-		new ViewerFrame("compete data",dataset.toGUI());
 		if (dataset.size()>lastTrainingSetSize || storedClassifier==null) {
 			log.info("final training for "+innerLearner+" on "+dataset.size()+" examples");
 			storedClassifier = innerLearner.batchTrain(dataset);
-			new ViewerFrame("classifier", new SmartVanillaViewer(storedClassifier));
+
 			lastTrainingSetSize = dataset.size();
 		}
 	}

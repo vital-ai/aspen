@@ -15,13 +15,10 @@ import edu.cmu.minorthird.classify.Example;
 import edu.cmu.minorthird.classify.ExampleSchema;
 import edu.cmu.minorthird.classify.Explanation;
 import edu.cmu.minorthird.classify.Instance;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 
 //// so here when you call the 		MultiClassHMMClassifier, it's like return MultiClassHMMClassifier( dataset)	
-	public class MultiClassHMMClassifier implements SequenceClassifier,SequenceConstants,Visible,Serializable
+	public class MultiClassHMMClassifier implements SequenceClassifier,SequenceConstants,Serializable
 	{
 		
 		static final long serialVersionUID=20080207L;
@@ -155,29 +152,6 @@ this function is also required to be re-written*/
 		Explanation ex = new Explanation(top);
 		return ex;
 	    }
-
-/*This one is for visualization*/
-		public Viewer toGUI()
-		{
-			Viewer gui = new ComponentViewer() {
-				static final long serialVersionUID=20080207L;
-					public JComponent componentFor(Object o) {
-						MultiClassHMMClassifier c = (MultiClassHMMClassifier)o;
-						JPanel main = new JPanel();
-						for (int i=0; i<numStates; i++) {
-							JPanel classPanel = new JPanel();
-							classPanel.setBorder(new TitledBorder("Class "+c.schema.getClassName(i)));
-//							Viewer subviewer = voteMode ? s_t[i].toGUI() : w_t[i].toGUI();
-//							subviewer.setSuperView( this );
-//							classPanel.add( subviewer );
-							main.add(classPanel);
-						}
-						return new JScrollPane(main);
-					}
-				};
-			gui.setContent(this);
-			return gui;
-		}
 
 
 /*This one could be used to output the model, say all the matrix*/

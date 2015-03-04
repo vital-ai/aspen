@@ -3,7 +3,6 @@ package edu.cmu.minorthird.classify.sequential;
 import edu.cmu.minorthird.classify.*;
 import edu.cmu.minorthird.classify.algorithms.linear.Hyperplane;
 import edu.cmu.minorthird.util.*;
-import edu.cmu.minorthird.util.gui.*;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -137,7 +136,7 @@ public class CollinsPerceptronLearner implements BatchSequenceClassifierLearner,
 		return new CMM(c, historySize, schema );
 	}
 
-	public static class MultiClassVPClassifier implements Classifier,Visible,Serializable
+	public static class MultiClassVPClassifier implements Classifier,Serializable
 	{
 		static private final long serialVersionUID = 1;
 		private ExampleSchema schema;
@@ -202,28 +201,6 @@ public class CollinsPerceptronLearner implements BatchSequenceClassifierLearner,
 			}
 			Explanation ex = new Explanation(top);
 			return ex;
-		}
-
-		public Viewer toGUI()
-		{
-			Viewer gui = new ComponentViewer() {
-				static final long serialVersionUID=20080207L;
-				public JComponent componentFor(Object o) {
-					MultiClassVPClassifier c = (MultiClassVPClassifier)o;
-					JPanel main = new JPanel();
-					for (int i=0; i<numClasses; i++) {
-						JPanel classPanel = new JPanel();
-						classPanel.setBorder(new TitledBorder("Class "+c.schema.getClassName(i)));
-						Viewer subviewer = voteMode ? s_t[i].toGUI() : w_t[i].toGUI();
-						subviewer.setSuperView( this );
-						classPanel.add( subviewer );
-						main.add(classPanel);
-					}
-					return new JScrollPane(main);
-				}
-			};
-			gui.setContent(this);
-			return gui;
 		}
 
 		public void reset()	

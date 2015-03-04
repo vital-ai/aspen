@@ -18,7 +18,6 @@ import edu.cmu.minorthird.util.BasicCommandLineProcessor;
 import edu.cmu.minorthird.util.CommandLineProcessor;
 import edu.cmu.minorthird.util.IOUtil;
 import edu.cmu.minorthird.util.ProgressCounter;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
 
 /** 
  * Learn from examples a GraphSearcher that re-ranks examples based on
@@ -74,14 +73,4 @@ public class RankingExpt
 		}
 	}
 
-	public static void main(String[] args) throws IOException,NumberFormatException
-	{
-		RankingExpt x = new RankingExpt();
-		x.getCLP().processArguments(args);
-		RankingEvaluation eval = x.doExpt();
-		System.out.println(eval.toTable());
-		if (x.guiFlag) new ViewerFrame("result", eval.toGUI());
-		if (x.saveFile!=null) 
-			IOUtil.saveSomehow(eval, new File(x.saveFile),true);
-	}
 }

@@ -13,9 +13,6 @@ import edu.cmu.minorthird.classify.ExampleSchema;
 import edu.cmu.minorthird.classify.Explanation;
 import edu.cmu.minorthird.classify.FeatureFactory;
 import edu.cmu.minorthird.classify.Instance;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * SVMClassifier wrapps the prediction code from the libsvm library for binary or multi-class problems.
@@ -29,7 +26,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  * @author qcm, Frank Lin
  */
 
-public class SVMClassifier implements Classifier,Serializable,Visible{
+public class SVMClassifier implements Classifier,Serializable{
 
 	static final long serialVersionUID=20071130L;
 
@@ -144,33 +141,6 @@ public class SVMClassifier implements Classifier,Serializable,Visible{
 		}
 
 		return label;
-	}
-
-	/**
-	 * GUI stuff
-	 */
-
-	public Viewer toGUI(){
-		SVMViewer svmViewer=new SVMViewer();
-		svmViewer.setContent(this);
-		return svmViewer;
-	}
-
-	private static class SVMViewer extends ComponentViewer{
-
-		static final long serialVersionUID=20071130L;
-
-		public boolean canReceive(Object o){
-			return o instanceof SVMClassifier;
-		}
-
-		public JComponent componentFor(Object o){
-			final SVMClassifier svmClassifier=(SVMClassifier)o;
-			// transform to visible SVM
-			VisibleSVM vsSVMtemp=new VisibleSVM(svmClassifier.getSVMModel(),svmClassifier.getFeatureFactory());
-			return vsSVMtemp.toGUI();
-		}
-
 	}
 
 }

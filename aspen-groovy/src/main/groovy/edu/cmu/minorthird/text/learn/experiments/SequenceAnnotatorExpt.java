@@ -19,8 +19,6 @@ import edu.cmu.minorthird.text.learn.AnnotatorTeacher;
 import edu.cmu.minorthird.text.learn.SequenceAnnotatorLearner;
 import edu.cmu.minorthird.text.learn.TextLabelsAnnotatorTeacher;
 import edu.cmu.minorthird.ui.Recommended;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Run an annotation-learning experiment based on pre-labeled text , using a
@@ -125,51 +123,6 @@ public class SequenceAnnotatorExpt{
 		}
 	}
 
-	public static void main(String[] args){
-		TextLabels labels=null;
-		Splitter<Example[]> splitter=new RandomSplitter<Example[]>();
-		SequenceClassifierLearner learner=null;
-		String inputLabel=null;
-		String tokPropFeats=null;
-		String toShow="eval";
-		try{
-			int pos=0;
-			while(pos<args.length){
-				String opt=args[pos++];
-				if(opt.startsWith("-lab")){
-					labels=FancyLoader.loadTextLabels(args[pos++]);
-				}else if(opt.startsWith("-sp")){
-					splitter=Expt.toSplitter(args[pos++],Example[].class);
-				}else if(opt.startsWith("-lea")){
-					learner=toSeqLearner(args[pos++]);
-				}else if(opt.startsWith("-i")){
-					inputLabel=args[pos++];
-				}else if(opt.startsWith("-p")){
-					tokPropFeats=args[pos++];
-				}else if(opt.startsWith("-sh")){
-					toShow=args[pos++];
-				}else{
-					usage();
-				}
-			}
-			if(labels==null||learner==null||splitter==null||inputLabel==null)
-				usage();
-			SequenceAnnotatorExpt expt=
-					new SequenceAnnotatorExpt(labels,splitter,learner,inputLabel,
-							tokPropFeats);
-			Visible v=null;
-			if(toShow.startsWith("ev"))
-				v=expt.evaluation();
-			else if(toShow.startsWith("all"))
-				v=expt.crossValidatedDataset();
-			else
-				usage();
-			new ViewerFrame("Evaluation",v.toGUI());
-		}catch(Exception e){
-			e.printStackTrace();
-			usage();
-		}
-	}
 
 	private static void usage(){
 		System.out

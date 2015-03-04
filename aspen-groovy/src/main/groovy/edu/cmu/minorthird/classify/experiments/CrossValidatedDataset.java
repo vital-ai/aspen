@@ -3,7 +3,6 @@ package edu.cmu.minorthird.classify.experiments;
 import edu.cmu.minorthird.classify.*;
 import edu.cmu.minorthird.classify.algorithms.trees.DecisionTreeLearner;
 import edu.cmu.minorthird.util.ProgressCounter;
-import edu.cmu.minorthird.util.gui.*;
 import org.apache.log4j.Logger;
 
 /** 
@@ -12,7 +11,7 @@ import org.apache.log4j.Logger;
  * @author William Cohen
  */
 
-public class CrossValidatedDataset implements Visible
+public class CrossValidatedDataset
 {
 	static private Logger log = Logger.getLogger(CrossValidatedDataset.class);
 
@@ -63,57 +62,7 @@ public class CrossValidatedDataset implements Visible
 		return buf.toString();
 	}
 
-	public Viewer toGUI()
-	{
-		ParallelViewer main = new ParallelViewer();
-		for (int i=0; i<cds.length; i++) {
-			final int k = i;
-			main.addSubView(
-				"Test Partition "+(i+1), 
-				new TransformedViewer(cds[0].toGUI()) {
-					static final long serialVersionUID=20080130L;
-					public Object transform(Object o) {
-					//what is this for? - frank
-						//CrossValidatedDataset cvd = (CrossValidatedDataset)o;
-						return cds[k];
-					}});
-		}
-		if (trainCds!=null) {
-			for (int i=0; i<trainCds.length; i++) {
-				final int k = i;
-				main.addSubView(
-					"Train Partition "+(i+1), 
-					new TransformedViewer(cds[0].toGUI()) {
-						static final long serialVersionUID=20080130L;
-						public Object transform(Object o) {
-							//what is this for? - frank
-							//CrossValidatedDataset cvd = (CrossValidatedDataset)o;
-							return trainCds[k];
-						}});
-			}
-		}
-		main.addSubView(
-			"Overall Evaluation", 
-			new TransformedViewer(v.toGUI()) {
-				static final long serialVersionUID=20080130L;
-				public Object transform(Object o) {
-					CrossValidatedDataset cvd = (CrossValidatedDataset)o;												
-					return cvd.v;
-				}
-			});
-		main.setContent(this);
-		return main;
-	}
 
 	public Evaluation getEvaluation() { return v; }
 
-	public static void main(String[] args)
-	{
-		Dataset train = SampleDatasets.sampleData("toy",false);
-		ClassifierLearner learner = new DecisionTreeLearner();
-		//ClassifierLearner learner = new NaiveBayes();
-		CrossValidatedDataset cd = new CrossValidatedDataset(learner,train,new CrossValSplitter<Example>(3),true);
-		new ViewerFrame("CrossValidatedDataset", cd.toGUI());
-	}
-	
 }

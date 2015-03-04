@@ -2,8 +2,6 @@ package edu.cmu.minorthird.classify;
 
 import java.io.Serializable;
 
-import edu.cmu.minorthird.util.gui.Visible;
-
 /**
  * An instance designed for a relational dataset. Extends from Example. Modified
  * by Zhenzhen Kou to include an ExmapleID
@@ -11,7 +9,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  * @author Zhenzhen Kou
  */
 
-public class SGMExample extends Example implements Instance,Visible,Serializable{
+public class SGMExample extends Example implements Instance,Serializable{
 
 	static final long serialVersionUID=20071015;
 

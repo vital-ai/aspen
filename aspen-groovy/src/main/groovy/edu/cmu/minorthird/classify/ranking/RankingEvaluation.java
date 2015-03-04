@@ -27,19 +27,12 @@ import edu.cmu.minorthird.classify.MutableInstance;
 import edu.cmu.minorthird.util.BasicCommandLineProcessor;
 import edu.cmu.minorthird.util.Saveable;
 import edu.cmu.minorthird.util.StringUtil;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.LineCharter;
-import edu.cmu.minorthird.util.gui.ParallelViewer;
-import edu.cmu.minorthird.util.gui.VanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
-import edu.cmu.minorthird.util.gui.Visible;
 
 
 /** Evaluate a classifier as a ranker
  */
 
-public class RankingEvaluation implements Visible, Saveable
+public class RankingEvaluation implements Saveable
 {
 	private final static int GRAPHS_PER_PAGE = 10;
 	private final static int NUM_TOP_TO_SHOW = 50;
@@ -362,82 +355,6 @@ public class RankingEvaluation implements Visible, Saveable
 
 	}
 
-	public Viewer toGUI()
-	{
-		ParallelViewer v = new ParallelViewer();
-		v.addSubView( "Summary Table", new ComponentViewer() {
-			static final long serialVersionUID=20080206L;
-			public JComponent componentFor(Object o) {
-				RankingEvaluation gsEval = (RankingEvaluation)o; 
-				return new VanillaViewer( gsEval.toTable() );
-			}
-		});
-		ParallelViewer v2 = new ParallelViewer();
-		v.addSubView( "11-Pt Precision", v2 );
-		v2.addSubView( "Averaged", new ComponentViewer() {
-			static final long serialVersionUID=20080206L;
-			public JComponent componentFor(Object o) {
-				RankingEvaluation gsEval = (RankingEvaluation)o; 
-				double[] avgPrec = gsEval.averageElevenPointPrecision();
-				LineCharter lc = new LineCharter();
-				lc.startCurve("11-Pt Avg Prec");
-				for (int j=0; j<=10; j++) {
-					lc.addPoint( j/10.0, avgPrec[j] );
-				}
-				return lc.getPanel("11-Pt Average Interpolated Precision", "Recall", "Precision");
-			}
-		});
-		String[][] groups = exampleGroups(GRAPHS_PER_PAGE);
-		for (int i=0; i<groups.length; i++) {
-			final String tag = groups.length==1 ? "Details" : ("Details: Group "+(i+1));
-			final String[] group = groups[i]; 
-			v2.addSubView( tag, new ComponentViewer() {
-				static final long serialVersionUID=20080206L;
-				public JComponent componentFor(Object o) {
-					RankingEvaluation gsEval = (RankingEvaluation)o; 
-					LineCharter lc = new LineCharter();
-					for (int i=0; i<group.length; i++) {
-						String name = group[i];
-						double[] avgPrec = gsEval.elevenPointPrecision(name);
-						lc.startCurve(name);
-						for (int j=0; j<=10; j++) {
-							lc.addPoint( j/10.0, avgPrec[j] );
-						}
-					}
-					return lc.getPanel("11-Pt Interpolated Precision", "Recall", "Precision");
-				}
-			});
-
-		}
-		v.addSubView( "AvgRecall vs Rank", new ComponentViewer() {
-			static final long serialVersionUID=20080206L;
-			public JComponent componentFor(Object o) {
-				//RankingEvaluation gsEval = (RankingEvaluation)o; 
-				double[] avgRec = averageRecallAtEachK();
-				LineCharter lc = new LineCharter();
-				lc.startCurve("Recall vs Rank");
-				for (int i=1; i<avgRec.length; i++) {
-					lc.addPoint( i, avgRec[i] );
-				}
-				return lc.getPanel("AvgRecall vs Rank", "Rank", "AvgRecall");
-			}
-		});
-		ParallelViewer v3 = new ParallelViewer();
-		v3.putTabsOnLeft();
-		v.addSubView( "Details", v3 );
-		for (Iterator<String> i=getRankingIterator(); i.hasNext(); ) {
-			final String name = i.next();
-			v3.addSubView( name, new ComponentViewer() {
-				static final long serialVersionUID=20080206L;
-				public JComponent componentFor(Object o) {
-					return new VanillaViewer( toTable(name,NUM_TOP_TO_SHOW) );
-				}
-			});
-		}
-		v.setContent(this);
-		return v;
-	}
-
 	//
 	// implement Saveable
 	//
@@ -554,11 +471,4 @@ public class RankingEvaluation implements Visible, Saveable
 	}
 	public void processArguments(String[] args) { new MyCLP().processArguments(args); }
 
-	static public void main(String[] args) throws IOException
-	{
-		RankingEvaluation eval = new RankingEvaluation();
-		eval.processArguments(args);
-		if (eval.guiFlag) new ViewerFrame(eval.loadedFile, eval.toGUI());
-		else System.out.println(eval.toTable());
-	}
 }

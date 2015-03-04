@@ -11,7 +11,6 @@ import java.util.regex.PatternSyntaxException;
 
 import org.apache.log4j.Logger;
 
-import edu.cmu.minorthird.text.gui.TextBaseViewer;
 import edu.cmu.minorthird.text.learn.SampleClassificationProblem;
 import edu.cmu.minorthird.text.learn.SampleExtractionProblem;
 import edu.cmu.minorthird.text.mixup.Mixup;
@@ -272,12 +271,4 @@ public class FancyLoader
 		return v!=null ? v : props.getProperty(prop);
 	}
 
-	static public void main(String[] args) throws bsh.EvalError, IOException 
-	{
-		Object o = FancyLoader.loadObject(args[0]);
-		System.out.println("loaded "+o);
-		if (o instanceof TextLabels) {
-			TextBaseViewer.view((TextLabels) o );
-		}
-	}
 }

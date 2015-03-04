@@ -23,16 +23,10 @@ import edu.cmu.minorthird.classify.DatasetLoader;
 import edu.cmu.minorthird.classify.Example;
 import edu.cmu.minorthird.classify.ExampleSchema;
 import edu.cmu.minorthird.classify.FeatureFactory;
-import edu.cmu.minorthird.classify.GUI;
 import edu.cmu.minorthird.classify.SampleDatasets;
 import edu.cmu.minorthird.classify.Splitter;
 import edu.cmu.minorthird.util.Saveable;
 import edu.cmu.minorthird.util.StringUtil;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
-import edu.cmu.minorthird.util.gui.Visible;
-import edu.cmu.minorthird.util.gui.ZoomedViewer;
 
 /**
  * A dataset of sequences of examples.
@@ -40,7 +34,7 @@ import edu.cmu.minorthird.util.gui.ZoomedViewer;
  * @author William Cohen
  */
 
-public class SequenceDataset implements Dataset,SequenceConstants,Visible,
+public class SequenceDataset implements Dataset,SequenceConstants,
 		Saveable{
 
 	protected List<Example[]> sequenceList=new ArrayList<Example[]>();
@@ -312,45 +306,6 @@ public class SequenceDataset implements Dataset,SequenceConstants,Visible,
 		}
 	}
 
-	/** A GUI view of the dataset. */
-	public Viewer toGUI(){
-		Viewer dbGui=new MyDataViewer();
-		dbGui.setContent(this);
-		Viewer seqGui=GUI.newSourcedExampleViewer();
-		return new ZoomedViewer(dbGui,seqGui);
-	}
-
-	private static class MyDataViewer extends ComponentViewer{
-
-		static final long serialVersionUID=20080207L;
-
-		public JComponent componentFor(Object o){
-			SequenceDataset d=(SequenceDataset)o;
-			final Example[] arr=new Example[d.size()];
-			int k=0;
-			for(Iterator<Example> i=d.iterator();i.hasNext();){
-				arr[k++]=i.next();
-			}
-			JList jList=new JList(arr);
-			jList.setCellRenderer(new ListCellRenderer(){
-
-				public Component getListCellRendererComponent(JList el,Object v,
-						int index,boolean sel,boolean focus){
-					return GUI.conciseExampleRendererComponent(arr[index],100,sel);
-				}
-			});
-			monitorSelections(jList);
-			return new JScrollPane(jList);
-		}
-	}
-
-	public static void main(String[] args) throws IOException{
-		SequenceDataset d=SampleDatasets.makeToySequenceData();
-		System.out.println(d.toString());
-		new ViewerFrame("Sequence data",d.toGUI());
-		if(args.length>0)
-			DatasetLoader.saveSequence(d,new File(args[0]));
-	}
 
 	public int getNumPosExamples(){
 		return -1;

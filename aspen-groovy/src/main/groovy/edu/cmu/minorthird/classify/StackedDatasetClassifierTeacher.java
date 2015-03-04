@@ -9,12 +9,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.minorthird.classify.experiments.Expt;
 import edu.cmu.minorthird.classify.experiments.Tester;
 import edu.cmu.minorthird.classify.relational.RealRelationalDataset;
 import edu.cmu.minorthird.util.IOUtil;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Trains a StackedClassifierLearner using the information in  a labeled relational Dataset.
@@ -88,27 +85,4 @@ public class StackedDatasetClassifierTeacher extends StackedClassifierTeacher{
 		return activeLearning;
 	}
 
-	static public void main(String[] argv){
-		try{
-			Dataset dataset=Expt.toDataset(argv[0]);
-			ClassifierLearner learner=Expt.toLearner(argv[1]);
-			Classifier c=new DatasetClassifierTeacher(dataset).train(learner);
-			if(c instanceof Visible){
-				new ViewerFrame("from "+argv[0]+" and "+argv[1],((Visible)c).toGUI());
-			}else{
-				System.out.println("Learnt classifier: "+c);
-			}
-			System.out.println("Training error:   "+Tester.errorRate(c,dataset));
-			if(c instanceof BinaryClassifier){
-				System.out.println("Average log loss: "+
-						Tester.logLoss(((BinaryClassifier)c),dataset));
-			}
-			if(argv.length>=3&&(c instanceof Serializable)){
-				IOUtil.saveSerialized(((Serializable)c),new File(argv[2]));
-			}
-		}catch(Exception e){
-			e.printStackTrace();
-			System.out.println("usage: dataset learner [classifierFile]");
-		}
-	}
 }

@@ -13,8 +13,6 @@ import edu.cmu.minorthird.util.BasicCommandLineProcessor;
 import edu.cmu.minorthird.util.CommandLineProcessor;
 import edu.cmu.minorthird.util.IOUtil;
 import edu.cmu.minorthird.util.ProgressCounter;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
 
 /*
  * A more scalable version of a document-per-file TextBase with
@@ -163,17 +161,4 @@ public class LabeledDirectory implements CommandLineProcessor.Configurable{
 		}
 	}
 
-	/**
-	 * A simple main program that allows you to add annotations to a directory of text files.
-	 */
-	public static void main(String[] args) throws IOException{
-		LabeledDirectory ld=new LabeledDirectory();
-		ld.getCLP().processArguments(args);
-		if(ld.nameOfFileToView==null){
-			ld.reLabelText();
-		}else{
-			TextLabels labels=ld.getTextLabels(new File(ld.nameOfFileToView));
-			new ViewerFrame(ld.nameOfFileToView,new SmartVanillaViewer(labels));
-		}
-	}
 }

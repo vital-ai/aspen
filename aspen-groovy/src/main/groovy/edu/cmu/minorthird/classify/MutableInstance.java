@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import edu.cmu.minorthird.util.UnionIterator;
-import edu.cmu.minorthird.util.gui.ViewerFrame;
 
 /** 
  * A single instance for a learner. 
@@ -74,20 +73,6 @@ public class MutableInstance extends AbstractInstance{
 	
 	public int numFeatures(){
 		return binarySet.size()+numericSet.size();
-	}
-
-	static public void main(String[] args){
-		try{
-			MutableInstance instance=new MutableInstance("William Cohen");
-			instance.addBinary(new Feature("token lc william"));
-			instance.addBinary(new Feature("token lc cohen"));
-			instance.addNumeric(new Feature("iq"),250);
-			instance.addNumeric(new Feature("office"),5317);
-			System.out.println(instance);
-			new ViewerFrame("TestInstance Viewer", instance.toGUI());
-		}catch(Exception e){
-			e.printStackTrace();
-		}
 	}
 
 }

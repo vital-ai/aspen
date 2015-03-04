@@ -1,8 +1,6 @@
 /* Copyright 2004, Carnegie Mellon, All Rights Reserved */
 package edu.cmu.minorthird.text.learn;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -12,18 +10,10 @@ import java.util.List;
 import java.util.Set;
 
 import edu.cmu.minorthird.text.AbstractAnnotator;
-import edu.cmu.minorthird.text.FancyLoader;
 import edu.cmu.minorthird.text.MonotonicTextLabels;
-import edu.cmu.minorthird.text.MutableTextLabels;
 import edu.cmu.minorthird.text.RegexTokenizer;
 import edu.cmu.minorthird.text.Span;
-import edu.cmu.minorthird.text.SpanDifference;
 import edu.cmu.minorthird.text.TextLabels;
-import edu.cmu.minorthird.text.TextLabelsLoader;
-import edu.cmu.minorthird.text.gui.TextBaseViewer;
-import edu.cmu.minorthird.text.mixup.MixupInterpreter;
-import edu.cmu.minorthird.text.mixup.MixupProgram;
-import edu.cmu.minorthird.util.IOUtil;
 
 /**
  * A name matching scheme on top of a given extractor, fit for spanTypes
@@ -340,94 +330,6 @@ public class NameMatcher extends AbstractAnnotator{
 				.println(" [-saveAs FILE]     a file to save the new post-name matching labels");
 		System.err.println("");
 		System.exit(1);
-	}
-
-	public static void main(String[] args) throws IOException{
-		File fromFile=null;
-		File saveAs=new File("NM_labels.env");
-		String spanType="";
-		MonotonicTextLabels textLabels=null;
-		MonotonicTextLabels annLabels=null;
-		ExtractorAnnotator ann=null;
-
-		NameMatcher nameMatcher=new NameMatcher(spanType);
-
-		// parse and load arguments
-		for(int i=0;i<args.length;i++){
-			if(args[i].equals("-loadFrom")){
-				fromFile=new File(args[i+1]);
-			}else if(args[i].equals("-saveAs")){
-				saveAs=new File(args[i+1]);
-			}else if(args[i].equals("-labels")){
-				textLabels=(MutableTextLabels)FancyLoader.loadTextLabels(args[i+1]);
-			}else if(args[i].equals("-spanType")){
-				spanType=args[i+1];
-			}
-		}
-		if((fromFile==null)||(textLabels==null)||(spanType==null))
-			usage();
-
-		// load the annotator
-		try{
-			ann=(ExtractorAnnotator)IOUtil.loadSerialized(fromFile);
-		}catch(IOException ex){
-			throw new IllegalArgumentException("can't load annotator from "+fromFile+
-					": "+ex);
-		}
-		annLabels=(MonotonicTextLabels)ann.annotatedCopy(textLabels);
-		// TextBaseViewer.view(annLabels);
-
-		nameMatcher.doAnnotate(annLabels);
-
-		MixupProgram p=null;
-		try{
-			p=
-					new MixupProgram(
-							new String[]{"defTokenProp email:t = ~re'([\\.\\-\\w+]+\\@[\\.\\-\\w\\+]+)',1;"});
-			p.addStatement("defSpanType email =: ... [email:t+R] ... ;");
-			p
-					.addStatement("defTokenProp predicted_name:1 =: ... [@_prediction_updated] ... || ... [@_prediction] ... ;");
-			p
-					.addStatement("defSpanType _prediction_updated_fixed =: ... [L <predicted_name:1, !email:t, !delete:t>+ R] ... ;");
-		}catch(Exception e){
-			System.out.println(e);
-		}
-		MixupInterpreter interp=new MixupInterpreter(p);
-		interp.eval(postLabels);
-		TextBaseViewer.view(postLabels);
-
-		if(saveAs!=null){
-			try{
-				(new TextLabelsLoader()).saveTypesAsOps(postLabels,saveAs);
-			}catch(IOException e){
-				try{
-					(new TextLabelsLoader()).saveTypesAsOps(postLabels,new File(
-							"name-matching-labels.env"));
-				}catch(Exception e2){
-					System.out.println(e2);
-				}
-			}
-		}
-
-		// TextBaseViewer.view(nameMatcher.postLabels);
-
-		SpanDifference sd;
-		System.out
-				.println("============================================================");
-		System.out.println("Pre names-matching:");
-		sd=
-				new SpanDifference(NameMatcher.postLabels
-						.instanceIterator(nameMatcher.predType),NameMatcher.postLabels
-						.instanceIterator(spanType),NameMatcher.postLabels
-						.closureIterator(spanType));
-		System.out.println(sd.toSummary());
-		System.out.println("Post names-matching:");
-		SpanDifference finalSD=
-				new SpanDifference(NameMatcher.postLabels
-						.instanceIterator(nameMatcher.predType+"_updated_fixed"),
-						NameMatcher.postLabels.instanceIterator(spanType),
-						NameMatcher.postLabels.closureIterator(spanType));
-		System.out.println(finalSD.toSummary());
 	}
 
 }

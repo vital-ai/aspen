@@ -25,9 +25,6 @@ import edu.cmu.minorthird.text.learn.experiments.MonotonicSubTextLabels;
 import edu.cmu.minorthird.text.learn.experiments.SubTextBase;
 import edu.cmu.minorthird.util.IOUtil;
 import edu.cmu.minorthird.util.ProgressCounter;
-import edu.cmu.minorthird.util.gui.SmartVanillaViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Wraps an Annotator learned by SequenceAnnotatorLearner with code to compute
@@ -70,7 +67,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  */
 
 public class ConfidenceReportingSequenceAnnotator extends AbstractAnnotator
-		implements ExtractorAnnotator,Serializable,Visible{
+		implements ExtractorAnnotator,Serializable{
 
 	static final long serialVersionUID=20080306L;
 	
@@ -172,9 +169,6 @@ public class ConfidenceReportingSequenceAnnotator extends AbstractAnnotator
 		return sequenceAnnotator.explainAnnotation(labels,documentSpan);
 	}
 
-	public Viewer toGUI(){
-		return new SmartVanillaViewer(sequenceAnnotator);
-	}
 
 	/**
 	 * Convert an appropriately trained ExtractorAnnotator to a

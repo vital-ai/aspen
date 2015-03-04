@@ -16,9 +16,6 @@ import edu.cmu.minorthird.text.SpanDifference;
 import edu.cmu.minorthird.text.TextBase;
 import edu.cmu.minorthird.util.IOUtil;
 import edu.cmu.minorthird.util.MathUtil;
-import edu.cmu.minorthird.util.gui.ComponentViewer;
-import edu.cmu.minorthird.util.gui.Viewer;
-import edu.cmu.minorthird.util.gui.Visible;
 
 /**
  * Records results of evaluating an extraction-learning system.
@@ -26,7 +23,7 @@ import edu.cmu.minorthird.util.gui.Visible;
  * @author William Cohen
  */
 
-public class ExtractionEvaluation implements Visible,Serializable{
+public class ExtractionEvaluation implements Serializable{
 
 	// serialization stuff
 	static final long serialVersionUID=20080314L;
@@ -189,34 +186,6 @@ public class ExtractionEvaluation implements Visible,Serializable{
 				acc_s.sf1.stdErr());
 	}
 
-	public Viewer toGUI(){
-		Viewer v=new ComponentViewer(){
-			static final long serialVersionUID=20080314L;
-			public JComponent componentFor(Object o){
-				ExtractionEvaluation e=(ExtractionEvaluation)o;
-				Object[][] table=new Object[e.tagToStatsMap.keySet().size()][7];
-				int row=0;
-				for(Iterator<String> i=e.tagToStatsMap.keySet().iterator();i.hasNext();){
-					String tag=i.next();
-					table[row][0]=tag;
-					Stats s=(Stats)tagToStatsMap.get(tag);
-					table[row][1]=new Double(s.tp);
-					table[row][2]=new Double(s.tr);
-					table[row][3]=new Double(s.tf1);
-					table[row][4]=new Double(s.sp);
-					table[row][5]=new Double(s.sr);
-					table[row][6]=new Double(s.sf1);
-					row++;
-				}
-				String[] colNames=
-						new String[]{"Measurement Tag","Token Prec.","Token Recall",
-								"Token F1","Span Prec.","Span Recall","Span F1"};
-				return new JScrollPane(new JTable(table,colNames));
-			}
-		};
-		v.setContent(this);
-		return v;
-	}
 
 	static public void main(String args[]) throws IOException{
 		if(args.length==0){
