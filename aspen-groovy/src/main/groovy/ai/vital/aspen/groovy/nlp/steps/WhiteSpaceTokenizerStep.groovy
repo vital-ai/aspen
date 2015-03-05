@@ -24,6 +24,7 @@ import ai.vital.domain.Sentence;
 import ai.vital.domain.TextBlock;
 import ai.vital.domain.Token;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
+import ai.vital.opennlp.tokenizer.VitalSimpleTokenizer;
 import ai.vital.vitalsigns.global.GlobalHashTable;
 import ai.vital.vitalsigns.model.VITAL_Container;
 import ai.vital.aspen.groovy.ontology.VitalOntology
@@ -45,7 +46,7 @@ class WhiteSpaceTokenizerStep extends AbstractStep {
 		if(strict) {
 			tokenizer = WhitespaceTokenizer.INSTANCE;
 		} else {
-			tokenizer = SimpleTokenizer.INSTANCE;
+			tokenizer = VitalSimpleTokenizer.INSTANCE;
 			
 		}
 	}
