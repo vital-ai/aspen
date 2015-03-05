@@ -19,5 +19,7 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry exported="true" kind="con" path="GROOVY_DSL_SUPPORT"/>
+	<classpathentry kind="lib" path="D:/workspace_vital.ai_git/vital-home-0.2.0/domain-groovy-jar/bloomberg-transcripts-groovy-0.2.0.jar"/>
+	<classpathentry kind="lib" path="D:/lib/javacsv/javacsv.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

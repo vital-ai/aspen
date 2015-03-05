@@ -46,6 +46,8 @@ class SentenceDetectorStep extends AbstractStep {
 	
 	private SentenceDetectorME detector;
 	
+	//this is a config option - very handy
+	boolean singleSentencePerBlock = false
 	
 	public void init()  {
 		
@@ -101,21 +103,17 @@ class SentenceDetectorStep extends AbstractStep {
 	
 	public void processDocument(Document doc, List results) {
 
-		
-		boolean singleSentencePerBlock = false
-		
-		
-			String uri = doc.getURI();
+		String uri = doc.getURI();
 			
-			log.info("Processing doc: {}", uri);
+		log.info("Processing doc: {}", uri);
 
-			int startIndex = 1;
+		int startIndex = 1;
 			
-			for( TextBlock block : doc.getTextBlocks() ) {
+		for( TextBlock block : doc.getTextBlocks() ) {
 			
-				startIndex = processTextBloc(results, doc, block, startIndex, singleSentencePerBlock);
+			startIndex = processTextBloc(results, doc, block, startIndex, singleSentencePerBlock);
 
-			}
+		}
 		
 	}
 

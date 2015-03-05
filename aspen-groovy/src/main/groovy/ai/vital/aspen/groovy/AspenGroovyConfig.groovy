@@ -1,5 +1,6 @@
 package ai.vital.aspen.groovy
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -31,7 +32,28 @@ class AspenGroovyConfig {
 		return singleton
 	}
 	
-	private AspenGroovyConfig(){}
+	private AspenGroovyConfig(){
+		
+		String path = "/resources/sample-aspen-groovy.config" 
+		
+		log.debug("Initilizing Aspen-Groovy config singleton from classpath resource ${path}")
+		
+		InputStream stream = null
+		
+		try {
+			stream = AspenGroovyConfig.class.getResourceAsStream(path)
+			if(stream != null) {
+				this.configure(stream)
+			} else {
+				log.warn("aspen config not found in classpath: ${path}")
+			}
+		} catch(Exception e) {
+			log.error("Error when configuring aspen groovy from classpath resource: ${path} - ${e.localizedMessage}")
+		} finally {
+			IOUtils.closeQuietly(stream)
+		}
+		
+	}
 	
 	/**
 	 * By default all resources are loaded from classpath /resources/ directory

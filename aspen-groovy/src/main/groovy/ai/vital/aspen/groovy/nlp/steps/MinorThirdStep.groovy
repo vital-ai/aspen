@@ -300,7 +300,7 @@ class MinorThirdStep extends AbstractStep {
 				
 				
 			}
-			
+		
 			for(String type : types) {
 				
 				String t = aposFilter(type);
@@ -544,7 +544,7 @@ class MinorThirdStep extends AbstractStep {
 			
 	private String resolveClass(Map<String, String> prefix2Package,
 			String clsName) {
-	
+			
 		int indexOfNSQualifier = clsName.indexOf(NS_QUALIFIER);
 		
 		if(indexOfNSQualifier >= 0 ) {
@@ -555,7 +555,8 @@ class MinorThirdStep extends AbstractStep {
 				
 			if(packageName == null) {
 					
-				throw new RuntimeException("No package registered for prefix: " + prefix);
+				log.warn("No package registered for prefix: " + prefix);
+				return clsName
 					
 			}
 				
@@ -625,6 +626,9 @@ class MinorThirdStep extends AbstractStep {
 	private void copyAllOtherProperties(Document doc, BasicTextLabels labels) {
 
 		int blockOffset = 0;
+		
+		labels.declareType(NOUN_PHRASE)
+		labels.declareType(VERB_PHRASE)
 		
 		Span docSpan = labels.getTextBase().documentSpan(docID);
 		

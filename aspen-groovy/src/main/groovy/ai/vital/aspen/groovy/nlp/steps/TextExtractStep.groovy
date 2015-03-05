@@ -46,6 +46,7 @@ class TextExtractStep extends AbstractStep {
 	
 	private final static Logger log = LoggerFactory.getLogger(TextExtractStep.class);
 	
+	boolean processHtml = true
 	
 	public String getName() {
 		return TEXTEXTRACTION_VS;
@@ -93,7 +94,7 @@ class TextExtractStep extends AbstractStep {
 			
 			String extractedText = null;
 			
-			if(document == null) {
+			if(document == null || !processHtml) {
 				
 				log.info("The document {} body is not parseable html...", uri);
 				

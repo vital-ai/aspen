@@ -1,10 +1,12 @@
 
-require 'vitalai.demoapp.PersonEntity' ;
+//require 'vitalai.demoapp.PersonEntity' ;
 
-require 'vitalai.demoapp.BrandEntity' ;
+//require 'vitalai.demoapp.BrandEntity' ;
 
-require 'vitalai.demoapp.Artist' ;
+//require 'vitalai.demoapp.Artist' ;
 
-require 'time';
+//require 'time';
 
-require 'ai.vital.domain.Entity' ;
+require 'Person' ;
+
+//require 'ai.vital.domain.Entity' ;

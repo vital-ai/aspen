@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.*;
 
+import opennlp.tools.tokenize.SimpleTokenizer;
+import opennlp.tools.tokenize.Tokenizer
 import opennlp.tools.tokenize.WhitespaceTokenizer;
 import opennlp.tools.util.Span;
 
@@ -33,16 +35,30 @@ class WhiteSpaceTokenizerStep extends AbstractStep {
 	
 	private final static Logger log = LoggerFactory.getLogger(WhiteSpaceTokenizerStep.class);
 
-	private WhitespaceTokenizer whitespaceTokenizer;
+	private Tokenizer tokenizer;
 	
 	private Pattern lastSentTokenPattern = Pattern.compile("([^,?!.]+)([,?!.]+)", Pattern.CASE_INSENSITIVE);
 	
 	
 	public void init()  {
-		log.info("Initializing whitespace tokenizer...");
-		whitespaceTokenizer = WhitespaceTokenizer.INSTANCE;
+		log.info("Initializing whitespace tokenizer, strict ? ${strict}...");
+		if(strict) {
+			tokenizer = WhitespaceTokenizer.INSTANCE;
+		} else {
+			tokenizer = SimpleTokenizer.INSTANCE;
+			
+		}
 	}
 	
+	boolean strict = true
+	
+	/**
+	 * @param strict - true - pure whitespace, false - simple tokenizer 
+	 * @return
+	 */
+	public WhiteSpaceTokenizerStep(boolean strict) {
+		this.strict = strict
+	}
 	
 	public String getName() {
 		return WHITESPACETOKENIZER_VS;
@@ -76,7 +92,7 @@ class WhiteSpaceTokenizerStep extends AbstractStep {
 					
 					String t = btext.substring(sentence.startPosition.rawValue(), sentence.endPosition.rawValue());
 					
-					Span[] tokenizePos = whitespaceTokenizer.tokenizePos(t);
+					Span[] tokenizePos = tokenizer.tokenizePos(t);
 				
 					StringBuilder tokensText = new StringBuilder();
 					

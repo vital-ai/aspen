@@ -65,7 +65,7 @@ class NamedPersonStep {
 			
 				if( AspenGroovyConfig.get().loadResourcesFromClasspath ) {
 					
-					String path = "resources/models/en-ner-person.bin"
+					String path = "/resources/models/en-ner-person.bin"
 					
 					log.info("Initializing named person model from classpath: {}", path);
 					
@@ -82,6 +82,7 @@ class NamedPersonStep {
 						throw new RuntimeException("Model file not found: ${namedPersonModelFile.absolutePath}")
 					}
 					
+					inputStream = new FileInputStream(namedPersonModelFile)
 					
 				}
 			
@@ -106,12 +107,10 @@ class NamedPersonStep {
 		
 	}
 
-	public void processPayload(VITAL_Container payload)
+	public void processDocument(Document doc, List results)
 			throws 
 			Exception {
 
-		for( Document doc : payload.iterator(Document.class) ) {
-			
 			String docUri = doc.getURI();
 			
 			log.info("Processing document {} ...", docUri);
@@ -128,16 +127,16 @@ class NamedPersonStep {
 				
 				for(Sentence sentence : sentences) {
 			
-					int sentenceOffset = sentence.startPosition;
+					int sentenceOffset = sentence.startPosition.rawValue();
 					
-					String sentenceText = blockText.substring(sentence.startPosition, sentence.endPosition);
+					String sentenceText = blockText.substring(sentence.startPosition.rawValue(), sentence.endPosition.rawValue());
 					
 					List<Token> tokens = TokenUtils.getTokens(sentence); //sentence.getTokens();
 					
 					String[] sentenceA = new String[tokens.size()];
 					
 					for(int i = 0 ; i < tokens.size(); i++) {
-						sentenceA[i] = tokens.get(i).tokenText;
+						sentenceA[i] = tokens.get(i).tokenText.toString();
 					}
 					
 					Span[] names = nameFinder.find(sentenceA);
@@ -147,23 +146,30 @@ class NamedPersonStep {
 						Token firstToken = tokens.get(n.getStart());
 						Token lastToken = tokens.get(n.getEnd() -1 );
 
-						Person np = new Person();
+						Entity np = new Entity();
 						np.setURI(docUri + "#NamedPerson_" + namedPersons.size());
 						
-						String substring = sentenceText.substring(firstToken.startPosition, lastToken.endPosition);
+						String substring = sentenceText.substring(firstToken.startPosition.rawValue(), lastToken.endPosition.rawValue());
 						np.name = substring;
 						np.extractSource = "OpenNLP";
-						np.category = NamedPerson.class.getSimpleName();
+						np.category = 'Person';
 
 						EntityInstance entityInstance = new EntityInstance();
 						entityInstance.setURI(np.getURI() + "instance_0");
 						entityInstance.exactString = substring;
 						entityInstance.lengthInSentence = substring.length();
-						entityInstance.offsetInSentence = firstToken.startPosition;
-						entityInstance.offset = DocumentUtils.translateBlocksContentOffsetToBodyOffset(doc, blockOffset + sentenceOffset + firstToken.startPosition);
+						entityInstance.offsetInSentence = firstToken.startPosition.rawValue();
+						entityInstance.offset = DocumentUtils.translateBlocksContentOffsetToBodyOffset(doc, blockOffset + sentenceOffset + firstToken.startPosition.rawValue());
 
 //							doc.translateBlocksContentOffsetToBodyOffset(blockOffset + firstToken.getStart()));
-						entityInstance.length = DocumentUtils.translateBlocksContentOffsetToBodyOffset(doc, blockOffset + sentenceOffset + lastToken.endPosition - entityInstance.offset);
+						entityInstance.length = DocumentUtils.translateBlocksContentOffsetToBodyOffset(doc, blockOffset + sentenceOffset + lastToken.endPosition.rawValue() - entityInstance.offset.rawValue());
+						
+						
+						Set<String> spanTypes = new HashSet<String>()
+						spanTypes.add("Person")
+					
+						entityInstance.spanType = spanTypes
+						
 						
 						List<EntityInstance> instances = new ArrayList<EntityInstance>();
 						instances.add(entityInstance);
@@ -174,10 +180,10 @@ class NamedPersonStep {
 //
 //						doc.getEntities().add(np);
 						
-						payload.putGraphObjects(Arrays.asList(np, entityInstance));
-						payload.putGraphObjects(EdgeUtils.createEdges(doc, Arrays.asList(np), Edge_hasEntity.class, VitalOntology.Edge_hasEntityURIBase));
-						payload.putGraphObjects(EdgeUtils.createEdges(np, Arrays.asList(entityInstance), Edge_hasEntityInstance.class, VitalOntology.Edge_hasEntityInstanceURIBase));
-						payload.putGraphObjects(EdgeUtils.createEdges(sentence, Arrays.asList(entityInstance), Edge_hasSentenceEntityInstance.class, VitalOntology.Edge_hasSentenceEntityInstanceURIBase));
+						results.addAll(Arrays.asList(np, entityInstance));
+						results.addAll(EdgeUtils.createEdges(doc, Arrays.asList(np), Edge_hasEntity.class, VitalOntology.Edge_hasEntityURIBase));
+						results.addAll(EdgeUtils.createEdges(np, Arrays.asList(entityInstance), Edge_hasEntityInstance.class, VitalOntology.Edge_hasEntityInstanceURIBase));
+						results.addAll(EdgeUtils.createEdges(sentence, Arrays.asList(entityInstance), Edge_hasSentenceEntityInstance.class, VitalOntology.Edge_hasSentenceEntityInstanceURIBase));
 						
 						namedPersons.add(np);
 						
@@ -189,10 +195,7 @@ class NamedPersonStep {
 			
 			}
 			
-		}
 		
 	}
 	
-	
-
 }
