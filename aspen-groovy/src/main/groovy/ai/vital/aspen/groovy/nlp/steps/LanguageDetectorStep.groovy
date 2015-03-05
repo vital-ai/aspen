@@ -104,8 +104,11 @@ zh-tw
 		File profileDir = null;
 		
 		if( ! AspenGroovyConfig.get().loadResourcesFromClasspath ) {
-			
-			profileDir = new File("resources/langdetect-profiles/");
+		
+			String resDir = AspenGroovyConfig.get().resourcesDir
+			if(!resDir) throw new RuntimeException("resourcesDir not set")
+				
+			profileDir = new File(resDir, "langdetect-profiles");
 			
 			log.info("Loading profies from file system: {}", profileDir.absolutePath)
 			

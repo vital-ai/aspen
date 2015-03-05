@@ -73,7 +73,10 @@ class SentenceDetectorStep extends AbstractStep {
 					
 				} else {
 				
-					File modelFile = new File("resources/models", "en-sent.bin");
+					String resDir = AspenGroovyConfig.get().resourcesDir
+					if(!resDir) throw new RuntimeException("resourcesDir not set")
+				
+					File modelFile = new File(new File(resDir, "models"), "en-sent.bin");
 				
 					log.info("Initializing sentences model from file: {}", modelFile.getAbsolutePath());
 				

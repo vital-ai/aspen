@@ -75,7 +75,10 @@ class NamedPersonStep {
 					
 				} else {
 				
-					File namedPersonModelFile = new File("resources/models/", "en-ner-person.bin")
+					String resDir = AspenGroovyConfig.get().resourcesDir
+					if(!resDir) throw new RuntimeException("resourcesDir not set")
+				
+					File namedPersonModelFile = new File(new File(resDir, "models"), "en-ner-person.bin")
 					log.info("Initializing named person model from file: {}", namedPersonModelFile.getAbsolutePath());
 					
 					if(!namedPersonModelFile.exists()) {

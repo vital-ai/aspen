@@ -70,10 +70,17 @@ class ChunkerStep extends AbstractStep {
 					
 					inputStream = AspenGroovyConfig.class.getResourceAsStream(path)				
 					
+					if(inputStream == null) throw new RuntimeException("Model file not found in classpath: ${path}")
+					
 				} else {
-							
-					File modelFile = new File("resources/models", "en-chunker.bin");
-							
+				
+					String resDir = AspenGroovyConfig.get().resourcesDir
+					if(!resDir) throw new RuntimeException("resourcesDir not set")			
+				
+					File modelFile = new File(new File(resDir, "models"), "en-chunker.bin");
+					
+					if(!modelFile.exists()) throw new RuntimeException("Mode file not found: ${modelFile.absolutePath}")		
+					
 					log.info("Initializing Chunker model from file: {}", modelFile.getAbsolutePath());
 				
 					inputStream = new FileInputStream(modelFile)			

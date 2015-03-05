@@ -108,7 +108,10 @@ class MinorThirdStep extends AbstractStep {
 			
 		} else {
 		
-			File mixupDir = new File("resources/mixup/");
+			String resDir = AspenGroovyConfig.get().resourcesDir
+			if(!resDir) throw new RuntimeException("resourcesDir not set")
+		
+			File mixupDir = new File(resDir, "mixup");
 			
 			log.info("Using directory annotator loader, dir: {}", mixupDir.absolutePath)
 			

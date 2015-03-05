@@ -49,10 +49,10 @@ class EntityAnnotatorScript {
 			h longOpt: "help", "Show usage information", args: 0, required: false
 			i longOpt: "input", "input vital block file (.vital[.gz])", args: 1, required: true
 			p longOpt: "property", "text property name", args: 1, required: true
+			t longOpt: "type", "optional class simple name filter", args: 1, required: false
 			o longOpt: "output", "output vital block file (.vital[.gz])", args: 1, required: true
 			ow longOpt: "overwrite", "overwrite output file if exists", args: 0, required: false
 			c longOpt: "config", "optional aspen-groovy config file path", args: 1, required: false
-			sd longOpt: "skip-document", "skip document in output block", args: 0, required: false
 		}
 
 		def options = cli.parse(args)
@@ -63,12 +63,12 @@ class EntityAnnotatorScript {
 
 		String prop = options.p
 
+		String type = options.t ? options.t : null
+		
 		String output = options.o
 
 		boolean overwrite = options.ow ? true : false
 		
-		boolean skipDocuments = options.sd ? true : false
-
 		if( ! (input.endsWith(".vital") || input.endsWith(".vital.gz")) ){
 			error("input block file name must end with .vital[.gz] : ${input}")
 		}
@@ -85,10 +85,10 @@ class EntityAnnotatorScript {
 		
 		println "Input: ${inputFile.absolutePath}"
 		println "Property: ${prop}"
+		println "Type filter: ${type}"
 		println "Output: ${outputFile.absolutePath}"
 		println "Overwrite: ${overwrite}"
 		println "Optional config file: ${optionalConfigFile != null ? optionalConfigFile.absolutePath : null}"
-		println "Skip document in output: ${skipDocuments}"
 
 		if(!inputFile.exists()) error("Input file not found: ${inputFile.absolutePath}")
 		if(!inputFile.isFile()) error("Input path is not a file: ${inputFile.absolutePath}")
@@ -123,6 +123,7 @@ class EntityAnnotatorScript {
 		
 		int iterated = 0
 		int nonDoc = 0
+		int nonType = 0
 		int noField = 0
 		int noValue = 0
 		int outdocs = 0
@@ -167,12 +168,24 @@ class EntityAnnotatorScript {
 			List<GraphObject> allObjects = [block.mainObject]
 			allObjects.addAll(block.dependentObjects)
 			
+			
+			writer.startBlock()
+			for(GraphObject g : allObjects) {
+				writer.writeGraphObject(g)
+			}
+			
+			
 			for(GraphObject g : allObjects) {
 				
 				iterated++
 				
 				if(!( g instanceof Document)) {
 					nonDoc++
+					continue
+				}
+				
+				if(type != null && !g.getClass().getSimpleName().equals(type)) {
+					nonType++
 					continue
 				}
 				
@@ -241,13 +254,6 @@ class EntityAnnotatorScript {
 				
 				list = []
 				
-				boolean blockStarted = false
-				if(!skipDocuments) {
-					writer.startBlock()
-					blockStarted = true
-					writer.writeGraphObject(originalDocument)
-				}
-				
 				String dID = uri2LocalPart(originalDocument.URI)
 				
 				for(Entity entity : d.getEntities()) {
@@ -262,24 +268,17 @@ class EntityAnnotatorScript {
 						edge.URI = URIGenerator.generateURI(service.getApp(), Edge_hasEntityInstance.class, dID + '_to_' + localPart)
 						edge.addSource(originalDocument).addDestination(ei)
 						
-						if(!blockStarted) {
-							writer.startBlock()
-							blockStarted = true
-						}
-						
 						writer.writeGraphObject(ei)
 						writer.writeGraphObject(edge)
 					}
 					
 				}
 				
-				if(blockStarted) {
-					writer.endBlock()
-				}
-				
 				outdocs++
 				
 			}
+			
+			writer.endBlock()
 			
 			
 		}
@@ -293,6 +292,7 @@ class EntityAnnotatorScript {
 		println "noField   : ${noField}"
 		println "noValue   : ${noValue}"
 		println "nonDoc    : ${nonDoc}"
+		println "nonType   : ${nonType}"
 		println "outdocs   : ${outdocs}"
 
 

@@ -70,7 +70,10 @@ class SentimentClassifierStep {
 					
 				} else {
 				
-					File sentimentModelFile = new File("resources/models/", "en-sentiment.bin");
+					String resDir = AspenGroovyConfig.get().resourcesDir
+					if(!resDir) throw new RuntimeException("resourcesDir not set")
+				
+					File sentimentModelFile = new File(new File(resDir, "models"), "en-sentiment.bin");
 					
 					log.info("Initializing named person model from file: {} ...", sentimentModelFile.getAbsolutePath());
 					

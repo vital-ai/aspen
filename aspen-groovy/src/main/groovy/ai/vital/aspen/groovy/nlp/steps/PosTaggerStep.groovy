@@ -67,7 +67,10 @@ class PosTaggerStep extends AbstractStep {
 					
 				} else {
 				
-					File modelFile = new File("resources/models", "en-pos-maxent.bin");
+					String resDir = AspenGroovyConfig.get().resourcesDir
+					if(!resDir) throw new RuntimeException("resourcesDir not set")
+				
+					File modelFile = new File(new File(resDir, "models"), "en-pos-maxent.bin");
 					
 					log.info("Initializing POS tagger model from file: {}", modelFile.getAbsolutePath());
 				

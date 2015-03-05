@@ -77,9 +77,14 @@ class EnglishTokenizerStep {
 					
 					inputStream = AspenGroovyConfig.class.getResourceAsStream(path)
 					
+					if(inputStream == null) throw new RuntimeException("model not found in classpath: ${path}")
+					
 				} else {
 				
-					File englishtokenizerModelFile = new File("resources/models/", "en-token.bin");
+					String resDir = AspenGroovyConfig.get().resourcesDir
+					if(!resDir) throw new RuntimeException("resourcesDir not set")
+				
+					File englishtokenizerModelFile = new File(new File(resDir, "models"), "en-token.bin");
 					
 					log.info("Initializing English Tokenizer model from file: {} ...", englishtokenizerModelFile.getAbsolutePath());
 					
