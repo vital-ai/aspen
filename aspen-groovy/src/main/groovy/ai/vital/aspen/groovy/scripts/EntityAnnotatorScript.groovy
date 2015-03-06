@@ -137,7 +137,7 @@ class EntityAnnotatorScript {
 		sentdetect_step.init()
 		
 		
-		WhiteSpaceTokenizerStep wst_step = new WhiteSpaceTokenizerStep(false)
+		WhiteSpaceTokenizerStep wst_step = new WhiteSpaceTokenizerStep(true)
 		wst_step.init()
 		
 		
