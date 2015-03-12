@@ -14,7 +14,7 @@ def vitalhome = System.getenv('VITAL_HOME')
 def mainClass = 'ai.vital.aspen.groovy.scripts.EntityAnnotatorScript'
 
 List jars = [
-	homeDir + 'target/aspen-groovy-0.0.1-SNAPSHOT.jar'
+	homeDir + 'target/aspen-groovy-0.0.1-SNAPSHOT-with-dependencies.jar'
 ]
 
 
