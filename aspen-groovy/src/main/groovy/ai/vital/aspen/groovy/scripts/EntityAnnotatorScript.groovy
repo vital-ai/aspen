@@ -318,9 +318,13 @@ class EntityAnnotatorScript {
 	
 	static String uri2LocalPart(String URI) {
 		
-		int lastUnderScore = URI.lastIndexOf('_')
+		int lastSlash = URI.lastIndexOf('/')
 		
-		return URI.substring(lastUnderScore + 1)
+		if(lastSlash > 0 && lastSlash < URI.length() - 1) {
+			return URI.substring(lastSlash + 1)
+		}
+		
+		return URI
 		
 	}
 

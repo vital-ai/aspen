@@ -28,11 +28,11 @@ class VitalSimpleTokenizer extends SimpleTokenizer {
 
 //	Pattern decimalPattern = Pattern.compile("(^|\\s)(\\d*\\.?\\d*)(\\s|\$)")
 
-	Pattern emailPattern = Pattern.compile("(^|\\s)([A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4})(\\s|\$)", Pattern.CASE_INSENSITIVE)
+	Pattern emailPattern = Pattern.compile("(^|\\s|[<\"])([A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4})(\\s|\$|[>\"])", Pattern.CASE_INSENSITIVE)
 
 	//	Pattern urlPattern = Pattern.compile("(^|\\s)((https?:\\/\\/)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w\\.-]*)*\\/?)(\\s|\$)")
 
-	Pattern urlPattern = Pattern.compile("(^|\\s)(https?:\\S+)(\\s|\$)")
+	Pattern urlPattern = Pattern.compile("(^|\\s|[<\"])(https?:\\S+)(\\s|\$)")
 
 
 
@@ -119,6 +119,14 @@ class VitalSimpleTokenizer extends SimpleTokenizer {
 		while(urlMatcher.find()) {
 			int st = urlMatcher.start(2)
 			int end = urlMatcher.end(2)
+			
+			String span = urlMatcher.group(2);
+			
+			while(span.endsWith(">") || span.endsWith("\"")) {
+				span = span.substring(0, span.length() - 1);
+				end--;
+			}
+			
 			vitalSpans.add(new Span(st, end, "url"));
 		}
 
