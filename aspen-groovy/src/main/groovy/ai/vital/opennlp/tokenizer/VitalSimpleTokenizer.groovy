@@ -28,11 +28,14 @@ class VitalSimpleTokenizer extends SimpleTokenizer {
 
 //	Pattern decimalPattern = Pattern.compile("(^|\\s)(\\d*\\.?\\d*)(\\s|\$)")
 
-	Pattern emailPattern = Pattern.compile("(^|\\s|[<\"])([A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4})(\\s|\$|[>\"])", Pattern.CASE_INSENSITIVE)
+//	Pattern emailPattern = Pattern.compile("(^|\\s|[<\"])([A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4})(\\s|\$|[>\"])", Pattern.CASE_INSENSITIVE)
+	Pattern emailPattern = Pattern.compile("[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,4}", Pattern.CASE_INSENSITIVE)
 
 	//	Pattern urlPattern = Pattern.compile("(^|\\s)((https?:\\/\\/)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w\\.-]*)*\\/?)(\\s|\$)")
+	//http://code.tutsplus.com/tutorials/8-regular-expressions-you-should-know--net-6149
+	Pattern urlPattern = Pattern.compile("(https?:\\/\\/)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\/\\w_#\\.-]*)*\\/?", Pattern.CASE_INSENSITIVE)
 
-	Pattern urlPattern = Pattern.compile("(^|\\s|[<\"])(https?:\\S+)(\\s|\$)")
+//	Pattern urlPattern = Pattern.compile("(^|\\s|[<\"])(https?:\\S+)(\\s|\$)")
 
 
 
@@ -110,25 +113,30 @@ class VitalSimpleTokenizer extends SimpleTokenizer {
 		
 		Matcher emailMatcher = emailPattern.matcher(s)
 		while(emailMatcher.find()) {
-			int st = emailMatcher.start(2)
-			int end = emailMatcher.end(2)
-			vitalSpans.add(new Span(st, end, "email"));
+			int st = emailMatcher.start()
+			int end = emailMatcher.end()
+			addIfNotExists(vitalSpans, new Span(st, end, "email"));
 		}
 
 		Matcher urlMatcher = urlPattern.matcher(s)
 		while(urlMatcher.find()) {
-			int st = urlMatcher.start(2)
-			int end = urlMatcher.end(2)
+			int st = urlMatcher.start()
+			int end = urlMatcher.end()
 			
-			String span = urlMatcher.group(2);
+			String span = urlMatcher.group();
 			
+			/*
 			while(span.endsWith(">") || span.endsWith("\"")) {
 				span = span.substring(0, span.length() - 1);
 				end--;
 			}
+			*/
 			
-			vitalSpans.add(new Span(st, end, "url"));
+			addIfNotExists(vitalSpans, new Span(st, end, "url"));
 		}
+		
+		//remove overlapping vital span pattern
+		
 
 		List<Span> original = new ArrayList<Span>(Arrays.asList(this.origTokenizePos(s)));
 
@@ -190,7 +198,24 @@ class VitalSimpleTokenizer extends SimpleTokenizer {
 	 */
 
 
+	protected boolean addIfNotExists(List<Span> vitalSpans, Span span) {
+		
+		for(Span vitalSpan : vitalSpans) {
+			
+			if( vitalSpan.intersects(span) ) {
+				return false
+			}
+			
+		}
+		
+		vitalSpans.add(span);
+		
+		return true
+		
+	}
+	
 }
+
 
 class CharacterEnum {
 	static final CharacterEnum WHITESPACE = new CharacterEnum("whitespace");
