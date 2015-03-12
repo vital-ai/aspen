@@ -288,8 +288,9 @@ object TwentyNewsToVitalBlock {
     def collectFiles(inputFS: FileSystem, inputDir: Path, res: MutableList[Path]) : Unit = {
       
       for( p <- inputFS.listStatus(inputDir) ) {
-        
-        if( p.isDirectory()) {
+       
+        //TODO, isDirectory changed to isDir() ?        
+        if( p.isDir()) {
           
           
           collectFiles(inputFS, p.getPath, res)
