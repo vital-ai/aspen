@@ -132,9 +132,9 @@ object TwentyNewsToVitalBlock {
       
       if( seqOut ) {
         
-        val codec = new GzipCodec()
+//        val codec = new GzipCodec()
         
-    	  seqWriter = SequenceFile.createWriter(new Configuration(), outpuBlockFS.create(outputBlockPath, overwrite), classOf[Text], classOf[VitalBytesWritable], SequenceFile.CompressionType.RECORD, codec);
+    	  seqWriter = SequenceFile.createWriter(new Configuration(), outpuBlockFS.create(outputBlockPath, overwrite), classOf[Text], classOf[VitalBytesWritable], SequenceFile.CompressionType.NONE, null);
          
       } else {
     	  var fos : OutputStream = outpuBlockFS.create(outputBlockPath, overwrite)

@@ -147,26 +147,24 @@ object TwentyNewsSelectMessages extends AbstractJob {
     
     while(offset >= 0) {
       
-      val selectQuery = builder.queryString(
+      val selectQuery = builder.queryString(s"""
+import org.example.twentynews.domain.*
+import ai.vital.vitalservice.segment.VitalSegment
 
-"import org.example.twentynews.domain.*\n" +
-"import ai.vital.vitalservice.segment.VitalSegment\n" +
-"\n"+
-"SELECT {\n"+
-"\n"+
-"  value segments: [VitalSegment.withId('" + segment + "')]\n"+
-"\n"+  
-"  value limit: " + limit + "\n" +
-"  value offset: " + offset + "\n" + 
-"\n" +  
-//"  source { bind { 'src' } } \n"+
-"\n" +
-"  node_constraint { Message.class }\n" +
-"\n" +  
-"}\n"
-).toQuery()
+SELECT {
 
- 
+  value segments: [VitalSegment.withId('${segment}')]
+
+  value limit: ${limit} 
+  value offset: ${offset}  
+
+//  source { bind { 'src' } }
+
+  node_constraint { Message.class }
+
+}
+""").toQuery()
+
       val rl = vitalService.selectQuery(selectQuery.asInstanceOf[VitalSelectQuery])
       
       var c = 0
@@ -237,15 +235,10 @@ object TwentyNewsSelectMessages extends AbstractJob {
       println("writing results to sequence file")
       
       val hadoopOutput = output.map( pair =>
-        
         (new Text(pair._1), new VitalBytesWritable(pair._2))
-        
-      )
-
+       )
+     
       hadoopOutput.saveAsSequenceFile(outputPath.substring(5))
-//      hadoopOutput.
-      
-      
       
     } else {
       
