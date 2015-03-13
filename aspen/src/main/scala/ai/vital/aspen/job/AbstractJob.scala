@@ -1,8 +1,12 @@
 package ai.vital.aspen.job
 
+import spark.jobserver.SparkJob
 import org.apache.spark.SparkContext
+import spark.jobserver.SparkJobValidation
+import spark.jobserver.SparkJobValid
 import com.typesafe.config.Config
 import scala.util.Try
+import spark.jobserver.SparkJobInvalid
 import org.apache.commons.cli.Options
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.BasicParser
@@ -17,8 +21,11 @@ import com.typesafe.config.ConfigFactory
 /* this is placeholder code */
 
 
-trait AbstractJob  {
+trait AbstractJob extends SparkJob {
 
+  val profileOption = new Option("p", "profile", true, "optional vitalservice profile option")
+  profileOption.setRequired(false)
+  
   val masterOption = new Option("m", "master", true, "optional spark masterURL")
     masterOption.setRequired(false)
   
@@ -90,13 +97,39 @@ trait AbstractJob  {
       
       val sc = new SparkContext(conf)
       
+      runJob(sc, config)
       
       
     }
   
     def getOptions() : Options
   
-  
-  
-  
+    override def validate(sc: SparkContext, config: Config): SparkJobValidation = {
+      
+      for( o <- getOptions().getOptions.toArray()) {
+        
+        val optionCasted = o.asInstanceOf[Option]
+        
+        if(optionCasted.isRequired()) {
+          
+          if(optionCasted.hasArg()) {
+            
+            try {
+              config.getString(optionCasted.getLongOpt)
+            } catch {
+              case ex: Exception => {
+                return new SparkJobInvalid(ex.getLocalizedMessage)
+              }
+            }
+            
+          }
+          
+        }
+        
+      }
+     
+      return SparkJobValid
+      
+    }
+
 }

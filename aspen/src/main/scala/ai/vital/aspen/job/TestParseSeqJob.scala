@@ -112,8 +112,8 @@ object TestParseSeqJob {
   
     def getOptions() : Options = {
       val options = new Options()
-        
-        return options
+      options.addOption(masterOption)
+      return options
   }
   
   
