@@ -46,7 +46,7 @@ class TextExtractStep extends AbstractStep {
 	
 	private final static Logger log = LoggerFactory.getLogger(TextExtractStep.class);
 	
-	boolean processHtml = true
+	public boolean processHtml = true
 	
 	public String getName() {
 		return TEXTEXTRACTION_VS;

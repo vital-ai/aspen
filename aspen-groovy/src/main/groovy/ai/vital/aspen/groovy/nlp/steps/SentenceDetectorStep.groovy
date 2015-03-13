@@ -47,7 +47,7 @@ class SentenceDetectorStep extends AbstractStep {
 	private SentenceDetectorME detector;
 	
 	//this is a config option - very handy
-	boolean singleSentencePerBlock = false
+	public boolean singleSentencePerBlock = false
 	
 	public void init()  {
 		

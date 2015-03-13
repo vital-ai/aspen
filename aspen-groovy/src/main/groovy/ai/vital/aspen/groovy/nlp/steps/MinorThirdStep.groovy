@@ -123,7 +123,7 @@ class MinorThirdStep extends AbstractStep {
 			reloadMainMixup();
 		} catch (Exception e) {
 			log.error(e.getLocalizedMessage(), e);
-			
+			throw e;
 		}
 		
 		log.info("Minorthird step initialized properly, {}ms", System.currentTimeMillis() - start);
@@ -153,7 +153,7 @@ class MinorThirdStep extends AbstractStep {
 						
 		} else {
 		
-			File mixupFile = new File("resources/mixup/", "main.mixup");
+			File mixupFile = new File(new File(AspenGroovyConfig.get().resourcesDir, "mixup/"), "main.mixup");
 			
 			log.info("Setting up interpreter with main mixup file: {}", mixupFile.getAbsolutePath());
 			
@@ -189,7 +189,7 @@ class MinorThirdStep extends AbstractStep {
 		}
 		*/
 		
-		String mixupFileName = "main.mixup" //context.get("mixupFileName");
+		String mixupFileName = null//"main.mixup" //context.get("mixupFileName");
 		
 		
 		MixupInterpreter _interpreter = null;

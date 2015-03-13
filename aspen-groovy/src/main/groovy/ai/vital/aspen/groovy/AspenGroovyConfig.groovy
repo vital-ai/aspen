@@ -2,6 +2,8 @@ package ai.vital.aspen.groovy
 
 import javax.naming.ConfigurationException;
 
+import java.io.InputStream
+
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -60,12 +62,12 @@ class AspenGroovyConfig {
 	/**
 	 * By default all resources are loaded from classpath /resources/ directory
 	 */
-	boolean loadResourcesFromClasspath = true
+	public boolean loadResourcesFromClasspath = true
 	
 	/**
 	 * Required when loadResourcesFromClasspath==false, default "./resources"
 	 */
-	String resourcesDir = "./resources"
+	public String resourcesDir = "./resources"
 	
 	/**
 	 * Loads settings from given HOCON inputStream

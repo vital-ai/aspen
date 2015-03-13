@@ -17,21 +17,32 @@ import org.apache.hadoop.io.Text
 import ai.vital.vitalsigns.VitalSigns
 import scala.collection.JavaConversions._
 import org.example.twentynews.domain.Message
-import java.util.HashSet
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.commons.lang3.SerializationUtils
 import org.apache.spark.mllib.tree.RandomForest
+import java.util.Date
+import java.util.Set
+import java.util.HashSet
+import ai.vital.domain.EntityInstance
+import ai.vital.property.MultiValueProperty
+import ai.vital.property.IProperty
+import java.util.Collection
+import java.util.HashMap
 
-object TwentyNewsRandomForestTraning extends AbstractJob {
+object TwentyNewsRandomForestWithEntitiesTraning extends AbstractJob {
 
   def MIN_DF = 1
   
   def MAX_DF_PERCENT = 100
   
   def getJobName(): String = {
-    return "twentynews random forest training job"
+    return "twentynews random forest with features training job"
   }
+  
+  def ENTITY = "ENTITY__"
+  
+  def SPANTYPE = "SPANTYPE__"
   
   //expects 20news messages
   val inputOption  = new Option("i", "input", true, "input RDD[(String, Array[Byte])], either RDD name or path:<path>, where path is a .vital.seq file")
@@ -50,7 +61,7 @@ object TwentyNewsRandomForestTraning extends AbstractJob {
   maxDFPercentOption.setRequired(false)
   
   def getJobClassName(): String = {
-    TwentyNewsRandomForestTraning.getClass.getCanonicalName
+    TwentyNewsRandomForestWithEntitiesTraning.getClass.getCanonicalName
   }
   
   def getOptions(): Options = {
@@ -117,7 +128,7 @@ object TwentyNewsRandomForestTraning extends AbstractJob {
     }
     
     //gid, newsgroup, text
-    var inputRDD : RDD[(String, String, String)] = null
+    var inputRDD : RDD[(String, String, String, Set[String], Set[String])] = null
 
     if(inputName.startsWith("path:")) {
       
@@ -139,6 +150,9 @@ object TwentyNewsRandomForestTraning extends AbstractJob {
         
         val inputObjects = VitalSigns.get().decodeBlock(pair._2.get, 0, pair._2.get.length)
         
+        val entities : Set[String] = new HashSet[String]()
+        val spanTypes : Set[String] = new HashSet[String]()
+        
         for( g <- inputObjects ) {
           if(g.isInstanceOf[Message]){
             newsgroup = g.getProperty("newsgroup").toString()
@@ -147,10 +161,22 @@ object TwentyNewsRandomForestTraning extends AbstractJob {
             if(title != null) text = text + title.toString() + "\n"
             text += body
           }
+          if(g.isInstanceOf[EntityInstance]) {
+            if( g.getProperty("exactString")  != null ) {
+              val entity = g.getProperty("exactString").toString()
+              entities.add(entity.toLowerCase().replaceAll("\\s+", " ").trim())
+            }
+            if( g.getProperty("spanType") != null) {
+              val st = g.getProperty("spanType").asInstanceOf[IProperty].rawValue().asInstanceOf[Collection[Any]]
+              for( t <- st ) {
+                spanTypes.add(t.asInstanceOf[String])
+              }
+            }
+            
+          }
         } 
           
-        
-        (pair._1.toString(), newsgroup, text)
+        (pair._1.toString(), newsgroup, text, entities, spanTypes)
         
       }
 
@@ -189,10 +215,31 @@ object TwentyNewsRandomForestTraning extends AbstractJob {
       gidNewsgroupText._2
 
     }.distinct()
-
+    
+    
     val categories: Array[String] = categoriesRDD.toArray().sortWith((s1, s2) => s1.compareTo(s2) < 0)
 
     println("categories count: " + categories.size)
+    
+    
+    
+  	//find all unique entities
+  	val entitiesRDD: RDD[String] = trainRDD.flatMap { gidNewsgroupText =>
+    	gidNewsgroupText._4.toSeq 
+    }.distinct()
+    
+    val allEntities : Array[String] = entitiesRDD.toArray().sortWith((s1, s2) => s1.compareTo(s2) < 0)
+    println("all entities types count: " + allEntities.size)
+    
+    val spanTypesRDD : RDD[String] = trainRDD.flatMap { gidNewsgroupText =>
+      gidNewsgroupText._5.toSeq
+    }.distinct()
+    
+    val allSpanTypes : Array[String] = spanTypesRDD.toArray().sortWith((s1, s2) => s1.compareTo(s2) < 0)
+    println("all span types count: " + allSpanTypes.size)
+      
+
+
 
     val wordsRDD: RDD[String] = trainRDD.flatMap { gidNewsgroupText =>
 
@@ -239,11 +286,9 @@ object TwentyNewsRandomForestTraning extends AbstractJob {
     categoriesOS.close()
 
     //wordFrequencies
-    val wordsOccurences = wordsRDD.map(x => (x, 1)).reduceByKey((i1, i2) => i1 + i2).filter(wordc => wordc._2 > 1)
+    val wordsOccurences = wordsRDD.map(x => (x, 1)).reduceByKey((i1, i2) => i1 + i2).filter(wordc => wordc._2 >= minDF && wordc._2 <= maxDF)
 
     var dictionary = new java.util.HashMap[String, Int]()
-
-    var docFreq = new java.util.ArrayList[String]()
 
     var dicList = new java.util.ArrayList[String]()
 
@@ -253,9 +298,38 @@ object TwentyNewsRandomForestTraning extends AbstractJob {
 
     var counter = 0
 
+    
     val dictionaryFilePath = new Path(outputModelPath, "dictionary.tsv")
     
     var dictionaryOS = modelFS.create(dictionaryFilePath, true)
+    
+    
+    //prepend entities and span types
+    for( e <- allEntities ) {
+      
+      //prefix must be very unlikely to appear in normal text
+      val encoded = ENTITY + e
+      
+      dictionary.put(encoded, counter)
+      
+      dictionaryOS.write( (counter + "\t" + encoded + "\n").getBytes("UTF-8") )
+      
+      counter += 1
+    }
+    
+    for( t <- allSpanTypes ) {
+      
+      val encoded = SPANTYPE + t
+      
+      dictionary.put(encoded, counter)
+      
+      dictionaryOS.write( (counter + "\t" + encoded + "\n").getBytes("UTF-8") )
+      
+      counter += 1
+      
+    } 
+    
+
     
     for (e <- l) {
       
@@ -277,14 +351,6 @@ object TwentyNewsRandomForestTraning extends AbstractJob {
 
     println("dictionary size: " + dictionary.size())
     
-    val comp = new java.util.Comparator[String]() {
-      def compare(s1: String, s2: String): Int = {
-        return Integer.parseInt(s2.split("\\s+")(1)).compareTo(Integer.parseInt(s1.split("\\s+")(1)));
-      }
-    }
-
-    java.util.Collections.sort(docFreq, comp)
-
     
     val vectorized = trainRDD.map { gidNewsgroupText =>
 
@@ -292,6 +358,21 @@ object TwentyNewsRandomForestTraning extends AbstractJob {
 
       var index2Value: Map[Int, Double] = Map[Int, Double]()
 
+      
+      for( entity <- gidNewsgroupText._4 ) {
+        val index = dictionary.getOrElse(ENTITY + entity, -1)
+        if(index >= 0) {
+          index2Value += (index -> 1d)
+        }
+      }
+      
+      for( spantype <- gidNewsgroupText._5 ) {
+        val index = dictionary.getOrElse(SPANTYPE + spantype, -1)
+        if(index >= 0) {
+          index2Value += (index -> 1d)
+        }
+      }
+      
       /*
       var msg : Message = null
       
@@ -356,14 +437,27 @@ object TwentyNewsRandomForestTraning extends AbstractJob {
       
     println("Model persisted.")
     */
+    
+    val catMap = new HashMap[Int, Int]()
+    val categoricalFeaturesTotal = allEntities.size + allSpanTypes.size
+    
+    var x = 0
+    while ( x < categoricalFeaturesTotal) {
+      catMap.put(x, 2)
+      x += 1
+    }
 
     val numClasses = categories.length
-    val categoricalFeaturesInfo = Map[Int, Int]()
+    val categoricalFeaturesInfo = catMap.toMap
     val numTrees = 20 // Use more in practice.
     val featureSubsetStrategy = "auto" // Let the algorithm choose.
     val impurity = "gini"
     val maxDepth = 20
     val maxBins = 32
+    
+    
+    
+
 
     val model = RandomForest.trainClassifier(vectorized, numClasses, categoricalFeaturesInfo,
       numTrees, featureSubsetStrategy, impurity, maxDepth, maxBins)
@@ -398,6 +492,21 @@ object TwentyNewsRandomForestTraning extends AbstractJob {
 
       var index2Value: Map[Int, Double] = Map[Int, Double]()
 
+      
+      for( entity <- gidNewsgroupText._4 ) {
+        val index = dictionary.getOrElse(ENTITY + entity, -1)
+        if(index >= 0) {
+          index2Value += (index -> 1d)
+        }
+      }
+      
+      for( spantype <- gidNewsgroupText._5 ) {
+        val index = dictionary.getOrElse(SPANTYPE + spantype, -1)
+        if(index >= 0) {
+          index2Value += (index -> 1d)
+        }
+      }
+      
       /*
       var msg : Message = null
       
@@ -448,11 +557,12 @@ object TwentyNewsRandomForestTraning extends AbstractJob {
       (point.label, prediction)
     }
     val testErr = labelAndPreds.filter(r => r._1 != r._2).count.toDouble / vectorizedTest.count()
-    println("Test Error = " + testErr)
-    println("Learned classification forest model:\n" + model.toDebugString)
+//    println("Learned classification forest model:\n" + model.toDebugString)
     
-
-    println("DONE")
+    println("Test Error = " + testErr)
+    
+    
+    println("DONE " + new Date().toString())
    }
   
 }

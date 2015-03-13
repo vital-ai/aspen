@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog prefer="public" xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+    <uri id="Imports Wizard Entry" name="http://vital.ai/ontology/vital" uri="file:/D:/workspace_vital.ai_git/vital-home-0.2.0/vital-ontology/vital-0.2.0.owl"/>
+    <uri id="Imports Wizard Entry" name="http://vital.ai/ontology/vital-core" uri="file:/D:/workspace_vital.ai_git/vital-home-0.2.0/vital-ontology/vital-core-0.2.0.owl"/>
+    <group id="Folder Repository, directory=, recursive=true, Auto-Update=true, version=2" prefer="public" xml:base="">
+        <uri id="Automatically generated entry, Timestamp=1426190451082" name="http://vital.ai/ontology/twentynews" uri="twentynews-1.0.0.owl"/>
+    </group>
+</catalog>

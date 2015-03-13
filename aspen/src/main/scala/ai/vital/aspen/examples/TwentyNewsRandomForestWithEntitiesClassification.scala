@@ -31,19 +31,27 @@ import org.example.twentynews.domain.Message
 import ai.vital.domain.Edge_hasTargetNode
 import ai.vital.vitalservice.model.App
 import ai.vital.domain.TargetNode
-
 import org.apache.spark.mllib.tree.model.RandomForestModel
+import ai.vital.domain.EntityInstance
+import java.util.Set
+import java.util.HashSet
+import ai.vital.property.IProperty
+import java.util.Collection
+import scala.collection.JavaConversions._
 
-
-object TwentyNewsRandomForestClassification extends AbstractJob {
+object TwentyNewsRandomForestWithEntitiesClassification extends AbstractJob {
 
   def getJobClassName(): String = {
-     return TwentyNewsRandomForestClassification.getClass.getCanonicalName
+     return TwentyNewsRandomForestWithEntitiesClassification.getClass.getCanonicalName
   }
 
   def getJobName(): String = {
-     return "twentynews random forest classification"
+     return "twentynews random forest with entities classification"
   }
+  
+  def ENTITY = "ENTITY__"
+  
+  def SPANTYPE = "SPANTYPE__"
 
   val modelOption = new Option("mod", "model", true, "input model path (directory)")
   modelOption.setRequired(true)
@@ -217,20 +225,50 @@ object TwentyNewsRandomForestClassification extends AbstractJob {
 
       var index2Value: Map[Int, Double] = Map[Int, Double]()
 
-      var newsgroup = "X"
+      var newsgroup = ""
       var text = ""
-        
+      
+      val entities : Set[String] = new HashSet[String]()
+      val spanTypes : Set[String] = new HashSet[String]()
+      
       val inputObjects = VitalSigns.get().decodeBlock(gidNewsgroupText._2, 0, gidNewsgroupText._2.length)
         
-        for( g <- inputObjects ) {
-          if(g.isInstanceOf[Message]){
-            newsgroup = g.getProperty("newsgroup").toString()
-            val title = g.getProperty("title")
-            val body = g.getProperty("body").toString()
-            if(title != null) text = text + title.toString() + "\n"
-            text += body
+      for( g <- inputObjects ) {
+        if(g.isInstanceOf[Message]){
+          newsgroup = g.getProperty("newsgroup").toString()
+          val title = g.getProperty("title")
+          val body = g.getProperty("body").toString()
+          if(title != null) text = text + title.toString() + "\n"
+          text += body
+        }
+        if(g.isInstanceOf[EntityInstance]) {
+          if( g.getProperty("exactString")  != null ) {
+            val entity = g.getProperty("exactString").toString()
+            entities.add(entity.toLowerCase().replaceAll("\\s+", " ").trim())
           }
-        } 
+          if( g.getProperty("spanType") != null) {
+            val st = g.getProperty("spanType").asInstanceOf[IProperty].rawValue().asInstanceOf[Collection[Any]]
+            for( t <- st ) {
+              spanTypes.add(t.asInstanceOf[String])
+            }
+          }
+          
+          }
+      } 
+      
+      for( entity <- entities ) {
+        val index = dictionaryMap.getOrElse(ENTITY + entity, -1)
+        if(index >= 0) {
+          index2Value += (index -> 1d)
+        }
+      }
+      
+      for( spantype <- spanTypes ) {
+        val index = dictionaryMap.getOrElse(SPANTYPE + spantype, -1)
+        if(index >= 0) {
+          index2Value += (index -> 1d)
+        }
+      }
       
       
       val words = text.toLowerCase().split("\\s+")
