@@ -20,17 +20,17 @@ import org.example.twentynews.domain.Message
 import java.util.HashSet
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.linalg.Vectors
-import org.apache.spark.mllib.tree.DecisionTree
 import org.apache.commons.lang3.SerializationUtils
+import org.apache.spark.mllib.tree.RandomForest
 
-object TwentyNewsDecisionTreeTraning extends AbstractJob {
+object TwentyNewsRandomForestTraning extends AbstractJob {
 
   def MIN_DF = 1
   
   def MAX_DF_PERCENT = 100
   
   def getJobName(): String = {
-    return "twentynews decision tree training job"
+    return "twentynews random forest training job"
   }
   
   //expects 20news messages
@@ -50,7 +50,7 @@ object TwentyNewsDecisionTreeTraning extends AbstractJob {
   maxDFPercentOption.setRequired(false)
   
   def getJobClassName(): String = {
-    TwentyNewsDecisionTreeTraning.getClass.getCanonicalName
+    TwentyNewsRandomForestTraning.getClass.getCanonicalName
   }
   
   def getOptions(): Options = {
@@ -337,7 +337,7 @@ object TwentyNewsDecisionTreeTraning extends AbstractJob {
 //    println("Training dataset size: " + vectorized.count());
 
     println("Training model...")
-    
+    /*
     val numClasses = categories.length
     val categoricalFeaturesInfo = Map[Int, Int]()
     val impurity = "gini"
@@ -355,9 +355,30 @@ object TwentyNewsDecisionTreeTraning extends AbstractJob {
     modelOS.close()
       
     println("Model persisted.")
+    */
+
+    val numClasses = categories.length
+    val categoricalFeaturesInfo = Map[Int, Int]()
+    val numTrees = 3 // Use more in practice.
+    val featureSubsetStrategy = "auto" // Let the algorithm choose.
+    val impurity = "gini"
+    val maxDepth = 4
+    val maxBins = 32
+
+    val model = RandomForest.trainClassifier(vectorized, numClasses, categoricalFeaturesInfo,
+      numTrees, featureSubsetStrategy, impurity, maxDepth, maxBins)
+    
+    //not until spark 1.3.0
+    //model.save(sc, "myModelPath")
+      
+    val modelBinPath = new Path(outputModelPath, "model.bin")
+    val modelOS = modelFS.create(modelBinPath, true)
+    SerializationUtils.serialize(model, modelOS)
+    modelOS.close()
 
     
     // Evaluate model on training instances and compute training error
+    /*
     val labelAndPreds = vectorized.map { point =>
       val prediction = model.predict(point.features)
       (point.label, prediction)
@@ -365,6 +386,7 @@ object TwentyNewsDecisionTreeTraning extends AbstractJob {
     val trainErr = labelAndPreds.filter(r => r._1 != r._2).count.toDouble / vectorized.count
     println("Training Error = " + trainErr)
     println("Learned classification tree model:\n" + model)
+    */
     
     println("Testing ...")
     
@@ -415,11 +437,19 @@ object TwentyNewsDecisionTreeTraning extends AbstractJob {
     }
     
     
-    val predictionAndLabel = vectorizedTest.map(p => (model.predict(p.features), p.label))
-    val accuracy = 1.0 * predictionAndLabel.filter(x => x._1 == x._2).count() / vectorizedTest.count()
-
-    println("Accuracy: " + accuracy)
+//    val predictionAndLabel = vectorizedTest.map(p => (model.predict(p.features), p.label))
+//    val accuracy = 1.0 * predictionAndLabel.filter(x => x._1 == x._2).count() / vectorizedTest.count()
+//
+//    println("Accuracy: " + accuracy)
     
+    // Evaluate model on test instances and compute test error
+    val labelAndPreds = vectorizedTest.map { point =>
+      val prediction = model.predict(point.features)
+      (point.label, prediction)
+    }
+    val testErr = labelAndPreds.filter(r => r._1 != r._2).count.toDouble / vectorizedTest.count()
+    println("Test Error = " + testErr)
+    println("Learned classification forest model:\n" + model.toDebugString)
     
 
     println("DONE")

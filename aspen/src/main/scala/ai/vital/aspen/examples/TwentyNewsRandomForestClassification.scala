@@ -31,17 +31,18 @@ import org.example.twentynews.domain.Message
 import ai.vital.domain.Edge_hasTargetNode
 import ai.vital.vitalservice.model.App
 import ai.vital.domain.TargetNode
-import org.apache.spark.mllib.tree.model.DecisionTreeModel
+
+import org.apache.spark.mllib.tree.model.RandomForestModel
 
 
-object TwentyNewsDecisionTreeClassification extends AbstractJob {
+object TwentyNewsRandomForestClassification extends AbstractJob {
 
   def getJobClassName(): String = {
-     return TwentyNewsDecisionTreeClassification.getClass.getCanonicalName
+     return TwentyNewsRandomForestClassification.getClass.getCanonicalName
   }
 
   def getJobName(): String = {
-     return "twentynews decision tree classification"
+     return "twentynews random forest classification"
   }
 
   val modelOption = new Option("mod", "model", true, "input model path (directory)")
@@ -206,8 +207,8 @@ object TwentyNewsDecisionTreeClassification extends AbstractJob {
     val deserializedModel = SerializationUtils.deserialize(modelIS)
     modelIS.close()
     
-    val model : DecisionTreeModel = deserializedModel match {
-      case x: DecisionTreeModel => x
+    val model : RandomForestModel = deserializedModel match {
+      case x: RandomForestModel => x
       case _ => throw new ClassCastException
     }
 
