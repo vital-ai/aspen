@@ -106,8 +106,8 @@ object TwentyNewsAnnotateDocuments extends AbstractJob {
       
         val inputFS = FileSystem.get(inputPathObj.toUri(), new Configuration())
       
-        if (!inputFS.exists(inputPathObj) || !inputFS.isDirectory(inputPathObj)) {
-          System.err.println("Input train path does not exist or is not a directory: " + inputPathObj.toString())
+        if (!inputFS.exists(inputPathObj) /*|| !inputFS.isDirectory(inputPathObj)*/) {
+          System.err.println("Input train path does not exist " + /*or is not a directory*/ ": " + inputPathObj.toString())
           return
         }
 

@@ -124,8 +124,8 @@ object TwentyNewsRandomForestWithEntitiesClassification extends AbstractJob {
       
       val inputFS = FileSystem.get(inputPath.toUri(), new Configuration())
       
-      if (!inputFS.exists(inputPath) || !inputFS.isDirectory(inputPath)) {
-        System.err.println("Input train path does not exist or is not a directory: " + inputRDDName)
+      if (!inputFS.exists(inputPath) /*|| !inputFS.isDirectory(inputPath)*/) {
+        System.err.println("Input train path does not exist " + /*or is not a directory*/ ": " + inputRDDName)
         return
       }
 
