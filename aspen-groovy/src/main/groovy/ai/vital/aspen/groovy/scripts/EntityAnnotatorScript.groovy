@@ -15,16 +15,18 @@ import ai.vital.domain.Entity
 import ai.vital.domain.EntityInstance;
 import ai.vital.property.IProperty;
 import ai.vital.property.StringProperty;
+import ai.vital.property.URIProperty;
 import ai.vital.vitalservice.VitalService;
 import ai.vital.vitalsigns.VitalSigns;
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer;
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.BlockIterator;
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
-import ai.vital.vitalsigns.datatype.VitalURI;
 import ai.vital.vitalsigns.meta.GraphContext;
 import ai.vital.vitalsigns.model.GraphObject;
 
+
 import java.util.Map.Entry
+
 
 import org.apache.commons.io.IOUtils;
 
@@ -114,7 +116,7 @@ class EntityAnnotatorScript {
 			}
 		}
 		
-		VitalService service = ai.vital.vitalservice.factory.Factory.getVitalService()
+		VitalService service = ai.vital.vitalservice.factory.VitalServiceFactory.getVitalService()
 		
 		VitalSigns vs = VitalSigns.get()
 

@@ -2,10 +2,8 @@ package ai.vital.aspen.groovy.nlp.test
 
 import ai.vital.vitalservice.model.App;
 import ai.vital.vitalsigns.VitalSigns
-
 import ai.vital.common.uri.URIGenerator
-
-
+import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.nlp.steps.ChunkerStep
 import ai.vital.aspen.groovy.nlp.steps.MinorThirdStep
 import ai.vital.aspen.groovy.nlp.steps.PosTaggerStep
@@ -34,6 +32,10 @@ class MinorThirdStepTest {
 		// pass VitalSigns Document containing text properties to step
 		
 		VitalSigns vs = VitalSigns.get()
+		
+		AspenGroovyConfig config = AspenGroovyConfig.get()
+		config.loadResourcesFromClasspath = false
+		config.resourcesDir = "./resources"
 		
 		Document d = new Document()
 		
@@ -72,7 +74,7 @@ class MinorThirdStepTest {
 		vs.addToCache(list)
 		
 		
-		WhiteSpaceTokenizerStep wst_step = new WhiteSpaceTokenizerStep()
+		WhiteSpaceTokenizerStep wst_step = new WhiteSpaceTokenizerStep(true)
 		
 		
 		wst_step.init()

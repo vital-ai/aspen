@@ -8,7 +8,8 @@
   
   <repositories>
   
- <repository>
+  <!-- vital repositories disconnected -->
+  <!-- <repository>
     <id>vital-public-mvn-repo-releases</id>
     <name>Vital AI Public Maven Repo Releases</name>
     <url>https://github.com/vital-ai/vital-public-mvn-repo/raw/releases/</url>
@@ -19,7 +20,7 @@
     <name>Vital AI Public Maven Repo Snapshots</name>
     <url>https://github.com/vital-ai/vital-public-mvn-repo/raw/snapshots/</url>
 </repository>
-
+  -->
   </repositories>
   
   
@@ -432,31 +433,9 @@
       <scope>compile</scope>
     </dependency>
 
-	<dependency>
-      <groupId>io.netty</groupId>
-      <artifactId>netty</artifactId>
-      <version>3.4.0.Final</version>
-      <scope>compile</scope>
-    </dependency>
-    
-	<dependency>
-      <groupId>com.google.code.externalsortinginjava</groupId>
-      <artifactId>externalsortinginjava</artifactId>
-      <version>0.1.8</version>
-      <scope>compile</scope>
-    </dependency>
-    
-    <dependency>
-      <groupId>commons-pool</groupId>
-      <artifactId>commons-pool</artifactId>
-      <version>1.5.6</version>
-      <scope>compile</scope>
-    </dependency>
-    
-   
-   
+
+
     <!-- dependencies installed into local repo from vital software --> 
- 
   	<dependency>
        <groupId>vital-ai</groupId>
        <artifactId>vitalai-demoapp-groovy</artifactId>
@@ -464,12 +443,11 @@
       <scope>compile</scope>
    	</dependency>
    
-   
     
   <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vital-domain</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.250</version>
       <scope>compile</scope>
     </dependency>
   
@@ -477,7 +455,7 @@
   <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vitalsigns</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.250</version>
       <scope>compile</scope>
     </dependency>
   	
@@ -487,7 +465,7 @@
     <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vitalservice</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.250</version>
       <scope>compile</scope>
     </dependency>
      
@@ -496,19 +474,18 @@
     <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vital-lucene</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.250</version>
       <scope>compile</scope>
     </dependency>
   
     
     <dependency>
-      <groupId>vital-ai</groupId>
+	  <groupId>vital-ai</groupId>
       <artifactId>vital-triplestore</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.250</version>
       <scope>compile</scope>
-   
     </dependency>
-  
+    
   
  
  	<!-- dependencies from vital public releases repo -->     
@@ -519,28 +496,19 @@
       <scope>compile</scope>
     </dependency> 
  
-    
+ 
     <dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>agraph</artifactId>
-      <version>4.13.2</version>
-      <scope>compile</scope>
+      <groupId>com.google.code.externalsortinginjava</groupId>
+      <artifactId>externalsortinginjava</artifactId>
+      <version>0.1.9</version>
     </dependency>
-  
+
     <dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>json</artifactId>
-      <version>0.1.0</version>
-      <scope>compile</scope>
+      <groupId>org.openrdf.sesame</groupId>
+      <artifactId>sesame-runtime</artifactId>
+      <version>2.8.1</version>
     </dependency>
-    
-    <dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>openrdf-sesame</artifactId>
-      <version>2.6.8-onejar</version>
-      <scope>compile</scope>
-    </dependency>
-    
+ 
     
     <dependency>
 		<groupId>junit</groupId>

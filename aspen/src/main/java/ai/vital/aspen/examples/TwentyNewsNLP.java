@@ -127,10 +127,10 @@ public class TwentyNewsNLP {
 	static App app = new App();
 	static {
 		app.setID("app");
-		app.setCustomerID("customer");
+		app.setOrganizationID("customer");
 	}
 	
-	public List<GraphObject> process(List<GraphObject> input) throws Exception {
+	public synchronized List<GraphObject> process(List<GraphObject> input) throws Exception {
 		
 		List<GraphObject> output = new ArrayList<GraphObject>(input);
 		

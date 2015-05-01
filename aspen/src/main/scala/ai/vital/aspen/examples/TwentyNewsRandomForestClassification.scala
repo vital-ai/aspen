@@ -261,7 +261,7 @@ object TwentyNewsRandomForestClassification extends AbstractJob {
     val gidOutQuadsRDD = vectorized.map { p =>
       
       val app = new App()
-      app.setCustomerID("customer")
+      app.setOrganizationID("customer")
       app.setID("app")
       
       val category = model.predict(p._3)

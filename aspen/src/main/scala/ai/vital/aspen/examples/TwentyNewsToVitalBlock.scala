@@ -91,7 +91,7 @@ object TwentyNewsToVitalBlock {
       var seqOut = false;
       if(outPath.endsWith(".vital.seq")) {
         seqOut = true
-        println("Output is a<Text, VitalBytesWritable> sequence file...")
+        println("Output is a <Text, VitalBytesWritable> sequence file...")
       } else if(outPath.endsWith(".vital") || outPath.endsWith(".vital.gz")) {
     	  println("Output is a vital block file...")
       } else {

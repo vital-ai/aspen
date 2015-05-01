@@ -5,6 +5,15 @@
   <version>0.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
   
+  
+  <properties>
+  
+	<vital.version>0.2.250</vital.version>
+	
+	<!-- github server corresponds to entry in ~/.m2/settings.xml -->
+    <github.global.server>github</github.global.server>
+  </properties>
+  
   <repositories>
   
  <repository>
@@ -133,6 +142,18 @@
             <configuration>
 		      <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                
+                <!-- for environemnt without VITAL_HOME -->
+				<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                    <file>${VITAL_HOME}/vital-ontology/vital-core-${vital.version}.owl</file>
+					<resource>/resources/vital-ontology/vital-core-${vital.version}.owl</resource>
+                </transformer>
+                
+				<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                    <file>${VITAL_HOME}/vital-license/vital-license.lic</file>
+					<resource>/resources/vital-license/vital-license.lic</resource>
+                </transformer>
+                
               </transformers>
               <artifactSet>
               <!--  
@@ -144,6 +165,7 @@
               -->
                 <excludes>
                 	<!-- spark dependencies -->
+                	<!-- 
 					<exclude>org.apache.spark:*</exclude>
 					<exclude>aopalliance:*</exclude>
 					<exclude>com.clearspring.analytics:*</exclude>
@@ -210,6 +232,7 @@
 					<exclude>stax:*</exclude>
 					<exclude>org.apache.commons:commons-math:2.1</exclude>
 					<exclude>xmlenc:xmlenc:*</exclude>
+					-->
                 </excludes>
               </artifactSet>
               <filters>
@@ -231,12 +254,6 @@
       
     </plugins>
   </build>
-  
-  
-  <properties>
-    <!-- github server corresponds to entry in ~/.m2/settings.xml -->
-    <github.global.server>github</github.global.server>
-</properties>
   
   
   <distributionManagement>
@@ -274,14 +291,22 @@
   	<dependency>
   		<groupId>org.apache.spark</groupId>
   		<artifactId>spark-core_2.10</artifactId>
-  		<version>1.2.1</version>
+  		<version>1.3.1</version>
   		<exclusions>
   			<exclusion>
   				<artifactId>commons-codec</artifactId>
   				<groupId>commons-codec</groupId>
   			</exclusion>
   		</exclusions>
+  		<scope>provided</scope>
   	</dependency>
+  	
+	<dependency>
+		<groupId>org.apache.spark</groupId>
+		<artifactId>spark-mllib_2.10</artifactId>
+		<version>1.3.1</version>
+		<scope>provided</scope>
+	</dependency>
   	
   	
   	<dependency>
@@ -297,11 +322,7 @@
 </dependency>
   	
   	
-  	<dependency>
-	<groupId>org.apache.spark</groupId>
-	<artifactId>spark-mllib_2.10</artifactId>
-	<version>1.2.1</version>
-</dependency>
+
   	
   	
   	<dependency>

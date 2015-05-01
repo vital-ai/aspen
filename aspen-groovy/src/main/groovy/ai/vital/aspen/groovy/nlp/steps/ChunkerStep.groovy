@@ -152,9 +152,9 @@ class ChunkerStep extends AbstractStep {
 		
 		for( int i = 0 ; i < tokensList.size(); i++ ) {
 			
-			tokens[i] = tokensList.get(i).tokenText;
+			tokens[i] = tokensList.get(i).tokenText.toString();
 			
-			tags[i] = posTags.get(i).tagValue;
+			tags[i] = posTags.get(i).tagValue.toString();
 			
 		}
 		

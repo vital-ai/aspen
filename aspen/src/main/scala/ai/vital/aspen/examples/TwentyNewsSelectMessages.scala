@@ -9,12 +9,12 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
 import com.typesafe.config.ConfigException
 import ai.vital.vitalservice.VitalService
-import ai.vital.vitalservice.factory.Factory
-import ai.vital.query.graphbuilder.GraphQueryBuilder
-import ai.vital.vitalservice.query.graph.VitalSelectQuery
+import ai.vital.vitalservice.factory.VitalServiceFactory
+import ai.vital.query.querybuilder.VitalBuilder
+import ai.vital.vitalservice.query.VitalSelectQuery
 import scala.collection.JavaConversions._
 import ai.vital.vitalsigns.model.GraphMatch
-import ai.vital.vitalsigns.datatype.VitalURI
+import ai.vital.property.URIProperty
 import ai.vital.vitalsigns.meta.GraphContext
 import ai.vital.vitalsigns.model.container.GraphObjectsIterable
 import ai.vital.hadoop.writable.VitalBytesWritable
@@ -130,14 +130,14 @@ object TwentyNewsSelectMessages extends AbstractJob {
     
     if(profile != null) {
       println("Setting custom vitalservice profile: " + profile)
-      Factory.setServiceProfile(profile)
+      VitalServiceFactory.setServiceProfile(profile)
     } else {
       println("Using default service profile...")
     }
     
-    val vitalService = Factory.getVitalService
+    val vitalService = VitalServiceFactory.getVitalService
     
-    val builder = new GraphQueryBuilder()
+    val builder = new VitalBuilder()
     
     var offset = 0
     
@@ -165,30 +165,30 @@ SELECT {
 }
 """).toQuery()
 
-      val rl = vitalService.selectQuery(selectQuery.asInstanceOf[VitalSelectQuery])
+      val rl = vitalService.query(selectQuery)
       
       var c = 0
       
       val uris = new java.util.HashSet[String]()
       
-      val urisList = new java.util.ArrayList[VitalURI]()
+      val urisList = new java.util.ArrayList[URIProperty]()
       
       
       for( g <- rl) {
         
         val gm = g.asInstanceOf[GraphMatch]
         
-        val docURI = gm.getOverriddenMap.entrySet().iterator().next().getValue().toString()
+        val docURI = gm.getPropertiesMap.entrySet().iterator().next().getValue().toString()
         
         if(uris.add(docURI)) {
-          urisList.add(VitalURI.withString(docURI))
+          urisList.add(URIProperty.withString(docURI))
         }
         
         c = c+1
         
       }
       
-      val res = vitalService.get(urisList, GraphContext.ServiceWide, new java.util.ArrayList[GraphObjectsIterable]())
+      val res = vitalService.get(GraphContext.ServiceWide, urisList, false)
       
       var l = new java.util.ArrayList[(String, Array[Byte])]()
       
