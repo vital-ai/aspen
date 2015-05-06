@@ -2,9 +2,8 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>vital-ai</groupId>
   <artifactId>aspen</artifactId>
-  <version>0.2.250</version>
+  <version>0.2.250-module</version>
   <packaging>jar</packaging>
-  
   
   <properties>
   
@@ -144,6 +143,7 @@
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                 
                 <!-- for environemnt without VITAL_HOME -->
+                <!-- 
 				<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
                     <file>${VITAL_HOME}/vital-ontology/vital-core-${vital.version}.owl</file>
 					<resource>/resources/vital-ontology/vital-core-${vital.version}.owl</resource>
@@ -153,6 +153,7 @@
                     <file>${VITAL_HOME}/vital-license/vital-license.lic</file>
 					<resource>/resources/vital-license/vital-license.lic</resource>
                 </transformer>
+                -->
                 
               </transformers>
               <artifactSet>
@@ -233,6 +234,41 @@
 					<exclude>org.apache.commons:commons-math:2.1</exclude>
 					<exclude>xmlenc:xmlenc:*</exclude>
 					-->
+					
+                  <exclude>*:groovy-all</exclude>
+                  <exclude>vital-ai:vitalai-demoapp-groovy</exclude>
+                  <exclude>vital-ai:vital-domain</exclude>
+                  <exclude>vital-ai:vitalsigns</exclude>
+                  <exclude>vital-ai:vital-lucene</exclude>
+                  <exclude>vital-ai:vital-triplestore</exclude>
+                  <exclude>vital-ai:vitalservice</exclude>
+                  <exclude>vital-ai:twentynews</exclude>
+                  <exclude>junit:*</exclude>
+                  <exclude>commons-cli:*</exclude>
+                  <exclude>commons-codec:*</exclude>
+                  <exclude>commons-collections:*</exclude>
+                  <exclude>commons-httpclient:*</exclude>
+                  <exclude>commons-io:*</exclude>
+                  <exclude>commons-logging:*</exclude>
+                  <exclude>log4j:*</exclude>
+                  <exclude>org.apache.commons:commons-lang3:*</exclude>
+                  <exclude>org.apache.commons:commons-lang3:*</exclude>
+                  <exclude>org.apache.lucene:*</exclude>
+                  <exclude>org.apache.lucene:*</exclude>
+                  <exclude>org.apache.jena:*</exclude>
+                  <exclude>com.googlecode.concurrentlinkedhashmap:*</exclude>
+                  <exclude>net.sourceforge.owlapi:*</exclude>
+                  <exclude>com.typesafe:*</exclude>
+                  <exclude>org.slf4j:*</exclude>
+                  <exclude>com.google.guava:*</exclude>
+                  <exclude>net.sf.trove4j:*</exclude>
+                  <exclude>com.ibm.icu:*</exclude>
+                  <exclude>xerces:xercesImpl:*</exclude>
+                  <exclude>xml-apis:xml-apis:*</exclude>
+                  <exclude>org.codehaus.jackson:*</exclude>
+                  <exclude>vital-ai:owl2vcs-vital</exclude>
+                  <exclude>com.google.code.externalsortinginjava:*</exclude>
+                  <exclude>org.openrdf.sesame:*</exclude>
                 </excludes>
               </artifactSet>
               <filters>
@@ -245,6 +281,8 @@
                   </excludes>
                 </filter>
                 </filters>
+		 	  <shadedArtifactAttached>true</shadedArtifactAttached>
+              <shadedClassifierName>assembly</shadedClassifierName> <!-- Any name that makes sense -->
               
             </configuration>
            
@@ -298,14 +336,12 @@
   				<groupId>commons-codec</groupId>
   			</exclusion>
   		</exclusions>
-  		<scope>provided</scope>
   	</dependency>
   	
 	<dependency>
 		<groupId>org.apache.spark</groupId>
 		<artifactId>spark-mllib_2.10</artifactId>
 		<version>1.3.1</version>
-		<scope>provided</scope>
 	</dependency>
   	
   	

@@ -35,6 +35,13 @@ import ai.vital.domain.Document
 import ai.vital.vitalsigns.VitalSigns
 import java.util.Arrays
 import ai.vital.hadoop.writable.VitalBytesWritable
+import ai.vital.domain.TargetNode
+import ai.vital.common.uri.URIGenerator
+import ai.vital.domain.Edge_hasTargetNode
+import ai.vital.vitalsigns.model.GraphObject
+import java.util.ArrayList
+import scala.collection.JavaConversions._
+import java.util.Random
 
 object TwentyNewsToVitalBlock {
 
@@ -55,11 +62,19 @@ object TwentyNewsToVitalBlock {
       val overwriteOption = new Option("ow", "overwrite", false, "overwrite output file if exists")
       overwriteOption.setRequired(false)
       
+      val targetNodesOption = new Option("tn", "target-nodes", false, "add target nodes")
+      targetNodesOption.setRequired(true)
+      
+      val percentOption = new Option("p", "percent", true, "optional output objects percent limit")
+      percentOption.setRequired(false)
+      
       val options = new Options()
         .addOption(inputOption)
         .addOption(outputOption)
         .addOption(overwriteOption)
-      
+        .addOption(targetNodesOption)
+        .addOption(percentOption)
+        
       if (args.length == 0) {
         val hf = new HelpFormatter()
         hf.printHelp(TwentyNewsToVitalBlock.getClass.getCanonicalName, options)
@@ -73,7 +88,7 @@ object TwentyNewsToVitalBlock {
         cmd = parser.parse(options, args);
       } catch {
         case ex: ParseException => {
-          System.err.println(ex.getLocalizedMessage());
+          error(ex.getLocalizedMessage());
           return
         }
       }
@@ -81,10 +96,25 @@ object TwentyNewsToVitalBlock {
       val inputPath = new Path(cmd.getOptionValue(inputOption.getOpt))
       val outputBlockPath = new Path(cmd.getOptionValue(outputOption.getOpt))
       val overwrite = cmd.hasOption(overwriteOption.getOpt)
+      val targetNodes = cmd.hasOption(targetNodesOption.getOpt)
+      
+      val percentValue = cmd.getOptionValue(percentOption.getOpt)
+      var percent = 100D
+      if(percentValue != null && !percentValue.isEmpty()) {
+         percent = java.lang.Double.parseDouble(percentValue)
+      }
+      
       
       println("Input path:  " + inputPath.toString())
       println("Output block path:  " + outputBlockPath.toString())
       println("Overwrite ? " + overwrite)
+      println("Add target nodes ? " + targetNodes)
+      println("Output docs percent: " + percent)
+      
+      if(percent <= 0D || percent > 100D) {
+        error("percent value must be in (0; 100] range: " + percent)
+        return
+      }
       
       val outPath = outputBlockPath.toString()
       
@@ -130,6 +160,9 @@ object TwentyNewsToVitalBlock {
       
       var seqWriter : SequenceFile.Writer = null;
       
+      var processed = 0;
+      var skipped = 0;
+      
       if( seqOut ) {
         
 //        val codec = new GzipCodec()
@@ -147,115 +180,153 @@ object TwentyNewsToVitalBlock {
       val seqKey = new Text()
       val seqValue = new VitalBytesWritable() 
       
+      val random = new Random(1000L)
+      
       for(file <- files) {
         
-        var inBody = false;
-
-        var inSubject = false;
-
-        var subject = ""
-
-        var body = ""
-
-        var message : String = null
+        var accept = true
         
-        var newsgroup = file.getParent.getName
-        
-        var is : InputStream = null 
-        try {
+        if(percent < 100D) {
           
-          is = inputFS.open(file)
-          
-          message = IOUtils.toString(is, "UTF-8")
-          
-        } catch {
-          case ex: Exception => {
-            error(ex.getLocalizedMessage())
+          if(random.nextDouble() * 100D > percent) {
+            accept = false
+            skipped = skipped + 1
           }
-        } finally {
-          IOUtils.closeQuietly(is)
+          
         }
         
-        for (line <- scala.io.Source.fromString(message).getLines()) {
-
-          breakable {
-            //extract title ( subject ) and body
-            if (line.isEmpty()) {
-    
-              if (!inBody) {
-    
-                inSubject = false
-    
-                inBody = true
-    
-                //continue
-                break
-    
-              }
-            }
-    
-            if (inBody) {
-    
-              if (body.length() > 0) body += "\n"
-    
-              body += line
-    
-              //continue
-    
-              break
-    
-            }
-    
-            if (line.startsWith("Subject:")) {
-              inSubject = true
-              subject += line.substring("Subject:".length()).trim();
-            } else if (inSubject && line.startsWith(" ")) {
-              subject += "\n"
-              subject += line
-            } else {
-              inSubject = false;
-            }
-          }
-    
-        }
-        
-        subject = XMLChar.filterXML(subject)
-        body = XMLChar.filterXML(body)
-        
-        
-        val s = MESSAGES_NS + newsgroup + "/" + file.getName
-        
-        val msg = new Message()
-        msg.setURI(s) 
-        msg.setProperty("subject", subject)
-        msg.setProperty("body", body)
-        msg.setProperty("newsgroup", newsgroup)
-        
+        if(accept) {
+          
+          processed = processed + 1
+          
+        	var inBody = false;
+        	
+        	var inSubject = false;
+        	
+        	var subject = ""
+        			
+      		var body = ""
+        			
+      		var message : String = null
+        			
+      		var newsgroup = file.getParent.getName
+        			
+      		var is : InputStream = null
+          
+       		try {
+        				
+       				is = inputFS.open(file)
+        						
+      				message = IOUtils.toString(is, "UTF-8")
+        						
+       		} catch {
+        		case ex: Exception => {
+        			error(ex.getLocalizedMessage())
+         		}
+       		} finally {
+        			IOUtils.closeQuietly(is)
+        	}
+        	
+          for (line <- scala.io.Source.fromString(message).getLines()) {
+        		
+        		breakable {
+        			//extract title ( subject ) and body
+        			if (line.isEmpty()) {
+        				
+        				if (!inBody) {
+        					
+        					inSubject = false
+        							
+        							inBody = true
+        							
+        							//continue
+        							break
+        							
+        				}
+        			}
+        			
+        			if (inBody) {
+        				
+        				if (body.length() > 0) body += "\n"
+        						
+        						body += line
+        						
+        						//continue
+        						
+        						break
+        						
+        			}
+        			
+        			if (line.startsWith("Subject:")) {
+        				inSubject = true
+        						subject += line.substring("Subject:".length()).trim();
+        			} else if (inSubject && line.startsWith(" ")) {
+        				subject += "\n"
+        						subject += line
+        			} else {
+        				inSubject = false;
+        			}
+        		}
+        		
+        	}
+        	
+        	subject = XMLChar.filterXML(subject)
+        			body = XMLChar.filterXML(body)
+        			
+        			
+        			val s = MESSAGES_NS + newsgroup + "/" + file.getName
+        			
+        			val msg = new Message()
+        	msg.setURI(s) 
+        	msg.setProperty("subject", subject)
+        	msg.setProperty("body", body)
+        	msg.setProperty("newsgroup", newsgroup)
+        	
 //        nquadsWriter.handleStatement(vf.createStatement(subjectURI, RDF.TYPE, MESSAGE, context))
 //        nquadsWriter.handleStatement(vf.createStatement(subjectURI, hasNewsgroup, vf.createLiteral(newsgroup), context))
 //        nquadsWriter.handleStatement(vf.createStatement(subjectURI, hasSubject, vf.createLiteral(subject), context))
 //        nquadsWriter.handleStatement(vf.createStatement(subjectURI, hasBody, vf.createLiteral(body), context))
-
-        
-        if(blockWriter != null) {
-          
-          blockWriter.startBlock()
-          blockWriter.writeGraphObject(msg)
-          blockWriter.endBlock()
-          
-        } 
-        
-        if(seqWriter != null) {
-          
-          val block = VitalSigns.get().encodeBlock(Arrays.asList(msg))
-          
-          seqKey.set(s)
-          seqValue.set(block)
-          
-          seqWriter.append(seqKey, seqValue)
+        	
+        	val outputObjs = new ArrayList[GraphObject]();
+        	outputObjs.add(msg)
+        	
+        	if(targetNodes) {
+        		val targetNode = new TargetNode()
+        		targetNode.setURI(URIGenerator.generateURI(null, classOf[TargetNode], false))
+        		targetNode.setProperty("targetStringValue", newsgroup)
+        		targetNode.setProperty("targetScore", 1D)
+        		
+        		val targetEdge = new Edge_hasTargetNode()
+        		targetEdge.setURI(URIGenerator.generateURI(null, classOf[Edge_hasTargetNode], false))
+        		targetEdge.addSource(msg).addDestination(targetNode)
+        		
+        		outputObjs.add(targetNode)
+        		outputObjs.add(targetEdge)
+        		
+        	}
+        	
+        	if(blockWriter != null) {
+        		
+        		blockWriter.startBlock()
+        		for(g <- outputObjs) {
+        			blockWriter.writeGraphObject(g)
+        		}
+        		blockWriter.endBlock()
+        		
+        	} 
+        	
+        	if(seqWriter != null) {
+        		
+        		val block = VitalSigns.get().encodeBlock(outputObjs)
+        				
+        				seqKey.set(s)
+        				seqValue.set(block)
+        				
+        				seqWriter.append(seqKey, seqValue)
+        				
+        	}
           
         }
-          
         
       }
 
@@ -268,7 +339,10 @@ object TwentyNewsToVitalBlock {
         seqWriter.close()
       }
       
+      
       println("DONE")
+      println("processed: " + processed)
+      println("skipped: " + skipped)
       
       
     }
@@ -285,8 +359,7 @@ object TwentyNewsToVitalBlock {
       
       for( p <- inputFS.listStatus(inputDir) ) {
        
-        //TODO, isDirectory changed to isDir() ?        
-        if( p.isDir()) {
+        if( p.isDirectory()) {
           
           
           collectFiles(inputFS, p.getPath, res)

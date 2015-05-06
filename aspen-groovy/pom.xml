@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>vital-ai</groupId>
   <artifactId>aspen-groovy</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.2.250</version>
   <name>Aspen Groovy Modules</name>
   
   
@@ -53,6 +53,31 @@
                   <exclude>vital-ai:vital-triplestore</exclude>
                   <exclude>vital-ai:vitalservice</exclude>
                   <exclude>junit:*</exclude>
+                  <exclude>commons-cli:*</exclude>
+                  <exclude>commons-codec:*</exclude>
+                  <exclude>commons-collections:*</exclude>
+                  <exclude>commons-httpclient:*</exclude>
+                  <exclude>commons-io:*</exclude>
+                  <exclude>commons-logging:*</exclude>
+                  <exclude>log4j:*</exclude>
+                  <exclude>org.apache.commons:commons-lang3:*</exclude>
+                  <exclude>org.apache.commons:commons-lang3:*</exclude>
+                  <exclude>org.apache.lucene:*</exclude>
+                  <exclude>org.apache.lucene:*</exclude>
+                  <exclude>org.apache.jena:*</exclude>
+                  <exclude>com.googlecode.concurrentlinkedhashmap:*</exclude>
+                  <exclude>net.sourceforge.owlapi:*</exclude>
+                  <exclude>com.typesafe:*</exclude>
+                  <exclude>org.slf4j:*</exclude>
+                  <exclude>com.google.guava:*</exclude>
+                  <exclude>net.sf.trove4j:*</exclude>
+                  <exclude>com.ibm.icu:*</exclude>
+                  <exclude>xerces:xercesImpl:*</exclude>
+                  <exclude>xml-apis:xml-apis:*</exclude>
+                  <exclude>org.codehaus.jackson:*</exclude>
+                  <exclude>vital-ai:owl2vcs-vital</exclude>
+                  <exclude>com.google.code.externalsortinginjava:*</exclude>
+                  <exclude>org.openrdf.sesame:*</exclude>
                 </excludes>
               </artifactSet>
             </configuration>
