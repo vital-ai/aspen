@@ -869,7 +869,7 @@ object ModelTrainingJob extends AbstractJob {
     
     val inputValue = config.getString(inputOption.getLongOpt)
     
-    if(inputValue.startsWith("name:")) {
+    if(!skipNamedRDDValidation && inputValue.startsWith("name:")) {
       
       val inputRDDName = inputValue.substring("name:".length)
       

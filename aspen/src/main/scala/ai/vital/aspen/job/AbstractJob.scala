@@ -30,6 +30,9 @@ import org.codehaus.jackson.map.ObjectMapper
 
 trait AbstractJob extends SparkJob with NamedRddSupport {
 
+  //this flag is set when the job is about to be submitted to the jobserver - it skip the named rdd validation that would prevent posting it
+  var skipNamedRDDValidation = false
+  
   val profileOption = new Option("prof", "profile", true, "optional vitalservice profile option")
   profileOption.setRequired(false)
   
@@ -148,12 +151,6 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       
       val sc = new SparkContext(conf)
       
-      //validate it now
-      val status = validate(sc, config)
-      if(status.isInstanceOf[SparkJobInvalid]) {
-        throw new RuntimeException("Local spark job validation failed: " + status.asInstanceOf[SparkJobInvalid].reason)
-      }
-      
       var jobServerURL : String = null;
       
       if(hasJobServerOption) {
@@ -187,6 +184,15 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
          }
          
          
+         skipNamedRDDValidation = true
+         
+         //validate it now
+         val status = validate(sc, config)
+         if(status.isInstanceOf[SparkJobInvalid]) {
+            throw new RuntimeException("Local spark job validation failed: " + status.asInstanceOf[SparkJobInvalid].reason)
+         }
+         
+         
          val context = getOptionalString(config, contextOption)
         
          val sync = getBooleanOption(config, syncOption)
@@ -213,6 +219,13 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
           
           
       } else {
+        
+              //validate it now
+          val status = validate(sc, config)
+          if(status.isInstanceOf[SparkJobInvalid]) {
+            throw new RuntimeException("Local spark job validation failed: " + status.asInstanceOf[SparkJobInvalid].reason)
+          }
+        
           println("runnning the job locally ...")        
       	  runJob(sc, config)
       }

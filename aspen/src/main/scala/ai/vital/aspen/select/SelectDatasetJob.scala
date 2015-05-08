@@ -25,6 +25,8 @@ import org.apache.commons.io.IOUtils
 import java.nio.charset.StandardCharsets
 import spark.jobserver.SparkJobValid
 import spark.jobserver.SparkJobInvalid
+import java.util.ArrayList
+import ai.vital.vitalsigns.model.GraphObject
 
 class SelectDatasetJob {}
 
@@ -237,6 +239,8 @@ object SelectDatasetJob extends AbstractJob {
             
             if( ! uriOnly ) {
               bytes = VitalSigns.get.encodeBlock(Arrays.asList(g))
+            } else {
+              bytes = VitalSigns.get.encodeBlock(new ArrayList[GraphObject]())
             }
         			  
             l.add((g.getURI, bytes))
@@ -293,7 +297,7 @@ object SelectDatasetJob extends AbstractJob {
     
     val outputValue = config.getString(outputOption.getLongOpt)
     
-    if(outputValue.startsWith("name:")) {
+    if(!skipNamedRDDValidation && outputValue.startsWith("name:")) {
       
       try{
     	  if(this.namedRdds == null) {

@@ -154,6 +154,11 @@
 					<resource>resources/vital-license/vital-license.lic</resource>
                 </transformer>
                 
+                <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                    <file>${VITAL_HOME}/vital-config/vitalservice/vitalservice.config</file>
+					<resource>resources/vital-config/vitalservice/vitalservice.config</resource>
+                </transformer>
+                
               </transformers>
               <artifactSet>
               <!--  
