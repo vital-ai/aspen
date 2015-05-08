@@ -128,6 +128,22 @@
                 </execution>
 
 
+                <execution>
+                  <id>owl2vcs-vital-0.0.1.jar</id>
+                  <phase>validate</phase>
+                  <goals>
+                    <goal>install-file</goal>
+                  </goals>
+                  <configuration>
+                    <groupId>vital-ai</groupId>
+                    <artifactId>owl2vcs-vital</artifactId>
+                    <version>0.0.1</version>
+                    <packaging>jar</packaging>
+                    <file>${VITAL_HOME}/vitalsigns/lib/owl2vcs-vital.jar</file>
+                  </configuration>
+                </execution>
+
+
             </executions>
         </plugin>            
       
