@@ -25,6 +25,18 @@ import ai.vital.vitalsigns.VitalSigns
 import scala.collection.JavaConversions._
 import ai.vital.domain.TargetNode
 import ai.vital.property.IProperty
+import java.util.ArrayList
+import ai.vital.vitalservice.segment.VitalSegment
+import ai.vital.vitalservice.factory.VitalServiceFactory
+import ai.vital.vitalservice.factory.VitalServiceFactory
+import ai.vital.vitalsigns.model.GraphObject
+import ai.vital.query.querybuilder.VitalBuilder
+import ai.vital.vitalservice.query.VitalGraphQuery
+import ai.vital.vitalservice.VitalStatus
+import ai.vital.vitalsigns.model.GraphMatch
+import ai.vital.property.URIProperty
+import ai.vital.property.URIProperty
+import ai.vital.vitalsigns.block.CompactStringSerializer
 
 class ModelTestingJob {}
 
@@ -52,6 +64,12 @@ object ModelTestingJob extends AbstractJob {
   val modelOption = new Option("mod", "model", true, "model path (directory or a zip/jar file)")
   modelOption.setRequired(true)
   
+  val featureQueryOption = new Option("fq", "feature-query", false, "use model builder query, a model must provide it")
+  featureQueryOption.setRequired(false)
+  
+  val segmentsOption = new Option("segs", "segments", true, "optional segments list (csv), required when feature-query is enabled")
+  segmentsOption.setRequired(false)
+  
 //  val outputOption = new Option("o", "output", true, "optional output RDD[(String, Array[Byte])], either named RDD name (name:<name> or <path> (no prefix), where path is a .vital.seq")
 //  outputOption.setRequired(true)
   
@@ -60,6 +78,9 @@ object ModelTestingJob extends AbstractJob {
     new Options().addOption(masterOption)
       .addOption(inputOption)
       .addOption(modelOption)
+      .addOption(featureQueryOption)
+      .addOption(segmentsOption)
+      .addOption(profileOption)
     )
   }
   
@@ -69,6 +90,10 @@ object ModelTestingJob extends AbstractJob {
 
     val inputName = jobConfig.getString(inputOption.getLongOpt)
     
+    val featureQuery = getBooleanOption(jobConfig, featureQueryOption)
+    val segmentsString = getOptionalString(jobConfig, segmentsOption);
+    val serviceProfile = getOptionalString(jobConfig, profileOption)
+        
     var inputRDDName : String = null
     if(inputName.startsWith("name:")) {
       inputRDDName = inputName.substring("name:".length())
@@ -78,6 +103,10 @@ object ModelTestingJob extends AbstractJob {
     
     println("Input name/path: " + inputName)
     println("Model path: " + modelPath)
+    
+    println("feature query ? " + featureQuery)
+    println("segments: " + segmentsString)
+    println("service profile: " + serviceProfile)
     
 //    val modelManager = new ModelManager()
     val mt2c = AspenGroovyConfig.get.modelType2Class
@@ -92,6 +121,34 @@ object ModelTestingJob extends AbstractJob {
     val aspenModel = modelManager.loadModel(modelPath.toUri().toString())
     
     println("Model loaded successfully")
+    
+    val queryString = aspenModel.getModelConfig.getQuery
+    
+    val segmentsList = new ArrayList[VitalSegment]()
+    
+    if(featureQuery) {
+      if(queryString == null || queryString.isEmpty() ) {
+        throw new RuntimeException("Cannot use feture-query - the model builder does not provide query string")
+      }
+      
+      if(segmentsString == null || segmentsString.isEmpty()) {
+        throw new RuntimeException("segments param is required with feature-query")
+      }
+      
+      for( s <- segmentsString.split(",") ) {
+        val t = s.trim()
+        if(t.length() > 0) {
+          segmentsList.add(VitalSegment.withId(t))
+        }
+      }
+      
+      if(segmentsList.size() < 1) throw new RuntimeException("No segments decoded from string: " + segmentsString)
+      
+      if(serviceProfile != null) {
+        VitalServiceFactory.setServiceProfile(serviceProfile)
+      }
+      
+    }
     
       //URI, category, text
     var inputBlockRDD : RDD[(String, Array[Byte])] = null
@@ -137,7 +194,64 @@ object ModelTestingJob extends AbstractJob {
     //matched, morethan1 input target, no targets
     val results : RDD[(Int, Int, Int, Int)] = inputBlockRDD.map { pair =>
       
-      val block = VitalSigns.get.decodeBlock(pair._2, 0, pair._2.length)
+        var block : java.util.List[GraphObject] = null
+      
+        if(featureQuery) {
+        
+        val _uri = pair._1
+        val qString = queryString.replace("$URI", _uri)
+        val vitalQuery = new VitalBuilder().queryString(qString).toQuery()
+        
+        if(serviceProfile != null && !VitalServiceFactory.getServiceProfile.equals(serviceProfile)) {
+          VitalServiceFactory.setServiceProfile(serviceProfile)
+        }
+        
+        vitalQuery.setSegments(segmentsList)
+        
+        if(vitalQuery.isInstanceOf[VitalGraphQuery]) {
+          vitalQuery.asInstanceOf[VitalGraphQuery].setPayloads(true)
+        }
+        
+        val rs = VitalServiceFactory.getVitalService.query(vitalQuery)
+        
+        if(rs.getStatus().getStatus != VitalStatus.Status.ok) {
+          throw new RuntimeException("Query exception: " + rs.getStatus.getMessage)
+        }
+        
+        block = new ArrayList[GraphObject]()
+        
+        for(g <- rs) {
+          if(g.isInstanceOf[GraphMatch]) {
+            //make sure payloads is e
+            for( e <- g.getPropertiesMap.entrySet() ) {
+              
+              val un = e.getValue.unwrapped();
+              
+              if(un.isInstanceOf[URIProperty]) {
+                
+                try {
+                  val uri = un.asInstanceOf[URIProperty].get()
+                  val x = CompactStringSerializer.fromString(g.getProperty(uri).toString())
+                  if(x != null) {
+                    block.add(x)
+                  }
+                } catch {
+                  case ex : Exception => {}
+                }
+                
+              }
+              
+            }
+          } else {
+            block.add(g)
+          }
+        }
+        
+      } else {
+        
+    	  block = VitalSigns.get.decodeBlock(pair._2, 0, pair._2.length)
+        
+      }
       
       var targetValue : String = null 
       
@@ -146,7 +260,6 @@ object ModelTestingJob extends AbstractJob {
       var moreThanOne = 0
       
       var noTargets = 0
-      
       
       for( b <- block ) {
         if(b.isInstanceOf[TargetNode]) {
