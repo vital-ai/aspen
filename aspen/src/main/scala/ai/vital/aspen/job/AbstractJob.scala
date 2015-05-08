@@ -141,16 +141,6 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       
       val config = ConfigFactory.parseMap(optionsMap)
       
-      val masterURL = cmd.getOptionValue(masterOption.getOpt);
-      
-      val conf = new SparkConf().setAppName(getJobName())
-      if (masterURL != null) {
-        println("custom masterURL: " + masterURL)
-        conf.setMaster(masterURL)
-      }
-      
-      val sc = new SparkContext(conf)
-      
       var jobServerURL : String = null;
       
       if(hasJobServerOption) {
@@ -177,6 +167,8 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       
       if(jobServerURL != null) {
         
+         println("runnning the job remotely in jobserver ...")
+        
          val appName = getOptionalString(config, appNameOption)
          if(appName == null || appName.isEmpty) {
            System.err.println("No " + appNameOption.getLongOpt + " parameter - it is required in jobserver mode.")
@@ -187,7 +179,7 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
          skipNamedRDDValidation = true
          
          //validate it now
-         val status = validate(sc, config)
+         val status = validate(null, config)
          if(status.isInstanceOf[SparkJobInvalid]) {
             throw new RuntimeException("Local spark job validation failed: " + status.asInstanceOf[SparkJobInvalid].reason)
          }
@@ -220,13 +212,24 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
           
       } else {
         
+    	    println("runnning the job locally (non-jobserver) ...")      
+          
+          val masterURL = cmd.getOptionValue(masterOption.getOpt);
+      
+          val conf = new SparkConf().setAppName(getJobName())
+          if (masterURL != null) {
+            println("custom masterURL: " + masterURL)
+            conf.setMaster(masterURL)
+          }
+      
+          val sc = new SparkContext(conf)
+          
               //validate it now
           val status = validate(sc, config)
           if(status.isInstanceOf[SparkJobInvalid]) {
             throw new RuntimeException("Local spark job validation failed: " + status.asInstanceOf[SparkJobInvalid].reason)
           }
         
-          println("runnning the job locally ...")        
       	  runJob(sc, config)
       }
       
