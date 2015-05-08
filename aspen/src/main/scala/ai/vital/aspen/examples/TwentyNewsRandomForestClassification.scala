@@ -31,8 +31,10 @@ import org.example.twentynews.domain.Message
 import ai.vital.domain.Edge_hasTargetNode
 import ai.vital.vitalservice.model.App
 import ai.vital.domain.TargetNode
-
 import org.apache.spark.mllib.tree.model.RandomForestModel
+import spark.jobserver.SparkJobValidation
+import spark.jobserver.SparkJobInvalid
+import spark.jobserver.SparkJobValid
 
 
 object TwentyNewsRandomForestClassification extends AbstractJob {
@@ -48,10 +50,10 @@ object TwentyNewsRandomForestClassification extends AbstractJob {
   val modelOption = new Option("mod", "model", true, "input model path (directory)")
   modelOption.setRequired(true)
   
-  val inputNameOption = new Option("in", "input-name", true, "input RDD[(String, String, String)] (gid,newsgroup,text) name")
+  val inputNameOption = new Option("in", "input-name", true, "input RDD[(String, Array[Byte])] name or vital .seq file - 'path:' prefix")
   inputNameOption.setRequired(true)
   
-  val outputNameOption = new Option("out", "output-name", true, "output RDD[(String, String)] (gid, categoryquads) name")
+  val outputNameOption = new Option("out", "output-name", true, "output RDD[(String, Array[Byte])] name or vital.seq file - 'path:' prefix")
   outputNameOption.setRequired(true)
   
   val overwriteOption = new Option("ow", "overwrite", false, "overwrite model if exists")
@@ -94,8 +96,7 @@ object TwentyNewsRandomForestClassification extends AbstractJob {
       if(outFS.exists(outPath)) {
         
         if(!overwrite) {
-        	System.err.println("Output path already exists: " + outPath.toString() + " - user --overwrite param")
-        	return
+        	throw new RuntimeException("Output path already exists: " + outPath.toString() + " - user --overwrite param")
         }
         
         outFS.delete(outPath, true)
@@ -117,29 +118,11 @@ object TwentyNewsRandomForestClassification extends AbstractJob {
       val inputFS = FileSystem.get(inputPath.toUri(), new Configuration())
       
       if (!inputFS.exists(inputPath) /*|| !inputFS.isDirectory(inputPath)*/) {
-        System.err.println("Input train path does not exist " + /*or is not a directory*/ ": " + inputRDDName)
-        return
+        throw new RuntimeException("Input train path does not exist " + /*or is not a directory*/ ": " + inputRDDName)
       }
 
       inputRDD = sc.sequenceFile(inputPath.toString(), classOf[Text], classOf[VitalBytesWritable]).map{ pair =>
-      
-//        var newsgroup = "X"
-//        var text = ""
-//        
-//        val inputObjects = VitalSigns.get().decodeBlock(pair._2.get, 0, pair._2.get.length)
-//        
-//        for( g <- inputObjects ) {
-//          if(g.isInstanceOf[Message]){
-//            newsgroup = g.getProperty("newsgroup").toString()
-//            val title = g.getProperty("title")
-//            val body = g.getProperty("body")
-//            if(title != null) text = text + title + "\n"
-//            text += body
-//          }
-//        } 
-//      (pair._1.toString(), newsgroup, text)
           (pair._1.toString(), pair._2.get)
-        
       }
       
       //cache it only if it's not a named RDD? 
@@ -147,9 +130,7 @@ object TwentyNewsRandomForestClassification extends AbstractJob {
       
     } else {
       
-      throw new RuntimeException("Input named RDD not supported!")
-//      inputRDD = this.namedRdds.get[(String, String, String)](inputRDDName).get
-      
+      inputRDD = this.namedRdds.get[(String, Array[Byte])](inputRDDName).get
       
     }
     
@@ -299,6 +280,43 @@ object TwentyNewsRandomForestClassification extends AbstractJob {
 //        this.namedRdds.update(outputRDDName, gidOutQuadsRDD)
       throw new RuntimeException("Named RDD not supported!")
     }
+    
+  }
+  
+   override def subvalidate(sc: SparkContext, config: Config) : SparkJobValidation = {
+    
+    val inputValue = config.getString(inputNameOption.getLongOpt)
+    
+    if( ! inputValue.startsWith("path:") ) {
+      
+      try{
+        if(this.namedRdds == null) {
+        } 
+      } catch { case ex: NullPointerException => {
+        return new SparkJobInvalid("Cannot use named RDD output - no spark job context")
+        
+      }}
+        
+      val inputRDD = this.namedRdds.get[(String, Array[Byte])](inputValue)
+      if( !inputRDD.isDefined ) SparkJobInvalid("Missing named RDD [" + inputValue + "]")
+      
+    }
+    
+    val outputValue = config.getString(outputNameOption.getLongOpt)
+    
+    if( ! outputValue.startsWith("path:") ) {
+      
+      try{
+        if(this.namedRdds == null) {
+        } 
+      } catch { case ex: NullPointerException => {
+        return new SparkJobInvalid("Cannot use named RDD output - no spark job context")
+        
+      }}
+      
+    }
+    
+    SparkJobValid
     
   }
 

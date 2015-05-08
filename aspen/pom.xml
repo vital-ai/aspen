@@ -146,12 +146,12 @@
                 <!-- for environemnt without VITAL_HOME -->
 				<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
                     <file>${VITAL_HOME}/vital-ontology/vital-core-${vital.version}.owl</file>
-					<resource>/resources/vital-ontology/vital-core-${vital.version}.owl</resource>
+					<resource>resources/vital-ontology/vital-core-${vital.version}.owl</resource>
                 </transformer>
                 
 				<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
                     <file>${VITAL_HOME}/vital-license/vital-license.lic</file>
-					<resource>/resources/vital-license/vital-license.lic</resource>
+					<resource>resources/vital-license/vital-license.lic</resource>
                 </transformer>
                 
               </transformers>

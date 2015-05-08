@@ -12,6 +12,7 @@ object NaiveBayesPredictionModel {
   
 }
 
+@SerialVersionUID(1L)
 class NaiveBayesPredictionModel extends PredictionModel {
 
   var model : NaiveBayesModel = null;

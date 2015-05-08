@@ -12,6 +12,7 @@ object DecisionTreePredictionModel {
   
 }
 
+@SerialVersionUID(1L)
 class DecisionTreePredictionModel extends PredictionModel {
 
   var model : DecisionTreeModel = null;

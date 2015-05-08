@@ -1,7 +1,11 @@
 package ai.vital.aspen.groovy.modelmanager.domain
 
-class Feature {
+import java.io.Serializable
 
+class Feature implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+	
 	private String URI
 	
 	private String name

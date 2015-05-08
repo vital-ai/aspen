@@ -1,9 +1,12 @@
 package ai.vital.aspen.groovy.modelmanager.domain
 
 import java.util.List
+import java.io.Serializable
 
-class Model {
+class Model implements Serializable {
 
+	private static final long serialVersionUID = 1L;
+	
 	String URI
 	
 	String name
@@ -14,7 +17,9 @@ class Model {
 
 	String preferredLocation
 	
-	List<Feature> features = []
+	List<Feature> features = []
+	
+	String query
 
 	public String getURI() {
 		return URI;
@@ -63,6 +68,13 @@ class Model {
 	public void setFeatures(List<Feature> features) {
 		this.features = features;
 	}
-	
 
+	public String getQuery() {
+		return query;
+	}
+
+	public void setQuery(String query) {
+		this.query = query;
+	}
+	
 }

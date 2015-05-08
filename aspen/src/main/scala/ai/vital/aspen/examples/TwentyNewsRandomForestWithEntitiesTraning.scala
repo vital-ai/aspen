@@ -29,6 +29,9 @@ import ai.vital.property.MultiValueProperty
 import ai.vital.property.IProperty
 import java.util.Collection
 import java.util.HashMap
+import spark.jobserver.SparkJobValidation
+import spark.jobserver.SparkJobInvalid
+import spark.jobserver.SparkJobValid
 
 object TwentyNewsRandomForestWithEntitiesTraning extends AbstractJob {
 
@@ -102,13 +105,11 @@ object TwentyNewsRandomForestWithEntitiesTraning extends AbstractJob {
     }
     
     if(minDF < 1) {
-      System.err.println("minDF must be > 0")
-      return
+      throw new RuntimeException("minDF must be > 0")
     }
     
     if(maxDFPercent > 100 || maxDFPercent < 1) {
-      System.err.println("maxDFPercent must be within range [1, 100]")
-      return
+      throw new RuntimeException("maxDFPercent must be within range [1, 100]")
     }
     
     
@@ -123,13 +124,12 @@ object TwentyNewsRandomForestWithEntitiesTraning extends AbstractJob {
 
     
     if (modelFS.exists(outputModelPath) && !overwrite) {
-      System.err.println("Output model path already exists, use -ow option")
-      return
+      throw new RuntimeException("Output model path already exists, use -ow option")
     }
     
     //gid, newsgroup, text
-    var inputRDD : RDD[(String, String, String, Set[String], Set[String])] = null
-
+    var inputBlockRDD : RDD[(String, Array[Byte])] = null
+    
     if(inputName.startsWith("path:")) {
       
       println("test mode - input path: " + inputName)
@@ -139,16 +139,25 @@ object TwentyNewsRandomForestWithEntitiesTraning extends AbstractJob {
       val inputFS = FileSystem.get(inputPath.toUri(), new Configuration())
       
       if (!inputFS.exists(inputPath) /*|| !inputFS.isDirectory(inputPath)*/) {
-        System.err.println("Input train path does not exist " + /*or is not a directory*/ ": " + inputName)
-        return
+        throw new RuntimeException("Input train path does not exist " + /*or is not a directory*/ ": " + inputName)
       }
 
-      inputRDD = sc.sequenceFile(inputPath.toString(), classOf[Text], classOf[VitalBytesWritable]).map{ pair =>
+      inputBlockRDD = sc.sequenceFile(inputPath.toString(), classOf[Text], classOf[VitalBytesWritable]).map{ pair =>
+        (pair._1.toString(), pair._2.get)
+      }
+      
+    } else {
+      
+      inputBlockRDD = this.namedRdds.get[(String, Array[Byte])](inputName).get
+      
+    }
+    
+    val inputRDD = inputBlockRDD.map{ pair =>
         
         var newsgroup = "X"
         var text = ""
         
-        val inputObjects = VitalSigns.get().decodeBlock(pair._2.get, 0, pair._2.get.length)
+        val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
         
         val entities : Set[String] = new HashSet[String]()
         val spanTypes : Set[String] = new HashSet[String]()
@@ -179,18 +188,9 @@ object TwentyNewsRandomForestWithEntitiesTraning extends AbstractJob {
         (pair._1.toString(), newsgroup, text, entities, spanTypes)
         
       }
-
+    
       //cache it only if it's not a named RDD? 
       inputRDD.cache()
-      
-    } else {
-      
-      throw new RuntimeException("namedRDD not supported yet")
-//      inputRDD = this.namedRdds.get[(String, String, String)](inputName).get
-      
-      
-    }
-
     
     val splits = inputRDD.randomSplit(Array(0.6, 0.4), seed = 11L)
     
@@ -563,6 +563,30 @@ object TwentyNewsRandomForestWithEntitiesTraning extends AbstractJob {
     
     
     println("DONE " + new Date().toString())
+    
    }
-  
+ 
+   override def subvalidate(sc: SparkContext, config: Config) : SparkJobValidation = {
+    
+    val inputValue = config.getString(inputOption.getLongOpt)
+    
+    if( ! inputValue.startsWith("path:") ) {
+      
+      try{
+        if(this.namedRdds == null) {
+        } 
+      } catch { case ex: NullPointerException => {
+        return new SparkJobInvalid("Cannot use named RDD output - no spark job context")
+        
+      }}
+      
+      val inputRDD = this.namedRdds.get[(String, Array[Byte])](inputValue)
+      if( !inputRDD.isDefined ) SparkJobInvalid("Missing named RDD [" + inputValue + "]")
+        
+      
+    }
+    
+    SparkJobValid
+    
+  }
 }

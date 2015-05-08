@@ -21,6 +21,7 @@ import java.util.ArrayList
 import ai.vital.domain.Edge_hasTargetNode
 import ai.vital.vitalsigns.model.VITAL_Node
 
+@SerialVersionUID(1L)
 abstract class PredictionModel extends AspenModel {
 
   val categories_tsv = "categories.tsv";

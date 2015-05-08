@@ -7,6 +7,7 @@ import ai.vital.aspen.groovy.modelmanager.domain.Feature;
 import ai.vital.aspen.groovy.modelmanager.domain.Model;
 
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
 
 public class HoconModelBuilder {
@@ -23,6 +24,9 @@ public class HoconModelBuilder {
 		m.setType(modelCfg.getString("type"));
 		m.setURI(modelCfg.getString("URI"));
 		
+		try {
+			m.setQuery(modelCfg.getString("query"));
+		} catch(ConfigException.Missing ex) {}
 //		m.setAlgorithm(algorithm);
 		
 //		Config config = cfg.getConfig("Feature");

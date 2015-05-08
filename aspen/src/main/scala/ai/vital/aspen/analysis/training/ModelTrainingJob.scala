@@ -48,7 +48,20 @@ import java.io.ByteArrayInputStream
 import ai.vital.aspen.model.NaiveBayesPredictionModel
 import org.apache.spark.mllib.tree.DecisionTree
 import org.apache.spark.mllib.classification.NaiveBayes
-
+import spark.jobserver.SparkJobInvalid
+import spark.jobserver.SparkJobValidation
+import spark.jobserver.SparkJobValid
+import ai.vital.vitalservice.query.VitalQuery
+import ai.vital.query.querybuilder.VitalBuilder
+import ai.vital.vitalservice.segment.VitalSegment
+import java.util.ArrayList
+import ai.vital.vitalservice.factory.VitalServiceFactory
+import ai.vital.vitalsigns.model.GraphObject
+import ai.vital.vitalservice.VitalStatus
+import ai.vital.vitalsigns.model.GraphMatch
+import ai.vital.vitalservice.query.VitalGraphQuery
+import ai.vital.property.URIProperty
+import ai.vital.vitalsigns.block.CompactStringSerializer
 
 class ModelTrainingJob {}
 
@@ -74,13 +87,20 @@ object ModelTrainingJob extends AbstractJob {
   val maxDFPercentOption = new Option("maxDFP", "maxDocFreqPercent", true, "maximum term document frequency (percent), default: " + MAX_DF_PERCENT)
   maxDFPercentOption.setRequired(false)
   
+  val featureQueryOption = new Option("fq", "feature-query", false, "use model builder query, a model must provide it")
+  featureQueryOption.setRequired(false)
+  
+  val segmentsOption = new Option("segs", "segments", true, "optional segments list (csv), required when feature-query is enabled")
+  segmentsOption.setRequired(false)
+  
   def MIN_DF = 1
   
   def MAX_DF_PERCENT = 100
   
   
   def getOptions(): Options = {
-      val options = new Options()
+    addJobServerOptions(
+      new Options()
       .addOption(masterOption)
       .addOption(modelBuilderOption)
       .addOption(inputOption)
@@ -88,7 +108,10 @@ object ModelTrainingJob extends AbstractJob {
       .addOption(overwriteOption)
       .addOption(minDFOption)
       .addOption(maxDFPercentOption)
-      return options
+      .addOption(featureQueryOption)
+      .addOption(segmentsOption)
+      .addOption(profileOption)
+    )
   }
   
   
@@ -111,6 +134,11 @@ object ModelTrainingJob extends AbstractJob {
 		  
     val inputName = jobConfig.getString(inputOption.getLongOpt)
     
+    var inputRDDName : String = null
+    if(inputName.startsWith("name:")) {
+      inputRDDName = inputName.substring("name:".length())
+    }
+    
     var modelPathParam = jobConfig.getString(outputOption.getLongOpt)
     
     var zipContainer = false
@@ -129,8 +157,11 @@ object ModelTrainingJob extends AbstractJob {
     }
     
     val outputModelPath = new Path(modelPathParam)
-    val overwrite = jobConfig.getBoolean(overwriteOption.getLongOpt)
+    val overwrite = getBooleanOption(jobConfig, overwriteOption)
+    val featureQuery = getBooleanOption(jobConfig, featureQueryOption)
+    val segmentsString = getOptionalString(jobConfig, segmentsOption);
     val builderPath = new Path(jobConfig.getString(modelBuilderOption.getLongOpt))
+    val serviceProfile = getOptionalString(jobConfig, profileOption)
     
     var minDF = MIN_DF
     var maxDFPercent = MAX_DF_PERCENT
@@ -148,13 +179,11 @@ object ModelTrainingJob extends AbstractJob {
     }
     
     if(minDF < 1) {
-      System.err.println("minDF must be > 0")
-      return
+      throw new RuntimeException("minDF must be > 0")
     }
     
     if(maxDFPercent > 100 || maxDFPercent < 1) {
-      System.err.println("maxDFPercent must be within range [1, 100]")
-      return
+      throw new RuntimeException("maxDFPercent must be within range [1, 100]")
     }
     
     
@@ -165,6 +194,9 @@ object ModelTrainingJob extends AbstractJob {
     if(zipContainer) println("   output is a zip container (.zip)")
     if(jarContainer) println("   output is a jar container (.jar)")
     println("overwrite if exists: " + overwrite)
+    println("feature query ? " + featureQuery)
+    println("segments: " + segmentsString)
+    println("service profile: " + serviceProfile)
     println("minDF: " + minDF)
     println("maxDFPercent: " + maxDFPercent)
     
@@ -181,14 +213,12 @@ object ModelTrainingJob extends AbstractJob {
     
     val builderFS = FileSystem.get(builderPath.toUri(), hadoopConfig)
     if(!builderFS.exists(builderPath)) {
-      System.err.println("Builder file not found: " + builderPath.toString())
-      return
+      throw new RuntimeException("Builder file not found: " + builderPath.toString())
     }
     
     val builderStatus = builderFS.getFileStatus(builderPath)
     if(!builderStatus.isFile()) {
-      System.err.println("Builder path does not denote a file: " + builderPath.toString())
-      return
+      throw new RuntimeException("Builder path does not denote a file: " + builderPath.toString())
     }
     
     
@@ -201,7 +231,33 @@ object ModelTrainingJob extends AbstractJob {
     
     val featuresMap = new Features().parseFeaturesMap(aspenModel)
     
+    val queryString = aspenModel.getModelConfig.getQuery
     
+    val segmentsList = new ArrayList[VitalSegment]()
+    
+    if(featureQuery) {
+      if(queryString == null || queryString.isEmpty() ) {
+        throw new RuntimeException("Cannot use feture-query - the model builder does not provide query string")
+      }
+      
+      if(segmentsString == null || segmentsString.isEmpty()) {
+        throw new RuntimeException("segments param is required with feature-query")
+      }
+      
+      for( s <- segmentsString.split(",") ) {
+        val t = s.trim()
+        if(t.length() > 0) {
+        	segmentsList.add(VitalSegment.withId(t))
+        }
+      }
+      
+      if(segmentsList.size() < 1) throw new RuntimeException("No segments decoded from string: " + segmentsString)
+      
+      if(serviceProfile != null) {
+        VitalServiceFactory.setServiceProfile(serviceProfile)
+      }
+      
+    }
 
     val modelFS = FileSystem.get(outputModelPath.toUri(), hadoopConfig)
 
@@ -209,8 +265,7 @@ object ModelTrainingJob extends AbstractJob {
     if (modelFS.exists(outputModelPath) || (outputContainerPath != null && modelFS.exists(outputContainerPath) ) ) {
       
       if( !overwrite ) {
-    	  System.err.println("Output model path already exists, use -ow option")
-    	  return
+    	  throw new RuntimeException("Output model path already exists, use -ow option")
       }
       
       modelFS.delete(outputModelPath, true)
@@ -221,9 +276,9 @@ object ModelTrainingJob extends AbstractJob {
     }
     
     //URI, category, text
-    var inputRDD : RDD[(String, String, String/*, Set[String], Set[String]*/)] = null
-
-    if(!inputName.startsWith("name:")) {
+    var inputBlockRDD : RDD[(String, Array[Byte])] = null
+    
+    if(inputRDDName == null) {
         
         println("input path: " + inputName)
         
@@ -232,8 +287,7 @@ object ModelTrainingJob extends AbstractJob {
         val inputFS = FileSystem.get(inputPath.toUri(), hadoopConfig)
         
         if (!inputFS.exists(inputPath) /*|| !inputFS.isDirectory(inputPath)*/) {
-          System.err.println("Input train path does not exist " + /*or is not a directory*/ ": " + inputPath.toString())
-          return
+          throw new RuntimeException("Input train path does not exist " + /*or is not a directory*/ ": " + inputPath.toString())
         }
         
         val inputFileStatus = inputFS.getFileStatus(inputPath)
@@ -241,48 +295,121 @@ object ModelTrainingJob extends AbstractJob {
         if(inputName.endsWith(".vital") || inputName.endsWith(".vital.gz")) {
       	    
       	    if(!inputFileStatus.isFile()) {
-      	      System.err.println("input path indicates a block file but does not denote a file: " + inputName)
-      	      return
+      	      throw new RuntimeException("input path indicates a block file but does not denote a file: " + inputName)
       	    }
-      	    System.err.println("Vital block files not supported yet")
-      	    return
+      	    throw new RuntimeException("Vital block files not supported yet")
       	    
         } else {
           
-      	  inputRDD = sc.sequenceFile(inputPath.toString(), classOf[Text], classOf[VitalBytesWritable]).map { pair =>
-      	  
-      	    var category : String = null
-      	    val text = new StringBuilder()
-      	  
-      	    val inputObjects = VitalSigns.get().decodeBlock(pair._2.get, 0, pair._2.get.length)
-      	  
-//      	  val entities : Set[String] = new HashSet[String]()
-//      	  val spanTypes : Set[String] = new HashSet[String]()
-      	  
-      	    for( g <- inputObjects) {
+          inputBlockRDD = sc.sequenceFile(inputPath.toString(), classOf[Text], classOf[VitalBytesWritable]).map { pair =>
+            (pair._1.toString(), pair._2.get)
+          }
+          
+        }
+        
+    } else {
+      
+      inputBlockRDD = this.namedRdds.get[(String, Array[Byte])](inputRDDName).get
+      
+//      inputRDD = this.namedRdds.get[(String, String, String)](inputRDDName).get
+      
+      
+    }
+    
+    
+    val inputRDD = inputBlockRDD.map { pair =>
+      
+      var inputObjects : java.util.List[GraphObject] = null;
+      
+      if(featureQuery) {
+        
+        val _uri = pair._1
+        val qString = queryString.replace("$URI", _uri)
+        val vitalQuery = new VitalBuilder().queryString(qString).toQuery()
+        
+        if(serviceProfile != null && !VitalServiceFactory.getServiceProfile.equals(serviceProfile)) {
+          VitalServiceFactory.setServiceProfile(serviceProfile)
+        }
+        
+        vitalQuery.setSegments(segmentsList)
+        
+        if(vitalQuery.isInstanceOf[VitalGraphQuery]) {
+          vitalQuery.asInstanceOf[VitalGraphQuery].setPayloads(true)
+        }
+        
+        val rs = VitalServiceFactory.getVitalService.query(vitalQuery)
+        
+        if(rs.getStatus().getStatus != VitalStatus.Status.ok) {
+          throw new RuntimeException("Query exception: " + rs.getStatus.getMessage)
+        }
+        
+        inputObjects = new ArrayList[GraphObject]()
+        
+        for(g <- rs) {
+          if(g.isInstanceOf[GraphMatch]) {
+            //make sure payloads is e
+            for( e <- g.getPropertiesMap.entrySet() ) {
+              
+              val un = e.getValue.unwrapped();
+              
+              if(un.isInstanceOf[URIProperty]) {
+                
+                try {
+                  val uri = un.asInstanceOf[URIProperty].get()
+                  val x = CompactStringSerializer.fromString(g.getProperty(uri).toString())
+                  if(x != null) {
+                    inputObjects.add(x)
+                  }
+                } catch {
+                  case ex : Exception => {}
+                }
+                
+              }
+              
+            }
+          } else {
+        	  inputObjects.add(g)
+          }
+        }
+        
+      } else {
+        
+        inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
+        
+      }
+      
+            var category : String = null
+            val text = new StringBuilder()
+          
+            
+          
+//          val entities : Set[String] = new HashSet[String]()
+//          val spanTypes : Set[String] = new HashSet[String]()
+          
+            for( g <- inputObjects) {
               
               if(g.isInstanceOf[TargetNode]) {
               
-              	  val pv = g.getProperty("targetStringValue")
-              	  if(pv != null) {
-              	                    
-              	    category = pv match {
-              	      case x: IProperty => "" + x.rawValue()
-              	      case y: String => y
-              	      case z: GString => z.toString()
-              	      case _ => throw new Exception("Cannot get string value from property " + pv)
-              	    }
-              	    
-              	  }
-              	  
-              	} else {
+                  val pv = g.getProperty("targetStringValue")
+                  if(pv != null) {
+                                    
+                    category = pv match {
+                      case x: IProperty => "" + x.rawValue()
+                      case y: String => y
+                      case z: GString => z.toString()
+                      case _ => throw new Exception("Cannot get string value from property " + pv)
+                    }
+                    
+                  }
+                  
+                } else {
                 
-                	for( e <- featuresMap.entrySet()) {
+                  for( e <- featuresMap.entrySet()) {
                     
                     if(e.getKey.isAssignableFrom(g.getClass)) {
-              			
-                			for(pn <- e.getValue ) {
-                				
+                    
+                      for(pn <- e.getValue ) {
+                        
                         val pv = g.getProperty(pn)
                                   
                         if(pv != null) {
@@ -302,31 +429,20 @@ object ModelTrainingJob extends AbstractJob {
                                     
                          }
                        
-                		   }
+                       }
                     }
                     
-              	   }
+                   }
                 }
               
               }
                 
-      	    (pair._1.toString(), category, text.toString()/*, entities, spanTypes*/)
+            (pair._1.toString(), category, text.toString()/*, entities, spanTypes*/)
             
-      	  } 
-      	  
-        }
-
+          } 
 
         //cache it only if it's not a named RDD? 
         inputRDD.cache()
-        
-    } else {
-      
-        throw new RuntimeException("namedRDD not supported yet")
-//      inputRDD = this.namedRdds.get[(String, String, String)](inputName).get
-      
-      
-    }
 
     
     val splits = inputRDD.randomSplit(Array(0.6, 0.4), seed = 11L)
@@ -746,6 +862,34 @@ object ModelTrainingJob extends AbstractJob {
     }
     
     return vectorized
+    
+  }
+  
+  override def subvalidate(sc: SparkContext, config: Config) : SparkJobValidation = {
+    
+    val inputValue = config.getString(inputOption.getLongOpt)
+    
+    if(inputValue.startsWith("name:")) {
+      
+      val inputRDDName = inputValue.substring("name:".length)
+      
+      try{
+        if(this.namedRdds == null) {
+        } 
+      } catch { case ex: NullPointerException => {
+        return new SparkJobInvalid("Cannot use named RDD output - no spark job context")
+        
+      }}
+      
+      val inputRDD = this.namedRdds.get[(String, Array[Byte])](inputRDDName)
+//      val rdd = this.namedRdds.get[(Long, scala.Seq[String])]("dictionary")
+      
+      if( !inputRDD.isDefined ) SparkJobInvalid("Missing named RDD [" + inputRDDName + "]")
+        
+      
+    }
+    
+    SparkJobValid
     
   }
   

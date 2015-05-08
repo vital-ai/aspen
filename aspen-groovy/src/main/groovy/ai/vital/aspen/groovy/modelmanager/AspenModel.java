@@ -1,7 +1,7 @@
 package ai.vital.aspen.groovy.modelmanager;
 
-import java.io.File;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -12,10 +12,11 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 
 import ai.vital.aspen.groovy.modelmanager.domain.Model;
-import ai.vital.domain.TargetNode;
 import ai.vital.vitalsigns.model.GraphObject;
 
-public abstract class AspenModel {
+public abstract class AspenModel implements Serializable {
+
+	private static final long serialVersionUID = 1L;
 
 	protected String name;
 	
@@ -25,13 +26,11 @@ public abstract class AspenModel {
 	
 	private boolean loaded = false;
 	
-	protected File modelDirectory;
-
 	protected Model modelConfig;
 
-	protected FileStatus fileStatus;
+	transient protected FileStatus fileStatus;
 	
-	protected FileSystem fileSystem;
+	transient protected FileSystem fileSystem;
 	
 	public String getName() {
 		return modelConfig.getName();

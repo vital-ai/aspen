@@ -1,6 +1,5 @@
 package ai.vital.aspen.groovy.nlp.models;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
@@ -9,13 +8,13 @@ import java.util.List;
 import java.util.Set;
 
 import opennlp.tools.chunker.ChunkerModel;
-import opennlp.tools.util.InvalidFormatException;
 import opennlp.tools.util.model.BaseModel;
 import ai.vital.aspen.groovy.modelmanager.AspenModel;
-import ai.vital.domain.TargetNode;
 import ai.vital.vitalsigns.model.GraphObject;
 
 public class OpenNLPModel extends AspenModel {
+
+	private static final long serialVersionUID = 1L;
 
 	private BaseModel baseModel;
 	

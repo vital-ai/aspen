@@ -15,6 +15,9 @@ import org.apache.spark.rdd.RDD
 import ai.vital.hadoop.writable.VitalBytesWritable
 import org.apache.hadoop.io.Text
 import ai.vital.vitalsigns.VitalSigns
+import spark.jobserver.SparkJobValidation
+import spark.jobserver.SparkJobInvalid
+import spark.jobserver.SparkJobValid
 
 
 object TwentyNewsAnnotateDocuments extends AbstractJob {
@@ -79,9 +82,7 @@ object TwentyNewsAnnotateDocuments extends AbstractJob {
       
       var outpuBlockFS : FileSystem = null 
       
-      if(!outputPath.startsWith("path:")) {
-        throw new RuntimeException("NamedRDD disabled, use path: prefixed output")
-      } else {
+      if(outputPath.startsWith("path:")) {
       
         val outputBlockPath = new Path(outputPath.substring(5))
         
@@ -107,8 +108,7 @@ object TwentyNewsAnnotateDocuments extends AbstractJob {
         val inputFS = FileSystem.get(inputPathObj.toUri(), new Configuration())
       
         if (!inputFS.exists(inputPathObj) /*|| !inputFS.isDirectory(inputPathObj)*/) {
-          System.err.println("Input train path does not exist " + /*or is not a directory*/ ": " + inputPathObj.toString())
-          return
+          throw new RuntimeException("Input train path does not exist " + /*or is not a directory*/ ": " + inputPathObj.toString())
         }
 
         inputRDD = sc.sequenceFile(inputPathObj.toString(), classOf[Text], classOf[VitalBytesWritable]).map{ pair =>
@@ -117,7 +117,9 @@ object TwentyNewsAnnotateDocuments extends AbstractJob {
         
         } 
       } else {
-        throw new RuntimeException("NamedRDD disabled, use path: prefixed input")
+        
+        inputRDD = this.namedRdds.get[(String, Array[Byte])](inputPath).get
+        
       }
       
       
@@ -157,5 +159,29 @@ object TwentyNewsAnnotateDocuments extends AbstractJob {
       
        
    }
+   
+   override def subvalidate(sc: SparkContext, config: Config) : SparkJobValidation = {
+    
+    val inputValue = config.getString(inputOption.getLongOpt)
+    
+    if( ! inputValue.startsWith("path:") ) {
+      
+      try{
+        if(this.namedRdds == null) {
+        } 
+      } catch { case ex: NullPointerException => {
+        return new SparkJobInvalid("Cannot use named RDD output - no spark job context")
+        
+      }}
+      
+      val inputRDD = this.namedRdds.get[(String, Array[Byte])](inputValue)
+      if( !inputRDD.isDefined ) SparkJobInvalid("Missing named RDD [" + inputValue + "]")
+        
+      
+    }
+    
+    SparkJobValid
+    
+  }
    
 }

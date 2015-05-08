@@ -12,6 +12,7 @@ object RandomForestPredictionModel {
   
 }
 
+@SerialVersionUID(1L)
 class RandomForestPredictionModel extends PredictionModel {
   
 

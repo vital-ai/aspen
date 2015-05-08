@@ -27,6 +27,9 @@ import org.apache.hadoop.io.Text
 import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
+import spark.jobserver.SparkJobValidation
+import spark.jobserver.SparkJobInvalid
+import spark.jobserver.SparkJobValid
 
 object TwentyNewsSelectMessages extends AbstractJob {
   
@@ -85,7 +88,9 @@ object TwentyNewsSelectMessages extends AbstractJob {
     println("Overwrite ? " + overwrite)
     
     if(!outputPath.startsWith("path:")) {
-        throw new RuntimeException("NamedRDD disabled, use path: prefixed output")
+
+      
+      
     } else {
       
       val outputBlockPath = new Path(outputPath.substring(5))
@@ -242,12 +247,33 @@ SELECT {
       
     } else {
       
-      println("persisting as named RDD...")
+      println("persisting as named RDD: " + outputPath)
       
-//      this.namedRdds.update(outputPath, output)
+      this.namedRdds.update(outputPath, output)
       
     }
     
+    
+  }
+  
+  override def subvalidate(sc: SparkContext, config: Config) : SparkJobValidation = {
+    
+    val outputValue = config.getString(outputOption.getLongOpt)
+    
+    if( ! outputValue.startsWith("path:") ) {
+      
+      try{
+        if(this.namedRdds == null) {
+        } 
+      } catch { case ex: NullPointerException => {
+        return new SparkJobInvalid("Cannot use named RDD output - no spark job context")
+        
+      }}
+        
+      
+    }
+    
+    SparkJobValid
     
   }
 }
