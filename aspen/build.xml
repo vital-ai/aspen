@@ -1,6 +1,6 @@
 <project name="aspen-distribution" default="dist">
 	
-	<property name="dist.version" value="0.2.250" />
+	<property name="dist.version" value="0.2.251" />
 	
 	<property name="dist.dir" value="${basedir}/dist" />
 	
@@ -14,6 +14,8 @@
 	
 	<!-- generate distribution -->
 	<target name="dist">
+		
+		<copy file="${basedir}/README.md" tofile="${basedir}/aspen-${dist.version}-readme.txt" />
 		
 		<delete file="${product.zip}" />
 		<delete file="${product.tar.gz}" />
@@ -35,6 +37,7 @@
                 <include name="bin/**"/>
     		</zipfileset>
 			<zipfileset dir="${basedir}" defaultexcludes="true" prefix="${prefix}">
+				<include name="conf/**" />
 				<include name="dist/**" />
 				<include name="domain-ontology/**" />
 				<include name="src/**" />
@@ -52,6 +55,7 @@
 				<include name="bin/**" />
 			</tarfileset>
 			<tarfileset dir="${basedir}" defaultexcludes="true" prefix="${prefix}">
+				<include name="conf/**" />
 				<include name="dist/**" />
 				<include name="domain-ontology/**" />
 				<include name="src/**" />

@@ -22,7 +22,7 @@ if ( ! sparkAssembly.exists() ) {
 
 List jars = [
   sparkAssembly.absolutePath,
-  homeDir + 'target/aspen-0.2.250.jar'
+  homeDir + 'target/aspen-0.2.251.jar'
 ]
 
 
