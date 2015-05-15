@@ -1,6 +1,6 @@
 <project name="aspen-distribution" default="dist">
 	
-	<property name="dist.version" value="0.2.251" />
+    <fail unless="dist.version" message="dist.version property not set!" />
 	
 	<property name="dist.dir" value="${basedir}/dist" />
 	

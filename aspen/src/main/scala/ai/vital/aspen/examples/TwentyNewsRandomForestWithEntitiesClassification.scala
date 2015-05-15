@@ -35,7 +35,7 @@ import org.apache.spark.mllib.tree.model.RandomForestModel
 import ai.vital.domain.EntityInstance
 import java.util.Set
 import java.util.HashSet
-import ai.vital.property.IProperty
+import ai.vital.vitalsigns.model.property.IProperty
 import java.util.Collection
 import scala.collection.JavaConversions._
 import spark.jobserver.SparkJobValidation

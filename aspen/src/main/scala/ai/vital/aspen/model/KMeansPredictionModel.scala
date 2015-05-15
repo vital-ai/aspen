@@ -4,6 +4,7 @@ import java.io.InputStream
 import org.apache.commons.lang3.SerializationUtils
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.clustering.KMeansModel
+import org.apache.commons.io.IOUtils
 
 object KMeansPredictionModel {
   
@@ -22,7 +23,7 @@ class KMeansPredictionModel extends PredictionModel {
 
   def deserializeModel(stream: InputStream): Unit = {
     
-      val deserializedModel : KMeansModel = SerializationUtils.deserialize(stream)
+      val deserializedModel : KMeansModel = SerializationUtils.deserialize(IOUtils.toByteArray(stream))
     
       model = deserializedModel match {
         case x: KMeansModel => x
@@ -35,4 +36,11 @@ class KMeansPredictionModel extends PredictionModel {
     return model.predict(v).intValue()
   }
   
+  override def isClustering() : Boolean = {
+    true
+  }
+ 
+  def getClustersCount() : Int = {
+    model.k
+  }
 }

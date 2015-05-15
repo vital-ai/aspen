@@ -2,6 +2,7 @@ package ai.vital.aspen.groovy.modelmanager;
 
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -31,6 +32,8 @@ public abstract class AspenModel implements Serializable {
 	transient protected FileStatus fileStatus;
 	
 	transient protected FileSystem fileSystem;
+
+	private Date timestamp;
 	
 	public String getName() {
 		return modelConfig.getName();
@@ -197,5 +200,23 @@ public abstract class AspenModel implements Serializable {
 	public void close() {
 		
 	}
+
+	/**
+	 * Set model timestamp (from resource)
+	 * @param timestamp
+	 */
+	public void setTimestamp(Date timestamp) {
+		this.timestamp = timestamp;
+	}
+
+	/**
+	 * Returns model timestamp (copied from resource modification timestamp)
+	 * @return
+	 */
+	public Date getTimestamp() {
+		return timestamp;
+	}
+	
+	
 
 }

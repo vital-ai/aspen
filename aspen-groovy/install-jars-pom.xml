@@ -5,6 +5,9 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>Install Vital AI Jars into Local Repo</name>
   
+  <properties>
+  	<vital.version>0.2.251</vital.version>
+  </properties>
   
   <repositories>
   
@@ -48,7 +51,7 @@
                 </execution>
 
                 <execution>
-                    <id>VitalDomain-groovy-0.2.350.jar</id>
+                    <id>VitalDomain-groovy-${vital.version}.jar</id>
                     <phase>validate</phase>
                     <goals>
                         <goal>install-file</goal>
@@ -56,16 +59,16 @@
                     <configuration>
 				      <groupId>vital-ai</groupId>
 				      <artifactId>vital-domain</artifactId>
-				      <version>0.2.250</version>
+				      <version>${vital.version}</version>
 				      <packaging>jar</packaging>
-					  <file>${VITAL_HOME}/vital-domain/VitalDomain-groovy-0.2.250.jar</file>
+					  <file>${VITAL_HOME}/vital-domain/VitalDomain-groovy-${vital.version}.jar</file>
                     </configuration>
                     
                 </execution>
 
 
                 <execution>
-                  <id>VitalSigns-0.2.250.jar</id>
+                  <id>VitalSigns-${vital.version}.jar</id>
                   <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
@@ -73,15 +76,15 @@
                   <configuration>
                     <groupId>vital-ai</groupId>
                     <artifactId>vitalsigns</artifactId>
-                    <version>0.2.250</version>
+                    <version>${vital.version}</version>
                     <packaging>jar</packaging>
-                    <file>${VITAL_HOME}/vitalsigns/command/VitalSigns-0.2.250.jar</file>
+                    <file>${VITAL_HOME}/vitalsigns/command/VitalSigns-${vital.version}.jar</file>
                   </configuration>
                 </execution>
                 
                 
                 <execution>
-                  <id>vital-lucene-0.2.250.jar</id>
+                  <id>vital-lucene-${vital.version}.jar</id>
                   <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
@@ -89,15 +92,15 @@
                   <configuration>
                     <groupId>vital-ai</groupId>
                     <artifactId>vital-lucene</artifactId>
-                    <version>0.2.250</version>
+                    <version>${vital.version}</version>
                     <packaging>jar</packaging>
-                    <file>${VITAL_HOME}/vital-lucene/vital-lucene-0.2.250.jar</file>
+                    <file>${VITAL_HOME}/vital-lucene/vital-lucene-${vital.version}.jar</file>
                   </configuration>
                 </execution>
 
 
                 <execution>
-                  <id>vital-triplestore-0.2.250.jar</id>
+                  <id>vital-triplestore-${vital.version}.jar</id>
                   <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
@@ -105,15 +108,15 @@
                   <configuration>
                     <groupId>vital-ai</groupId>
                     <artifactId>vital-triplestore</artifactId>
-                    <version>0.2.250</version>
+                    <version>${vital.version}</version>
                     <packaging>jar</packaging>
-                    <file>${VITAL_HOME}/vital-triplestore/vital-triplestore-0.2.250.jar</file>
+                    <file>${VITAL_HOME}/vital-triplestore/vital-triplestore-${vital.version}.jar</file>
                   </configuration>
                 </execution>
 
 
                 <execution>
-                  <id>VitalService-0.2.250.jar</id>
+                  <id>VitalService-${vital.version}.jar</id>
                   <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
@@ -121,9 +124,9 @@
                   <configuration>
                     <groupId>vital-ai</groupId>
                     <artifactId>vitalservice</artifactId>
-                    <version>0.2.250</version>
+                    <version>${vital.version}</version>
                     <packaging>jar</packaging>
-                    <file>${VITAL_HOME}/vitalservice/VitalService-0.2.250.jar</file>
+                    <file>${VITAL_HOME}/vitalservice/VitalService-${vital.version}.jar</file>
                   </configuration>
                 </execution>
 

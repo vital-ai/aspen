@@ -11,12 +11,12 @@ import org.apache.commons.lang3.SerializationUtils
 import org.apache.spark.mllib.tree.model.RandomForestModel
 import java.util.List
 import ai.vital.vitalsigns.VitalSigns
-import ai.vital.property.IProperty
+import ai.vital.vitalsigns.model.property.IProperty
 import groovy.lang.GString
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.linalg.Vector
 import java.util.Arrays
-import ai.vital.common.uri.URIGenerator
+import ai.vital.vitalsigns.uri.URIGenerator
 import java.util.ArrayList
 import ai.vital.domain.Edge_hasTargetNode
 import ai.vital.vitalsigns.model.VITAL_Node
@@ -45,6 +45,10 @@ abstract class PredictionModel extends AspenModel {
   
   def deserializeModel(stream: InputStream) : Unit;
   
+  def isClustering() : Boolean = {
+    false
+  }
+  
   var modelBinaryLoaded = false;
   
   def acceptResource(s: String): Boolean = {
@@ -53,8 +57,10 @@ abstract class PredictionModel extends AspenModel {
 
   def onResourcesProcessed(): Unit = {
     
-    if(categoriesMap == null) throw new Exception("Categories map was not loaded, make sure " + categories_tsv + " file is in the model files")
-    if(categoriesMap.size < 2) throw new Exception("Categories map size must be greater than 1")
+    if ( ! isClustering() ) {
+      if(categoriesMap == null) throw new Exception("Categories map was not loaded, make sure " + categories_tsv + " file is in the model files")
+      if(categoriesMap.size < 2) throw new Exception("Categories map size must be greater than 1")
+    }
     
     if(dictionaryMap == null) throw new Exception("Dictionary map was not loaded, make sure " + dictionary_tsv + " file is in the model files")
     if(dictionaryMap.size < 1) throw new Exception("Dictionary map cannot be empty")
@@ -119,14 +125,23 @@ abstract class PredictionModel extends AspenModel {
       
     var categoryID = doPredict(v);
     
-    val label = categoriesMap.get(categoryID)
-    
     val tn = new TargetNode()
     val app : App = null
     tn.setURI(URIGenerator.generateURI(null, classOf[TargetNode], false))
     
-    tn.setProperty("targetStringValue", label.get)
-    tn.setProperty("targetScore", 1D)
+    if(isClustering()) {
+      
+      tn.setProperty("targetDoubleValue", categoryID.doubleValue())
+      tn.setProperty("targetScore", 1D)
+      
+    } else {
+      
+    	val label = categoriesMap.get(categoryID)
+      tn.setProperty("targetStringValue", label.get)
+      tn.setProperty("targetScore", 1D)
+      
+    }
+    
     
     if(objectWithFeature != null) {
     	val edge = new Edge_hasTargetNode()

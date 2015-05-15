@@ -4,6 +4,9 @@ import com.cybozu.labs.langdetect.DetectorFactory;
 
 import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.nlp.models.LanguageDetector;
+import ai.vital.domain.Annotation;
+import ai.vital.domain.Document
+import ai.vital.vitalsigns.model.GraphObject
 import junit.framework.TestCase;
 
 class LanguageDetectorStepTest extends TestCase {
@@ -34,6 +37,23 @@ class LanguageDetectorStepTest extends TestCase {
 		DetectorFactory.clear()
 		
 		ldstep.init()
+		
+		
+		Document doc = new Document()
+		doc.body = "Jestem tak bardzo polski"
+		 
+		List<GraphObject> objects = ldstep.processDocument(doc)
+		assertEquals(2, objects.size())
+		for(GraphObject g : objects) {
+			if(g instanceof Annotation) {
+				Annotation a = g;
+				assertEquals('language-id', a.annotationName.toString());
+				assertEquals('pl', a.annotationValue.toString());
+				
+			}
+		}
+		
+		
 		
 	}
 

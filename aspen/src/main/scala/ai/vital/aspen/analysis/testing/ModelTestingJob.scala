@@ -24,7 +24,7 @@ import ai.vital.aspen.groovy.modelmanager.AspenModel
 import ai.vital.vitalsigns.VitalSigns
 import scala.collection.JavaConversions._
 import ai.vital.domain.TargetNode
-import ai.vital.property.IProperty
+import ai.vital.vitalsigns.model.property.IProperty
 import java.util.ArrayList
 import ai.vital.vitalservice.segment.VitalSegment
 import ai.vital.vitalservice.factory.VitalServiceFactory
@@ -34,9 +34,10 @@ import ai.vital.query.querybuilder.VitalBuilder
 import ai.vital.vitalservice.query.VitalGraphQuery
 import ai.vital.vitalservice.VitalStatus
 import ai.vital.vitalsigns.model.GraphMatch
-import ai.vital.property.URIProperty
-import ai.vital.property.URIProperty
+import ai.vital.vitalsigns.model.property.URIProperty
 import ai.vital.vitalsigns.block.CompactStringSerializer
+import ai.vital.aspen.model.KMeansPredictionModel
+import org.apache.spark.Accumulator
 
 class ModelTestingJob {}
 
@@ -112,6 +113,7 @@ object ModelTestingJob extends AbstractJob {
     val mt2c = AspenGroovyConfig.get.modelType2Class
 
     mt2c.put(DecisionTreePredictionModel.spark_decision_tree_prediction, classOf[DecisionTreePredictionModel].getCanonicalName)
+    mt2c.put(KMeansPredictionModel.spark_kmeans_prediction, classOf[KMeansPredictionModel].getCanonicalName)
     mt2c.put(NaiveBayesPredictionModel.spark_naive_bayes_prediction, classOf[NaiveBayesPredictionModel].getCanonicalName)
     mt2c.put(RandomForestPredictionModel.spark_randomforest_prediction, classOf[RandomForestPredictionModel].getCanonicalName)
 
@@ -190,6 +192,21 @@ object ModelTestingJob extends AbstractJob {
       inputBlockRDD = this.namedRdds.get[(String, Array[Byte])](inputRDDName).get
       
     }
+    
+    
+    //clustering stats
+    var clustersStats : java.util.List[Accumulator[Int]] = null
+    
+    if(aspenModel.isInstanceOf[KMeansPredictionModel]) {
+    	clustersStats = new ArrayList[Accumulator[Int]]()
+      val cc = aspenModel.asInstanceOf[KMeansPredictionModel].getClustersCount()
+      var x = 0
+      while( x < cc) {
+        clustersStats.add(sc.accumulator(0))
+        x = x+1
+      }
+    }
+    
     
     //matched, morethan1 input target, no targets
     val results : RDD[(Int, Int, Int, Int)] = inputBlockRDD.map { pair =>
@@ -273,31 +290,55 @@ object ModelTestingJob extends AbstractJob {
         }
       }
       
-      if(targetValue != null) {
+      
+      if(aspenModel.getType.equals(KMeansPredictionModel.spark_kmeans_prediction)) {
         
-    	    val predictions = aspenModel.predict(block)
+    	  val predictions = aspenModel.predict(block)
+        
+        for(p <- predictions) {
+                
+          if(p.isInstanceOf[TargetNode]) {
+                  
+            val pv = p.getProperty("targetDoubleValue");
           
-          for(p <- predictions) {
+            if(pv != null) {
             
-            if(p.isInstanceOf[TargetNode]) {
+              val prediction = pv.asInstanceOf[IProperty].rawValue()
               
-              val pv = p.getProperty("targetStringValue");
-              if(pv != null) {              
-            	  val prediction = pv.asInstanceOf[IProperty].toString()
-                
-                if(targetValue.equals(prediction)) {
-                  matched = 1
-                }
-                
-              }
-              
+              clustersStats.get( prediction.asInstanceOf[Double].intValue() ).add(1)
             }
-            
           }
-          
+        }
       } else {
-        noTargets = 1
+        
+    	  if(targetValue != null) {
+    		  
+    		  val predictions = aspenModel.predict(block)
+    				  
+    				  for(p <- predictions) {
+    					  
+    					  if(p.isInstanceOf[TargetNode]) {
+    						  
+    						  val pv = p.getProperty("targetStringValue");
+    						  if(pv != null) {              
+    							  val prediction = pv.asInstanceOf[IProperty].toString()
+    									  
+    									  if(targetValue.equals(prediction)) {
+    										  matched = 1
+    									  }
+    							  
+    						  }
+    						  
+    					  }
+    					  
+    				  }
+    		  
+    	  } else {
+    		  noTargets = 1
+    	  }
+        
       }
+       
       
 
       (1, matched, moreThanOne, noTargets)
@@ -311,19 +352,37 @@ object ModelTestingJob extends AbstractJob {
     val samples = reduced._1 - reduced._4
     
     val output = new StringBuilder("Total test samples: " + reduced._1);
-    output.append("\nSamples with targets: " + ( samples) )
-    output.append("\nSamples with more than 1 input target: " + reduced._3)
-    output.append("\nCorrect predictions: " + reduced._2)
     
-    if(samples > 0) {
+    if(clustersStats != null) {
       
-      output.append("\nAccuracy: " + (reduced._2.doubleValue() / samples.doubleValue()))
+      output.append("\nClusters count: " + clustersStats.size())
+      
+      var x = 0
+      for(cs <- clustersStats) {
+        
+        output.append("\nCluster #" + x + ": " + cs.value)
+        
+        x=x+1
+      }
       
     } else {
       
-      output.append("\nno accuracy stats - no samples with targets")
+    	output.append("\nSamples with targets: " + ( samples) )
+    	output.append("\nSamples with more than 1 input target: " + reduced._3)
+    	output.append("\nCorrect predictions: " + reduced._2)
+    	
+    	if(samples > 0) {
+    		
+    		output.append("\nAccuracy: " + (reduced._2.doubleValue() / samples.doubleValue()))
+    		
+    	} else {
+    		
+    		output.append("\nno accuracy stats - no samples with targets")
+    		
+    	}
       
     }
+    
     
     println(output.toString())
     

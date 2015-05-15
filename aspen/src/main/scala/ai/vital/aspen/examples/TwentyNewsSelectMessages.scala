@@ -14,7 +14,7 @@ import ai.vital.query.querybuilder.VitalBuilder
 import ai.vital.vitalservice.query.VitalSelectQuery
 import scala.collection.JavaConversions._
 import ai.vital.vitalsigns.model.GraphMatch
-import ai.vital.property.URIProperty
+import ai.vital.vitalsigns.model.property.URIProperty
 import ai.vital.vitalsigns.meta.GraphContext
 import ai.vital.vitalsigns.model.container.GraphObjectsIterable
 import ai.vital.hadoop.writable.VitalBytesWritable

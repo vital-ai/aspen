@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -14,7 +15,6 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -63,7 +63,9 @@ public class ModelManager {
 	 * @return
 	 */
 	public List<AspenModel> getLoadedModels() {
-		return new ArrayList<AspenModel>(loadedModels);
+		synchronized (loadedModels) {
+			return new ArrayList<AspenModel>(loadedModels);
+		}
 	}
 
 	
@@ -75,15 +77,26 @@ public class ModelManager {
 	 */
 	public boolean unloadModelByName(String modelName) {
 		
-		for(Iterator<AspenModel> i = loadedModels.iterator(); i.hasNext(); ) {
+		AspenModel found = null;
+		
+		synchronized (loadedModels) {
 			
-			AspenModel next = i.next();
-			if(next.getName().equals(modelName)) {
-				i.remove();
-				next.close();
-				return true;
+			for(Iterator<AspenModel> i = loadedModels.iterator(); i.hasNext(); ) {
+				
+				AspenModel next = i.next();
+				if(next.getName().equals(modelName)) {
+					i.remove();
+					found = next; 
+					break;
+				}
+				
 			}
 			
+		}
+		
+		if(found != null) {
+			found.close();
+			return true;
 		}
 		
 		return false;
@@ -98,27 +111,51 @@ public class ModelManager {
 	 */
 	public boolean unloadModelByURI(String modelURI) {
 		
-		for(Iterator<AspenModel> i = loadedModels.iterator(); i.hasNext(); ) {
+		AspenModel found = null;
+		
+		synchronized (loadedModels) {
 			
-			AspenModel next = i.next();
-			if(next.getURI().equals(modelURI)) {
-				i.remove();
-				next.close();
-				return true;
+			for(Iterator<AspenModel> i = loadedModels.iterator(); i.hasNext(); ) {
+				AspenModel next = i.next();
+				if(next.getURI().equals(modelURI)) {
+					i.remove();
+					found = next; 
+					break;
+				}
+				
 			}
 			
+			
+		}
+		
+		if(found != null) {
+			found.close();
+			return true;
 		}
 		
 		return false;
 		
 	}
 	
+	
+	/**
+	 * alias for {@link #loadModel(String, boolean)} with reloadIfExists=false
+	 * @param modelURL
+	 * @return
+	 * @throws Exception
+	 */
+	public AspenModel loadModel(String modelURL) throws Exception {
+		return loadModel(modelURL, false);
+	}
+	
 	/**
 	 * Loads model from given location, moel URL may be either a jar or a directory (jar is nothing else but
 	 * a compressed content of that directory. Each model must model.builder file which defines the model name, URI, type
 	 * features and functions
+	 * @param modelURL model location URL
+	 * @param reloadIfExists  if <code>true</code> existing model with given name or URI will be replaced, throws an exception otherwise 
 	 */
-	public AspenModel loadModel(String modelURL) throws Exception {
+	public AspenModel loadModel(String modelURL, boolean reloadIfExists) throws Exception {
 		
 		log.info("Loading model from URL: ", modelURL);
 		
@@ -200,12 +237,16 @@ public class ModelManager {
 			newModel.validateConfig();
 			
 			//now check if already loaded
-			for(AspenModel m : loadedModels) {
-				if(m.getName().equals(newModel.getName())) {
-					throw new Exception("model with name: " + m.getName() + " already loaded");
-				}
-				if(m.getURI().equals(newModel.getURI())) {
-					throw new Exception("model with URI: " + m.getURI() + " already loaded");
+			if(!reloadIfExists) {
+				synchronized (loadedModels) {
+					for(AspenModel m : loadedModels) {
+						if(m.getName().equals(newModel.getName())) {
+							throw new Exception("model with name: " + m.getName() + " already loaded");
+						}
+						if(m.getURI().equals(newModel.getURI())) {
+							throw new Exception("model with URI: " + m.getURI() + " already loaded");
+						}
+					}
 				}
 			}
 			
@@ -213,15 +254,32 @@ public class ModelManager {
 			
 			newModel.setSourceURL(modelURL);
 			
+			long timestamp = fstatus.getModificationTime();
+			
 			newModel.setFileStatus(fstatus);
 			newModel.setFileSystem(fs);
+			newModel.setTimestamp(new Date(timestamp));
 			
 			newModel.load();
 			
 			newModel.setFileStatus(null);
 			newModel.setFileSystem(null);
 			
-			loadedModels.add(newModel);
+			
+			synchronized (loadedModels) {
+				
+				//remove all existing models with that uri/name
+				for( Iterator<AspenModel> iterator = loadedModels.iterator(); iterator.hasNext(); ) {
+					AspenModel m = iterator.next();
+					if(m.getName().equals(newModel.getName()) || m.getURI().equals(newModel.getURI())) {
+						iterator.remove();
+					}
+				}
+				
+				loadedModels.add(newModel);
+				
+			}
+			
 			
 			return newModel;
 			

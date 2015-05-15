@@ -19,7 +19,7 @@ import ai.vital.aspen.groovy.nlp.steps.NamedPersonStep;
 import ai.vital.aspen.groovy.nlp.steps.SentenceDetectorStep;
 import ai.vital.aspen.groovy.nlp.steps.TextExtractStep;
 import ai.vital.aspen.groovy.nlp.steps.WhiteSpaceTokenizerStep;
-import ai.vital.common.uri.URIGenerator;
+import ai.vital.vitalsigns.uri.URIGenerator;
 import ai.vital.domain.Document;
 import ai.vital.domain.Edge_hasEntityInstance;
 import ai.vital.domain.Entity;

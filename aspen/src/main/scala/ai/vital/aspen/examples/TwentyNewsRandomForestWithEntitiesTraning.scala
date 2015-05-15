@@ -25,8 +25,8 @@ import java.util.Date
 import java.util.Set
 import java.util.HashSet
 import ai.vital.domain.EntityInstance
-import ai.vital.property.MultiValueProperty
-import ai.vital.property.IProperty
+import ai.vital.vitalsigns.model.property.MultiValueProperty
+import ai.vital.vitalsigns.model.property.IProperty
 import java.util.Collection
 import java.util.HashMap
 import spark.jobserver.SparkJobValidation

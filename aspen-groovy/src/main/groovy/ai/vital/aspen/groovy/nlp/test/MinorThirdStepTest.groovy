@@ -2,7 +2,7 @@ package ai.vital.aspen.groovy.nlp.test
 
 import ai.vital.vitalservice.model.App;
 import ai.vital.vitalsigns.VitalSigns
-import ai.vital.common.uri.URIGenerator
+import ai.vital.vitalsigns.uri.URIGenerator
 import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.nlp.steps.ChunkerStep
 import ai.vital.aspen.groovy.nlp.steps.MinorThirdStep

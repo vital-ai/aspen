@@ -36,7 +36,7 @@ import ai.vital.vitalsigns.VitalSigns
 import java.util.Arrays
 import ai.vital.hadoop.writable.VitalBytesWritable
 import ai.vital.domain.TargetNode
-import ai.vital.common.uri.URIGenerator
+import ai.vital.vitalsigns.uri.URIGenerator
 import ai.vital.domain.Edge_hasTargetNode
 import ai.vital.vitalsigns.model.GraphObject
 import java.util.ArrayList

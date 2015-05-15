@@ -12,7 +12,7 @@ import ai.vital.vitalservice.factory.VitalServiceFactory
 import ai.vital.query.querybuilder.VitalBuilder
 import org.apache.spark.rdd.RDD
 import ai.vital.vitalservice.query.VitalSelectQuery
-import ai.vital.property.URIProperty
+import ai.vital.vitalsigns.model.property.URIProperty
 import scala.collection.JavaConversions._
 import ai.vital.vitalsigns.VitalSigns
 import java.util.Arrays

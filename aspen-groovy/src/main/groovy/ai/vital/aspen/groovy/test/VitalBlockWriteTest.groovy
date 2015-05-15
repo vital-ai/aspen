@@ -6,7 +6,7 @@ import ai.vital.vitalservice.model.App
 import ai.vital.vitalsigns.*
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer
 
-import ai.vital.common.uri.URIGenerator
+import ai.vital.vitalsigns.uri.URIGenerator
 
 
 
