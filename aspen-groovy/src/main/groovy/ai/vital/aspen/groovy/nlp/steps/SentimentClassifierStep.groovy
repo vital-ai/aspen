@@ -13,10 +13,10 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ai.vital.domain.Category;
 import ai.vital.domain.Document;
-import ai.vital.domain.Edge_hasCategory;
+import ai.vital.domain.Edge_hasTargetNode
 import ai.vital.domain.Sentence;
+import ai.vital.domain.TargetNode
 import ai.vital.domain.TextBlock;
 import ai.vital.domain.Token;
 import ai.vital.aspen.groovy.AspenGroovyConfig;
@@ -158,14 +158,13 @@ class SentimentClassifierStep {
 			
 			if(bestCategory != null) {
 
-				Category c = new Category();
-				c.name = "sentiment/" + bestCategory.toLowerCase();
-				c.score = (float) ( bestScore.floatValue() / (float)sentencesCount );
+				TargetNode c= new TargetNode()
 				c.setURI(uri + "#SentimentCategory");
-//				doc.getCategories().add(c);
-		
+				c.name = "sentiment/" + bestCategory.toLowerCase();
+				c.targetScore = (double) ( bestScore.doubleValue() / (double)sentencesCount );
+				
 				payload.putGraphObjects(Arrays.asList(c));
-				payload.putGraphObjects(EdgeUtils.createEdges(doc, Arrays.asList(c), Edge_hasCategory.class, VitalOntology.Edge_hasCategoryURIBase));
+				payload.putGraphObjects(EdgeUtils.createEdges(doc, Arrays.asList(c), Edge_hasTargetNode.class, VitalOntology.Edge_hasTargetNodeURIBase));
 						
 			}
 			

@@ -1,16 +1,18 @@
 package ai.vital.aspen.groovy.nlp.models;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import opennlp.tools.chunker.ChunkerModel;
 import opennlp.tools.util.model.BaseModel;
 import ai.vital.aspen.groovy.modelmanager.AspenModel;
-import ai.vital.vitalsigns.model.GraphObject;
+import ai.vital.predictmodel.Prediction;
+import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock;
 
 public class OpenNLPModel extends AspenModel {
 
@@ -41,11 +43,6 @@ public class OpenNLPModel extends AspenModel {
 		tokenizer
 	)));
 	
-	@Override
-	public List<GraphObject> predict(List<GraphObject> input) {
-		throw new RuntimeException("OpenNLP implementation shouldn't use this method");
-	}
-
 	@Override
 	protected boolean acceptResource(String name) {
 		
@@ -87,7 +84,18 @@ public class OpenNLPModel extends AspenModel {
 	public BaseModel getBaseModel() {
 		return baseModel;
 	}
-	
-	
+
+	@Override
+	protected Prediction _predict(VitalBlock input, Map<String, Object> features) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected void persistFiles(File tempDir) {
+		// TODO Auto-generated method stub
+		
+	}
+
 
 }

@@ -36,6 +36,13 @@ public class ModelManager {
 	
 	public static final String MODEL_BUILDER_FILE = "model.builder";
 	
+	//serialized model object file
+	public static final String MODEL_OBJECT_FILE = "model.object";
+	
+	public static final String MODEL_AGGREGATION_RESULTS_FILE = "aggregation_results.json";
+	
+	public static final String MODEL_FEATURES_DIR = "features";
+	
 	private List<AspenModel> loadedModels = new ArrayList<AspenModel>();
 	
 	private ModelCreator creator = null;
@@ -150,7 +157,7 @@ public class ModelManager {
 	
 	/**
 	 * Loads model from given location, moel URL may be either a jar or a directory (jar is nothing else but
-	 * a compressed content of that directory. Each model must model.builder file which defines the model name, URI, type
+	 * a compressed content of that directory. Each model must model.object file which defines the model name, URI, type
 	 * features and functions
 	 * @param modelURL model location URL
 	 * @param reloadIfExists  if <code>true</code> existing model with given name or URI will be replaced, throws an exception otherwise 
@@ -171,9 +178,9 @@ public class ModelManager {
 		
 		tempDirectory.deleteOnExit();
 		
-		byte[] builderFileContent= null;
+		byte[] objectFileContent= null;
 		
-		InputStream builderInputStream = null;
+		InputStream objectInputStream = null;
 		
 		try {
 			
@@ -185,17 +192,17 @@ public class ModelManager {
 				
 				log.info("Model URL is a directory: " + path.toString());
 				
-				Path builderFile = new Path(path, MODEL_BUILDER_FILE);
+				Path objectFile = new Path(path, MODEL_OBJECT_FILE);
 				
-				FileStatus builderStatus = fs.getFileStatus(builderFile);
+				FileStatus builderStatus = fs.getFileStatus(objectFile);
 				
-				if(!builderStatus.isFile()) throw new RuntimeException("model.builder file path does not denote a file: " + builderFile.toString());
+				if(!builderStatus.isFile()) throw new RuntimeException(MODEL_OBJECT_FILE + " file path does not denote a file: " + objectFile.toString());
 				
-				builderInputStream = fs.open(builderFile);
+				objectInputStream = fs.open(objectFile);
 				
-				builderFileContent = IOUtils.toByteArray(builderInputStream);
+				objectFileContent = IOUtils.toByteArray(objectInputStream);
 				
-				builderInputStream.close();
+				objectInputStream.close();
 				
 			} else {
 				
@@ -209,13 +216,13 @@ public class ModelManager {
 					
 					String name = nextEntry.getName();
 					
-					if(name.equals(MODEL_BUILDER_FILE)) {
+					if(name.equals(MODEL_OBJECT_FILE)) {
 						
 						ByteArrayOutputStream os = new ByteArrayOutputStream();
 						IOUtils.copy(inputS, os);
 						os.close();
 						
-						builderFileContent = os.toByteArray();
+						objectFileContent = os.toByteArray();
 						
 						break;
 						
@@ -226,11 +233,11 @@ public class ModelManager {
 				
 				inputS.close();
 				
-				if(builderFileContent == null) throw new RuntimeException("No model.builder file found in model jar/zip, path:" + path.toString());
+				if(objectFileContent == null) throw new RuntimeException("No " + MODEL_OBJECT_FILE + " file found in model jar/zip, path:" + path.toString());
 				
 			}
 			
-			AspenModel newModel = creator.createModel(builderFileContent);
+			AspenModel newModel = creator.createModelFromObject(objectFileContent);
 			
 			log.info("Model config loaded, name:{}, URI:{}, type:{}", new Object[]{newModel.getName(), newModel.getURI(), newModel.getType()});
 			
@@ -284,7 +291,7 @@ public class ModelManager {
 			return newModel;
 			
 		} finally {
-			IOUtils.closeQuietly(builderInputStream);
+			IOUtils.closeQuietly(objectInputStream);
 			IOUtils.closeQuietly(inputS);
 			FileUtils.deleteQuietly(tempDirectory);
 			IOUtils.closeQuietly(fs);
