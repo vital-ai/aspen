@@ -20,6 +20,10 @@ class NaiveBayesPredictionModel extends PredictionModel {
   def supportedType(): String = {
     return NaiveBayesPredictionModel.spark_naive_bayes_prediction
   }
+  
+  def setModel(_model: NaiveBayesModel) : Unit = {
+    model = _model
+  }
 
   def deserializeModel(stream: InputStream): Unit = {
     

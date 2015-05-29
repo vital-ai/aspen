@@ -20,6 +20,10 @@ class DecisionTreePredictionModel extends PredictionModel {
   def supportedType(): String = {
     return DecisionTreePredictionModel.spark_decision_tree_prediction
   }
+  
+  def setModel(_model: DecisionTreeModel) : Unit = {
+    model = _model
+  }
 
   def deserializeModel(stream: InputStream): Unit = {
     

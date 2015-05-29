@@ -16,6 +16,10 @@ class KMeansPredictionModel extends PredictionModel {
 
 
   var model : KMeansModel = null;
+
+  def setModel(_model: KMeansModel) : Unit = {
+    model = _model
+  }
   
   def supportedType(): String = {
     return KMeansPredictionModel.spark_kmeans_prediction

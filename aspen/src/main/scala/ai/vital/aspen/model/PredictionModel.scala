@@ -20,24 +20,19 @@ import ai.vital.vitalsigns.uri.URIGenerator
 import java.util.ArrayList
 import ai.vital.domain.Edge_hasTargetNode
 import ai.vital.vitalsigns.model.VITAL_Node
+import java.nio.charset.StandardCharsets
+import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 
 @SerialVersionUID(1L)
 abstract class PredictionModel extends AspenModel {
 
-  val categories_tsv = "categories.tsv";
-  
-  val dictionary_tsv = "dictionary.tsv";
-  
   val model_bin = "model.bin"; 
+
+  val error_txt = "error.txt";
+
+  var error : String;
   
 //  val spark_randomforest_prediction = "spark-randomforest-prediction";
-  
-  var categoriesMap : LinkedHashMap[Int, String] = null;//new LinkedHashMap[Int, String]()
-  var dictionaryMap : LinkedHashMap[String, Int] = null;//new LinkedHashMap[String, Int]()
-  
-//  var model : RandomForestModel = null;
-  
-  var features : LinkedHashMap[Class[GraphObject], List[String]] = null
   
   def supportedType() : String;
   
@@ -49,27 +44,23 @@ abstract class PredictionModel extends AspenModel {
     false
   }
   
+  def setError(_error: String) : Unit =  {
+    error = _error
+  }
+  
   var modelBinaryLoaded = false;
   
   def acceptResource(s: String): Boolean = {
-    return s.equals(categories_tsv) || s.equals(dictionary_tsv) || s.equals(model_bin)
+    return s.equals(error_txt) || s.equals(model_bin)
   }
 
   def onResourcesProcessed(): Unit = {
-    
-    if ( ! isClustering() ) {
-      if(categoriesMap == null) throw new Exception("Categories map was not loaded, make sure " + categories_tsv + " file is in the model files")
-      if(categoriesMap.size < 2) throw new Exception("Categories map size must be greater than 1")
-    }
-    
-    if(dictionaryMap == null) throw new Exception("Dictionary map was not loaded, make sure " + dictionary_tsv + " file is in the model files")
-    if(dictionaryMap.size < 1) throw new Exception("Dictionary map cannot be empty")
-    
     
     if(!modelBinaryLoaded) throw new Exception("Model was not loaded, make sure " + model_bin + " file is in the model files")
     
   }
 
+  /*
   def predict(input: List[GraphObject]): List[GraphObject] = {
     
     val text = new StringBuilder()
@@ -153,7 +144,10 @@ abstract class PredictionModel extends AspenModel {
     return Arrays.asList(tn)
     
   }
+  */
+
   
+  /*
   def vectorize(str: String) : Vector = {
     
       var index2Value: Map[Int, Double] = Map[Int, Double]()
@@ -183,43 +177,22 @@ abstract class PredictionModel extends AspenModel {
       return v
 
   }
+  */
 
   def processResource(s: String, stream: InputStream): Unit = {
 
-    if(s.equals(categories_tsv)) {
-
-      categoriesMap = new LinkedHashMap[Int, String]()
-      
-      for(catLine <- IOUtils.readLines(stream, "UTF-8")) {
-        if(!catLine.isEmpty()) {
-          val s = catLine.split("\t")
-          categoriesMap.put(Integer.parseInt(s(0)), s(1))
-        }
-      }
-      
-    }
-    
-    if(s.equals(dictionary_tsv)) {
-      
-      dictionaryMap = new LinkedHashMap[String, Int]()
-      
-      for(dictLine <- IOUtils.readLines(stream, "UTF-8")) {
-        if(!dictLine.isEmpty()) {
-          val s = dictLine.split("\t")
-          dictionaryMap.put(s(1), Integer.parseInt(s(0)))
-        }
-      }
-      
-    }
-    
     if(s.equals(model_bin)) {
       
       deserializeModel(stream)
       
       modelBinaryLoaded = true
       
+    } else if(s.equals(error_txt)) {
+      
+      error = IOUtils.toString(stream, StandardCharsets.UTF_8.name())
+      
     }
-
+    
   }
 
   def validateConfig(): Unit = {
@@ -229,11 +202,15 @@ abstract class PredictionModel extends AspenModel {
       throw new RuntimeException("Unexpected model type: " + modelConfig.getType )
     }
     
-        //prepare features
+  }
+  
+  
+  
+  
+  
+  def vectorizeNoLabels(block : VitalBlock, featuresMap : Map[String, Object]) : Vector = {
     
-    features = new Features().parseFeaturesMap(this)
     
-    if(features.size < 1) throw new Exception("No features defined in the model")
     
   }
 

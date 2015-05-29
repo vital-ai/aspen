@@ -15,8 +15,11 @@ object RandomForestPredictionModel {
 @SerialVersionUID(1L)
 class RandomForestPredictionModel extends PredictionModel {
   
-
   var model : RandomForestModel = null;
+  
+  def setModel(_model: RandomForestModel) : Unit = {
+    model = _model
+  }
   
   def supportedType(): String = {
     return RandomForestPredictionModel.spark_randomforest_prediction
