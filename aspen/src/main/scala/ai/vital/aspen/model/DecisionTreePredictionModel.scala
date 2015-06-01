@@ -1,10 +1,16 @@
 package ai.vital.aspen.model
 
+import java.io.File
 import java.io.InputStream
 import org.apache.commons.lang3.SerializationUtils
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.tree.model.DecisionTreeModel
 import org.apache.commons.io.IOUtils
+import java.io.FileOutputStream
+import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
+import ai.vital.predictmodel.Prediction
+import ai.vital.aspen.groovy.modelmanager.AspenPrediction
+import ai.vital.vitalsigns.model.GraphObject
 
 object DecisionTreePredictionModel {
   
@@ -38,6 +44,15 @@ class DecisionTreePredictionModel extends PredictionModel {
 
   def doPredict(v: Vector): Int = {
     return model.predict(v).intValue()
+  }
+ 
+  @Override
+  def persistFiles(tempDir : File) : Unit = {
+
+    val os = new FileOutputStream(new File(tempDir, model_bin))
+    SerializationUtils.serialize(model, os)
+    os.close()
+	  
   }
   
   

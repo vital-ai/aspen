@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -21,8 +22,10 @@ import java.util.regex.Pattern;
 
 //dictionary used for text feature extraction
 //contains words index ( Map<String,Integer ) 
-public class Dictionary {
-
+public class Dictionary implements Serializable {
+	
+	private static final long serialVersionUID = 1L;
+	
 	private Map<String, Integer> source;
 
 	public Dictionary(Map<String, Integer> source) {

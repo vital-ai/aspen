@@ -1,6 +1,5 @@
 package ai.vital.aspen.analysis.randomforest
 
-import ai.vital.aspen.analysis.training.ModelTrainingJob
 import java.util.HashMap
 import scala.collection.JavaConversions._
 import org.apache.spark.mllib.tree.RandomForest

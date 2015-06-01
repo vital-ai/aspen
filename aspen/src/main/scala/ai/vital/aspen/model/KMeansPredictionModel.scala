@@ -5,6 +5,8 @@ import org.apache.commons.lang3.SerializationUtils
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.clustering.KMeansModel
 import org.apache.commons.io.IOUtils
+import java.io.File
+import java.io.FileOutputStream
 
 object KMeansPredictionModel {
   
@@ -47,4 +49,15 @@ class KMeansPredictionModel extends PredictionModel {
   def getClustersCount() : Int = {
     model.k
   }
+  
+  @Override
+  def persistFiles(tempDir : File) : Unit = {
+
+    val os = new FileOutputStream(new File(tempDir, model_bin))
+    SerializationUtils.serialize(model, os)
+    os.close()
+    
+  }
+  
+  
 }

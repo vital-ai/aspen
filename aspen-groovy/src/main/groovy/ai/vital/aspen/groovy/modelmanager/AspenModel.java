@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
@@ -80,13 +81,13 @@ public abstract class AspenModel implements Serializable {
 	private String builderContent;
 	
 	//data collected during training
-	private transient Map<String, FeatureData> featuresData;
+	protected Map<String, FeatureData> featuresData;
 	
-	private transient Map<String, Double> aggregationResults;
+	protected Map<String, Double> aggregationResults;
 	
-	private FeatureExtraction featureExtraction;
+	protected transient FeatureExtraction featureExtraction;
 	
-	private CategoricalFeatureData trainedCategories;
+	protected CategoricalFeatureData trainedCategories;
 	
 	public String getName() {
 		return modelConfig.getName();
@@ -145,6 +146,10 @@ public abstract class AspenModel implements Serializable {
 	 */
 	public final List<GraphObject> predict(VitalBlock input) {
 		
+		if(featureExtraction == null) {
+			this.featureExtraction = new FeatureExtraction(modelConfig, aggregationResults);
+		}
+		
 		Map<String, Object> features = featureExtraction.extractFeatures(input);
 		
 		Prediction prediction = _predict(input, features);
@@ -174,9 +179,10 @@ public abstract class AspenModel implements Serializable {
 		
 		innerValidation();
 		
-		this.featureExtraction = new FeatureExtraction(modelConfig, aggregationResults);
-		
 		onResourcesProcessed();
+		
+		
+		this.featureExtraction = new FeatureExtraction(modelConfig, aggregationResults);
 		
 		loaded = true;
 		
@@ -312,18 +318,7 @@ public abstract class AspenModel implements Serializable {
 			
 			this.builderContent = builderString;
 			
-			ModelString modelString = new ModelString();
-			modelString.setModelString(builderContent);
-			
-			PredictionModel modelEl = new ToModelImpl().toModel(modelString.toModel());
-			//we need to copy closures from builder file
-			
-			this.modelConfig.setFunctions(modelEl.getFunctions());
-			this.modelConfig.setTarget(modelEl.getTarget());
-			this.modelConfig.setTrain(modelEl.getTrain());
-			
-			PredictionModelAnalyzer.fixFunctionsAggregatesOrder(this.modelConfig);
-			
+			restoreClosures();
 			
 		} else if(uri.equals(ModelManager.MODEL_AGGREGATION_RESULTS_FILE)) {
 			
@@ -374,6 +369,25 @@ public abstract class AspenModel implements Serializable {
 			featuresData.put(fname, fd);
 			
 		} else throw new IOException("Unhandled inner model resource: " + uri);
+		
+	}
+
+	/**
+	 * restores closures from builder file, closures are not serializable
+	 */
+	protected void restoreClosures() {
+
+		ModelString modelString = new ModelString();
+		modelString.setModelString(builderContent);
+		
+		PredictionModel modelEl = new ToModelImpl().toModel(modelString.toModel());
+		//we need to copy closures from builder file
+		
+		this.modelConfig.setFunctions(modelEl.getFunctions());
+		this.modelConfig.setTarget(modelEl.getTarget());
+		this.modelConfig.setTrain(modelEl.getTrain());
+		
+		PredictionModelAnalyzer.fixFunctionsAggregatesOrder(this.modelConfig);
 		
 	}
 
@@ -627,6 +641,11 @@ public abstract class AspenModel implements Serializable {
 		out.defaultWriteObject();
 		
 	}
+	
+    private void readObject(ObjectInputStream in) throws IOException,ClassNotFoundException {
+        in.defaultReadObject();
+        restoreClosures();
+    }
 
 	public CategoricalFeatureData getTrainedCategories() {
 		return trainedCategories;

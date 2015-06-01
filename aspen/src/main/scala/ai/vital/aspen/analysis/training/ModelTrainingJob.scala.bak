@@ -29,8 +29,6 @@ import java.util.HashSet
 import ai.vital.domain.EntityInstance
 import ai.vital.vitalsigns.model.property.MultiValueProperty
 import ai.vital.vitalsigns.model.property.IProperty
-import ai.vital.predictmodel.Aggregate
-import ai.vital.predictmodel.Aggregate.Function
 import java.util.Collection
 import java.util.HashMap
 import ai.vital.aspen.groovy.modelmanager.ModelCreator
@@ -66,19 +64,10 @@ import ai.vital.vitalsigns.model.GraphMatch
 import ai.vital.vitalservice.query.VitalGraphQuery
 import ai.vital.vitalsigns.model.property.URIProperty
 import ai.vital.vitalsigns.block.CompactStringSerializer
-import ai.vital.predictmodel.CategoricalFeature
-import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
-import ai.vital.aspen.groovy.featureextraction.PredictionModelAnalyzer
-import ai.vital.aspen.groovy.featureextraction.FeatureExtraction
-import org.apache.spark.Accumulator
-import ai.vital.predictmodel.TextFeature
-import ai.vital.aspen.groovy.featureextraction.CategoricalFeatureData
-import ai.vital.aspen.groovy.featureextraction.Dictionary
-import ai.vital.aspen.groovy.featureextraction.TextFeatureData
 
-class ModelBuilderTrainingJob {}
+class ModelTrainingJob {}
 
-object ModelBuilderTrainingJob extends AbstractJob {
+object ModelTrainingJob extends AbstractJob {
   
   val modelBuilderOption = new Option("b", "model-builder", true, "model builder file")
   
@@ -100,6 +89,15 @@ object ModelBuilderTrainingJob extends AbstractJob {
   val maxDFPercentOption = new Option("maxDFP", "maxDocFreqPercent", true, "maximum term document frequency (percent), default: " + MAX_DF_PERCENT)
   maxDFPercentOption.setRequired(false)
   
+  val featureQueryOption = new Option("fq", "feature-query", false, "use model builder query, a model must provide it")
+  featureQueryOption.setRequired(false)
+  
+  val segmentsOption = new Option("segs", "segments", true, "optional segments list (csv), required when feature-query is enabled")
+  segmentsOption.setRequired(false)
+  
+  val clustersOption = new Option("clus", "clusters", true, "number of clusters, in clustering algorithms only")
+  clustersOption.setRequired(false)
+  
   def MIN_DF = 1
   
   def MAX_DF_PERCENT = 100
@@ -115,7 +113,10 @@ object ModelBuilderTrainingJob extends AbstractJob {
       .addOption(overwriteOption)
       .addOption(minDFOption)
       .addOption(maxDFPercentOption)
+      .addOption(featureQueryOption)
+      .addOption(segmentsOption)
       .addOption(profileOption)
+      .addOption(clustersOption)
     )
   }
   
@@ -163,6 +164,8 @@ object ModelBuilderTrainingJob extends AbstractJob {
     
     val outputModelPath = new Path(modelPathParam)
     val overwrite = getBooleanOption(jobConfig, overwriteOption)
+    val featureQuery = getBooleanOption(jobConfig, featureQueryOption)
+    val segmentsString = getOptionalString(jobConfig, segmentsOption);
     val builderPath = new Path(jobConfig.getString(modelBuilderOption.getLongOpt))
     val serviceProfile = getOptionalString(jobConfig, profileOption)
     
@@ -197,6 +200,8 @@ object ModelBuilderTrainingJob extends AbstractJob {
     if(zipContainer) println("   output is a zip container (.zip)")
     if(jarContainer) println("   output is a jar container (.jar)")
     println("overwrite if exists: " + overwrite)
+    println("feature query ? " + featureQuery)
+    println("segments: " + segmentsString)
     println("service profile: " + serviceProfile)
     println("minDF: " + minDF)
     println("maxDFPercent: " + maxDFPercent)
@@ -233,15 +238,52 @@ object ModelBuilderTrainingJob extends AbstractJob {
     if( !creatorMap.containsKey( aspenModel.getType ) ) {
       throw new RuntimeException("only the following model types are supported: " + creatorMap.keySet().toString())
     }
-
+    
+    var clustersCount : Integer = null
+    if( KMeansPredictionModel.spark_kmeans_prediction.equals(aspenModel.getType) ) {
+      
+      val ccs = getOptionalString(jobConfig, clustersOption)
+      
+      if(ccs == null) throw new RuntimeException(clustersOption.getLongOpt + " option is required when using: " + aspenModel.getType)
+      
+      try {
+        clustersCount = Integer.parseInt(ccs)
+        if(clustersCount <= 1) throw new Exception("clusters count must be > 1, entered: " + clustersCount)
+      } catch {
+        case ex : Exception => {
+          throw new RuntimeException("invalid " + clustersOption.getLongOpt + ": " + ex.getLocalizedMessage)
+        }
+      }
+    }
     
     val featuresMap = new Features().parseFeaturesMap(aspenModel)
     
+    val queryString = aspenModel.getModelConfig.getQuery
+    
     val segmentsList = new ArrayList[VitalSegment]()
     
+    if(featureQuery) {
+      if(queryString == null || queryString.isEmpty() ) {
+        throw new RuntimeException("Cannot use feture-query - the model builder does not provide query string")
+      }
       
-    if(serviceProfile != null) {
+      if(segmentsString == null || segmentsString.isEmpty()) {
+        throw new RuntimeException("segments param is required with feature-query")
+      }
+      
+      for( s <- segmentsString.split(",") ) {
+        val t = s.trim()
+        if(t.length() > 0) {
+        	segmentsList.add(VitalSegment.withId(t))
+        }
+      }
+      
+      if(segmentsList.size() < 1) throw new RuntimeException("No segments decoded from string: " + segmentsString)
+      
+      if(serviceProfile != null) {
         VitalServiceFactory.setServiceProfile(serviceProfile)
+      }
+      
     }
 
     val modelFS = FileSystem.get(outputModelPath.toUri(), hadoopConfig)
@@ -260,6 +302,7 @@ object ModelBuilderTrainingJob extends AbstractJob {
       
     }
     
+    //URI, category, text
     var inputBlockRDD : RDD[(String, Array[Byte])] = null
     
     if(inputRDDName == null) {
@@ -288,8 +331,6 @@ object ModelBuilderTrainingJob extends AbstractJob {
           inputBlockRDD = sc.sequenceFile(inputPath.toString(), classOf[Text], classOf[VitalBytesWritable]).map { pair =>
             (pair._1.toString(), pair._2.get)
           }
-         
-          inputBlockRDD.cache()
           
         }
         
@@ -297,28 +338,162 @@ object ModelBuilderTrainingJob extends AbstractJob {
       
       inputBlockRDD = this.namedRdds.get[(String, Array[Byte])](inputRDDName).get
       
+//      inputRDD = this.namedRdds.get[(String, String, String)](inputRDDName).get
+      
+      
     }
+    
+    
+    val inputRDD = inputBlockRDD.map { pair =>
+      
+      var inputObjects : java.util.List[GraphObject] = null;
+      
+      if(featureQuery) {
+        
+        val _uri = pair._1
+        val qString = queryString.replace("$URI", _uri)
+        val vitalQuery = new VitalBuilder().queryString(qString).toQuery()
+        
+        if(serviceProfile != null && !VitalServiceFactory.getServiceProfile.equals(serviceProfile)) {
+          VitalServiceFactory.setServiceProfile(serviceProfile)
+        }
+        
+        vitalQuery.setSegments(segmentsList)
+        
+        if(vitalQuery.isInstanceOf[VitalGraphQuery]) {
+          vitalQuery.asInstanceOf[VitalGraphQuery].setPayloads(true)
+        }
+        
+        val rs = VitalServiceFactory.getVitalService.query(vitalQuery)
+        
+        if(rs.getStatus().getStatus != VitalStatus.Status.ok) {
+          throw new RuntimeException("Query exception: " + rs.getStatus.getMessage)
+        }
+        
+        inputObjects = new ArrayList[GraphObject]()
+        
+        for(g <- rs) {
+          if(g.isInstanceOf[GraphMatch]) {
+            //make sure payloads is e
+            for( e <- g.getPropertiesMap.entrySet() ) {
+              
+              val un = e.getValue.unwrapped();
+              
+              if(un.isInstanceOf[URIProperty]) {
+                
+                try {
+                  val uri = un.asInstanceOf[URIProperty].get()
+                  val x = CompactStringSerializer.fromString(g.getProperty(uri).toString())
+                  if(x != null) {
+                    inputObjects.add(x)
+                  }
+                } catch {
+                  case ex : Exception => {}
+                }
+                
+              }
+              
+            }
+          } else {
+        	  inputObjects.add(g)
+          }
+        }
+        
+      } else {
+        
+        inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
+        
+      }
+      
+            var category : String = null
+            val text = new StringBuilder()
+          
+            
+          
+//          val entities : Set[String] = new HashSet[String]()
+//          val spanTypes : Set[String] = new HashSet[String]()
+          
+            for( g <- inputObjects) {
+              
+              if(g.isInstanceOf[TargetNode]) {
+              
+                  val pv = g.getProperty("targetStringValue")
+                  if(pv != null) {
+                                    
+                    category = pv match {
+                      case x: IProperty => "" + x.rawValue()
+                      case y: String => y
+                      case z: GString => z.toString()
+                      case _ => throw new Exception("Cannot get string value from property " + pv)
+                    }
+                    
+                  }
+                  
+                } else {
+                
+                  for( e <- featuresMap.entrySet()) {
+                    
+                    if(e.getKey.isAssignableFrom(g.getClass)) {
+                    
+                      for(pn <- e.getValue ) {
+                        
+                        val pv = g.getProperty(pn)
+                                  
+                        if(pv != null) {
+                                    
+                          val p : String = pv match {
+                            case x: IProperty => "" + x.rawValue()
+                            case y: String => y
+                            case z: GString => z.toString()
+                            case _ => throw new Exception("Cannot get string value from property " + pv)
+                          }
+                                    
+                          if(text.length > 0) {
+                            text.append("\n")
+                          }
+                                    
+                          text.append(p)
+                                    
+                         }
+                       
+                       }
+                    }
+                    
+                   }
+                }
+              
+              }
+                
+            (pair._1.toString(), category, text.toString()/*, entities, spanTypes*/)
+            
+          } 
 
+        //cache it only if it's not a named RDD? 
+        inputRDD.cache()
+
+    var trainRDD : RDD[(String, String, String)] = null
     
-    var trainRDD : RDD[(String, Array[Byte])] = null
+    var testRDD : RDD[(String, String, String)] = null
     
-    var testRDD : RDD[(String, Array[Byte])] = null
-    
-    if(false) {
+    if(clustersCount != null) {
       
       //use full set
-//      trainRDD = inputRDD
+      trainRDD = inputRDD
       
     } else {
       
-      val splits = inputBlockRDD.randomSplit(Array(0.6, 0.4), seed = 11L)
-          
+    	val splits = inputRDD.randomSplit(Array(0.6, 0.4), seed = 11L)
+    			
       trainRDD = splits(0)
-          
-      testRDD = splits(1)
+    			
+    	testRDD = splits(1)
       
     }
+        
     
+    
+    //filename->category | message -> extracted text content
+
     val docsCount = trainRDD.count();
     
     println("Documents count: " + docsCount)
@@ -327,167 +502,154 @@ object ModelBuilderTrainingJob extends AbstractJob {
     
     println("MaxDF: " + maxDF)
     
+    //collect distinct categories
+    val categoriesRDD: RDD[String] = trainRDD.map { gidNewsgroupText =>
+
+      gidNewsgroupText._2
+
+    }.distinct()
     
-    val modelCfg = aspenModel.getModelConfig
-    
-    //just collect a map of feature
-    val aggregates = aspenModel.getModelConfig.getAggregates;
-    
-    //do a pass over data to collect aggregation values, introspect categorical values and generate dictionaries
-    
-    val aggregatesResults = new HashMap[String, java.lang.Double]();
-    
-    aspenModel.setAggregationResults(aggregatesResults);
-    
-    for(a<-aggregates) {
-      
-      var acc : Accumulator[Int] = null; 
-      
-      if(a.getFunction == Function.AVERAGE) {
-        acc = sc.accumulator(0);
-      }
-      
-      val numerics = trainRDD.map { pair =>
-            
-        val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
-            
-        val vitalBlock = new VitalBlock(inputObjects)
-            
-        val aggFunctions = PredictionModelAnalyzer.getAggregationFunctions(aspenModel.getModelConfig, a)
-            
-        val ex = new FeatureExtraction(aspenModel.getModelConfig, aggregatesResults);
-            
-        val features = ex.extractFeatures(vitalBlock, aggFunctions)
-            
-        val fv = features.get( a.getRequires().get(0) )
-        
-        if(fv == null) {
-          return 0d
-        }
-        
-        if( ! fv.isInstanceOf[Number] ) {
-          throw new RuntimeException("Expected double value")
-        }
-        
-        if(acc != null) {
-          acc += 1
-        }
-        
-        fv.asInstanceOf[Number].doubleValue()
-        
-            
-      }
-      
-      if(a.getFunction == Function.AVERAGE) {
-        
-        if(acc.value == 0) {
-        	aggregatesResults.put( a.getProvides, 0d);
-        } else {
-          
-        	val reduced = numerics.reduce { (a1, a2) =>
-        	a1 + a2
-        	}
-        	
-        	aggregatesResults.put(a.getProvides, reduced /acc.value)
-          
-        } 
-        
-        
-      } else if(a.getFunction == Function.SUM) {
-  	    aggregatesResults.put(a.getProvides, numerics.sum())
-      } else if(a.getFunction == Function.MIN) {
-    	  aggregatesResults.put(a.getProvides, numerics.min())
-      } else if(a.getFunction == Function.MAX) {
-    	  aggregatesResults.put(a.getProvides, numerics.max())
-      } else {
-        throw new RuntimeException("Unhandled aggregation function: " + a.getFunction)
-      }
-      
-//      inputBlockRDD.ma
-      
-    }
-    
-    //TODO categories introscpection / setting
-    
-    
-    
-    //gather target categories
-    val categoriesRDD = trainRDD.map { pair =>
-      val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
-              
-      val vitalBlock = new VitalBlock(inputObjects)
-      
-      val ex = new FeatureExtraction(aspenModel.getModelConfig, aggregatesResults);
-          
-      val featuresMap = ex.extractFeatures(vitalBlock)
-          
-      val category = aspenModel.getModelConfig.getTrain.call(vitalBlock, featuresMap)
-      
-      if(category == null) throw new RuntimeException("No category returned: " + pair._1)
-      
-      category.asInstanceOf[String]
-      
-    }
     
     val categories: Array[String] = categoriesRDD.toArray().sortWith((s1, s2) => s1.compareTo(s2) < 0)
 
     println("categories count: " + categories.size)
     
-    val cfd = new CategoricalFeatureData()
-    cfd.setCategories(categories.toList)
-    aspenModel.setTrainedCategories(cfd)
     
     
+    //find all unique entities
+    /*
+    val entitiesRDD: RDD[String] = trainRDD.flatMap { gidNewsgroupText =>
+      gidNewsgroupText._4.toSeq 
+    }.distinct()
     
+    val allEntities : Array[String] = entitiesRDD.toArray().sortWith((s1, s2) => s1.compareTo(s2) < 0)
+    println("all entities types count: " + allEntities.size)
     
+    val spanTypesRDD : RDD[String] = trainRDD.flatMap { gidNewsgroupText =>
+      gidNewsgroupText._5.toSeq
+    }.distinct()
     
-    // calculate dictionaries
-    for( f <- aspenModel.getModelConfig.getFeatures ) {
+    val allSpanTypes : Array[String] = spanTypesRDD.toArray().sortWith((s1, s2) => s1.compareTo(s2) < 0)
+    println("all span types count: " + allSpanTypes.size)
       
-      if( f.isInstanceOf[TextFeature] ) {
+    */
 
-        val wordsRDD: RDD[String] = trainRDD.flatMap { pair =>
+    val wordsRDD: RDD[String] = trainRDD.flatMap { gidNewsgroupText =>
 
-          val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
-              
-          val vitalBlock = new VitalBlock(inputObjects)
-            
-          var l = new HashSet[String]()
-  
-          val ex = new FeatureExtraction(aspenModel.getModelConfig, aggregatesResults);
-          
-          val featuresMap = ex.extractFeatures(vitalBlock)
-          
-          val textObj = featuresMap.get(f.getName)
-          
-          if(textObj != null) {
-            
-          	for (x <- textObj.asInstanceOf[String].toLowerCase().split("\\s+") ) {
-          		if (x.isEmpty()) {
-          			
-          		} else {
-          			l.add(x)
-          		}
-          	}
-          }
-      
-  
-          l.toSeq
+    
+      var l = new HashSet[String]()
 
-        }
-        
-        val wordsOccurences = wordsRDD.map(x => (x, new Integer(1))).reduceByKey((i1, i2) => i1 + i2).filter(wordc => wordc._2 >= minDF && wordc._2 <= maxDF)
-
-        val dict = Dictionary.createDictionary(mapAsJavaMap( wordsOccurences.collectAsMap() ) , minDF, maxDF.intValue()) 
-
-        val tfd = new TextFeatureData()
-        tfd.setDictionary(dict)
-        
-        aspenModel.getFeaturesData.put(f.getName, tfd);
-        
+    /*
+    val inputObjects = VitalSigns.get().decodeBlock(gidNewsgroupText._2, 0, gidNewsgroupText._2.length)
+    
+    var msg : Message = null
+    
+    for(g <- inputObjects) {
+      if(g.isInstanceOf[Message]) {
+        msg = g.asInstanceOf[Message]
       }
+    }
+    
+    if(msg == null) throw new RuntimeException("No 20 news message found in block")
+    
+    val text = msg.getProperty("title").toString() + " " + msg.getProperty("body").toString()
+    */
+      val text = gidNewsgroupText._3
+    
+      for (x <- text.toLowerCase().split("\\s+") ) {
+        if (x.isEmpty()) {
+
+        } else {
+          l.add(x)
+        }
+      }
+
+      l.toSeq
+
+    }
+    
+    
+    var categoriesFilePath : Path = null
+    
+    if(clustersCount == null) {
+      
+    	categoriesFilePath = new Path(outputModelPath, "categories.tsv")
+    	
+    	val categoriesOS = modelFS.create(categoriesFilePath, true)
+    	
+    	var i = 0
+    	for(c <- categories ) {
+    		categoriesOS.write( (i + "\t" + c + "\n").getBytes("UTF-8") )
+    		println("category: " + i + "\t" + c);
+    		i = i + 1
+    	}
+    	categoriesOS.close()
       
     }
+    
+
+    //wordFrequencies
+    val wordsOccurences = wordsRDD.map(x => (x, 1)).reduceByKey((i1, i2) => i1 + i2).filter(wordc => wordc._2 >= minDF && wordc._2 <= maxDF)
+
+    var dictionary = new java.util.HashMap[String, Int]()
+
+    var dicList = new java.util.ArrayList[String]()
+
+    var l = wordsOccurences.toLocalIterator.toList
+    l.sortBy(e => e._2)
+
+    var counter = 0
+
+    
+    val dictionaryFilePath = new Path(outputModelPath, "dictionary.tsv")
+    
+    var dictionaryOS = modelFS.create(dictionaryFilePath, true)
+    
+    
+    /*
+    //prepend entities and span types
+    for( e <- allEntities ) {
+      
+      //prefix must be very unlikely to appear in normal text
+      val encoded = ENTITY + e
+      
+      dictionary.put(encoded, counter)
+      
+      dictionaryOS.write( (counter + "\t" + encoded + "\n").getBytes("UTF-8") )
+      
+      counter += 1
+    }
+    
+    for( t <- allSpanTypes ) {
+      
+      val encoded = SPANTYPE + t
+      
+      dictionary.put(encoded, counter)
+      
+      dictionaryOS.write( (counter + "\t" + encoded + "\n").getBytes("UTF-8") )
+      
+      counter += 1
+      
+    } 
+    */
+
+    
+    for (e <- l ) {
+      
+      if(e._2 >= minDF && e._2 <= maxDF) {
+
+        dictionary.put(e._1, counter)
+        
+        dictionaryOS.write( (counter + "\t" + e._1 + "\n").getBytes("UTF-8") )
+        counter = counter + 1
+        
+      }
+
+    }
+    
+    dictionaryOS.close()
+
+    println("dictionary size: " + dictionary.size())
     
     
     println("Training model...")
@@ -501,9 +663,13 @@ object ModelBuilderTrainingJob extends AbstractJob {
       x = x + 1
     }
 
+    val modelBinPath = new Path(outputModelPath, "model.bin")
+    
+    val modelErrorPath = new Path(outputModelPath, "error.txt")
+    
     if( DecisionTreePredictionModel.spark_decision_tree_prediction.equals(aspenModel.getType)) {
 
-      val vectorized = vectorize(trainRDD, aspenModel);
+      val vectorized = vectorize(trainRDD, categories, dictionary);
       
       val numClasses = categories.length
       val categoricalFeaturesInfo = catMap.toMap
@@ -514,13 +680,15 @@ object ModelBuilderTrainingJob extends AbstractJob {
       val model = DecisionTree.trainClassifier(vectorized, numClasses, categoricalFeaturesInfo, impurity,
         maxDepth, maxBins)
     
-      aspenModel.asInstanceOf[DecisionTreePredictionModel].setModel(model)
+      val modelOS = modelFS.create(modelBinPath, true)
+      SerializationUtils.serialize(model, modelOS)
+      modelOS.close()
       
       println("Testing ...")
       
       println("Test documents count: " + testRDD.count())
       
-      val vectorizedTest = vectorize(testRDD, aspenModel)
+      val vectorizedTest = vectorize(testRDD, categories, dictionary)
       
       val labelAndPreds = vectorizedTest.map { point =>
         val prediction = model.predict(point.features)
@@ -529,59 +697,57 @@ object ModelBuilderTrainingJob extends AbstractJob {
       
       val testErr = labelAndPreds.filter(r => r._1 != r._2).count.toDouble / vectorizedTest.count()
       
-      val msg = "Test Error = " + testErr
-      println(msg)
-      aspenModel.asInstanceOf[DecisionTreePredictionModel].setError(msg)
+      println("Test Error = " + testErr)
+          
+      val errorOS = modelFS.create(modelErrorPath)
+      errorOS.write( ("Test Error: " + testErr).getBytes() )
+      errorOS.close()
       
     } else if( KMeansPredictionModel.spark_kmeans_prediction.equals(aspenModel.getType)) {
       
-      val parsedData = vectorizeNoLabels(trainRDD)
-      
-      
-      var clustersCount = 10
-      var clustersCountSetting = aspenModel.getModelConfig.getAlgorithmConfig.get("clustersCount");
-      if(clustersCountSetting != null && clustersCountSetting.isInstanceOf[Number]) {
-        clustersCount = clustersCountSetting.asInstanceOf[Number].intValue()
-      }
-      
+      val parsedData = vectorizeNoLabels(trainRDD, dictionary)
       
       // Cluster the data into two classes using KMeans
       val numIterations = 20
       val clusters = KMeans.train(parsedData, clustersCount, numIterations)
       
       
-      aspenModel.asInstanceOf[KMeansPredictionModel].setModel(clusters)
+      val modelOS = modelFS.create(modelBinPath, true)
+      SerializationUtils.serialize(clusters, modelOS)
+      modelOS.close()
       
       // Evaluate clustering by computing Within Set Sum of Squared Errors
       val WSSSE = clusters.computeCost(parsedData)
       val msg = "Within Set Sum of Squared Errors = " + WSSSE
-
-      println(msg)
-      aspenModel.asInstanceOf[KMeansPredictionModel].setError(msg)
       
+      println(msg)
+      
+      val errorOS = modelFS.create(modelErrorPath)
+      errorOS.write( msg.getBytes() )
+      errorOS.close()
       
     } else if( NaiveBayesPredictionModel.spark_naive_bayes_prediction.equals(aspenModel.getType)) {
       
-      val vectorized = vectorize(trainRDD, aspenModel);
+      val vectorized = vectorize(trainRDD, categories, dictionary);
       
       val model = NaiveBayes.train(vectorized, lambda = 1.0)
       
-      aspenModel.asInstanceOf[NaiveBayesPredictionModel].setModel(model)
+      val modelOS = modelFS.create(modelBinPath, true)
+      SerializationUtils.serialize(model, modelOS)
+      modelOS.close()
       
-      val vectorizedTest = vectorize(testRDD, aspenModel)
+      val vectorizedTest = vectorize(testRDD, categories, dictionary)
       
       val predictionAndLabel = vectorizedTest.map(p => (model.predict(p.features), p.label))
       val accuracy = 1.0 * predictionAndLabel.filter(x => x._1 == x._2).count() / vectorizedTest.count()
       
-      val msg = "Accuracy: " + accuracy;
-      
-      println(msg)
-      
-      aspenModel.asInstanceOf[NaiveBayesPredictionModel].setError(msg);
+      val errorOS = modelFS.create(modelErrorPath)
+      errorOS.write( ("Accuracy: " + accuracy).getBytes() )
+      errorOS.close()
       
     } else if( RandomForestPredictionModel.spark_randomforest_prediction.equals(aspenModel.getType ) ) {
       
-      val vectorized = vectorize(trainRDD, aspenModel);
+      val vectorized = vectorize(trainRDD, categories, dictionary);
       
     	val numClasses = categories.length
  			val categoricalFeaturesInfo = catMap.toMap
@@ -597,8 +763,12 @@ object ModelBuilderTrainingJob extends AbstractJob {
     			//not until spark 1.3.0
     			//model.save(sc, "myModelPath")
     			
-      aspenModel.asInstanceOf[RandomForestPredictionModel].setModel(model)
       
+    	val modelOS = modelFS.create(modelBinPath, true)
+    	SerializationUtils.serialize(model, modelOS)
+    	modelOS.close()
+    	
+    	
     	// Evaluate model on training instances and compute training error
     	/*
      val labelAndPreds = vectorized.map { point =>
@@ -614,7 +784,7 @@ object ModelBuilderTrainingJob extends AbstractJob {
     	
     	println("Test documents count: " + testRDD.count())
     	
-    	val vectorizedTest = vectorize(testRDD, aspenModel)
+    	val vectorizedTest = vectorize(testRDD, categories, dictionary)
     	
     	
 //    val predictionAndLabel = vectorizedTest.map(p => (model.predict(p.features), p.label))
@@ -631,17 +801,59 @@ object ModelBuilderTrainingJob extends AbstractJob {
     	val testErr = labelAndPreds.filter(r => r._1 != r._2).count.toDouble / vectorizedTest.count()
 //    println("Learned classification forest model:\n" + model.toDebugString)
     			
-      val msg = "Test Error = " + testErr
-      println(msg)
-      
-      aspenModel.asInstanceOf[RandomForestPredictionModel].setError(msg)
+      println("Test Error = " + testErr)
+    			
+    			
+      val errorOS = modelFS.create(modelErrorPath)
+      errorOS.write( ("Test Error: " + testErr).getBytes() )
+      errorOS.close()
       
     } 
 
-    
-    //model packaging is now implemented in the model itsefl
-    
-    aspenModel.persist(modelFS, outputContainerPath, zipContainer || jarContainer)
+    //package the model
+    if(zipContainer || jarContainer) {
+      
+      println("packaging model...")
+      
+      modelFS.delete(outputContainerPath, true)
+      
+      val os = modelFS.create(outputContainerPath)
+      val zos = new ZipOutputStream(os)
+      
+      //package model builder first
+      val builderEntry = new ZipEntry(ModelManager.MODEL_BUILDER_FILE)
+      zos.putNextEntry(builderEntry)
+      IOUtils.copy(new ByteArrayInputStream(builderBytes), zos)
+      zos.closeEntry()
+      
+      //model binary
+      addToZipFile(zos, modelFS, modelBinPath)
+      
+      //categories tsv
+      if(categoriesFilePath != null) {
+    	  addToZipFile(zos, modelFS, categoriesFilePath)
+      }
+      
+      //dictionary tsv
+      addToZipFile(zos, modelFS, dictionaryFilePath)
+      
+      //error file
+      addToZipFile(zos, modelFS, modelErrorPath)
+      
+      zos.close()
+      os.close()
+      
+      modelFS.delete(outputModelPath, true)
+      
+    } else {
+      
+      //just copy the builder file
+      val builderOut = new Path(outputModelPath, ModelManager.MODEL_BUILDER_FILE)
+      val builderStream = modelFS.create(builderOut)
+      builderStream.write(builderBytes)
+      builderStream.close()
+      
+    }
     
     println("DONE " + new Date().toString())
 		  
@@ -658,13 +870,7 @@ object ModelBuilderTrainingJob extends AbstractJob {
     
   }
  
-  def vectorizeNoLabels ( trainRDD: RDD[(String, Array[Byte])] ) : RDD[Vector] = {
-    
-    return null
-    
-  }
-  
-  def vectorizeNoLabelsX ( trainRDD: RDD[(String, String, String)], dictionary: HashMap[String, Int]) : RDD[Vector]  = {
+  def vectorizeNoLabels ( trainRDD: RDD[(String, String, String)], dictionary: HashMap[String, Int]) : RDD[Vector]  = {
     
      val vectorized = trainRDD.map { gidNewsgroupText =>
 
@@ -735,21 +941,10 @@ object ModelBuilderTrainingJob extends AbstractJob {
     
   }
   
-  def vectorize (trainRDD: RDD[(String, Array[Byte])], model: AspenModel) : RDD[LabeledPoint] = {
+  def vectorize (trainRDD: RDD[(String, String, String)], categories : Array[String], dictionary: HashMap[String, Int]) : RDD[LabeledPoint] = {
     
-    val vectorized = trainRDD.map { pair =>
+    val vectorized = trainRDD.map { gidNewsgroupText =>
 
-      
-      val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
-            
-      val vitalBlock = new VitalBlock(inputObjects)
-      
-      val ex = new FeatureExtraction(model.getModelConfig, model.getAggregationResults)
-      
-      val featuresMap = ex.extractFeatures(vitalBlock)
-      
-      
-      
       val catgoryID: Double = categories.indexOf(gidNewsgroupText._2);
 
       var index2Value: Map[Int, Double] = Map[Int, Double]()

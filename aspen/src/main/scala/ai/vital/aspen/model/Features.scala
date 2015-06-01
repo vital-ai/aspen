@@ -13,6 +13,7 @@ import java.util.ArrayList
  */
 class Features {
 
+  /*
   def parseFeaturesMap(model: AspenModel) : LinkedHashMap[Class[GraphObject], List[String]] = {
    
     val modelConfig = model.getModelConfig;
@@ -67,5 +68,6 @@ class Features {
     return features
     
   }
+  * */
   
 }

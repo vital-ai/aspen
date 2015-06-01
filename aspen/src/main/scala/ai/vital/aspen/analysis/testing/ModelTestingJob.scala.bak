@@ -38,12 +38,10 @@ import ai.vital.vitalsigns.model.property.URIProperty
 import ai.vital.vitalsigns.block.CompactStringSerializer
 import ai.vital.aspen.model.KMeansPredictionModel
 import org.apache.spark.Accumulator
-import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
-import ai.vital.vitalservice.model.App
 
-class ModelBuilderTestingJob {}
+class ModelTestingJob {}
 
-object ModelBuilderTestingJob extends AbstractJob {
+object ModelTestingJob extends AbstractJob {
   
    def main(args: Array[String]): Unit = {
     
@@ -52,11 +50,11 @@ object ModelBuilderTestingJob extends AbstractJob {
   }
   
   def getJobClassName(): String = {
-    classOf[ModelBuilderTestingJob].getCanonicalName
+    classOf[ModelTestingJob].getCanonicalName
   }
   
   def getJobName(): String = {
-     "Model Builder Testing Job"
+     "Model Testing Job"
   }
 
   
@@ -67,6 +65,12 @@ object ModelBuilderTestingJob extends AbstractJob {
   val modelOption = new Option("mod", "model", true, "model path (directory or a zip/jar file)")
   modelOption.setRequired(true)
   
+  val featureQueryOption = new Option("fq", "feature-query", false, "use model builder query, a model must provide it")
+  featureQueryOption.setRequired(false)
+  
+  val segmentsOption = new Option("segs", "segments", true, "optional segments list (csv), required when feature-query is enabled")
+  segmentsOption.setRequired(false)
+  
 //  val outputOption = new Option("o", "output", true, "optional output RDD[(String, Array[Byte])], either named RDD name (name:<name> or <path> (no prefix), where path is a .vital.seq")
 //  outputOption.setRequired(true)
   
@@ -75,6 +79,8 @@ object ModelBuilderTestingJob extends AbstractJob {
     new Options().addOption(masterOption)
       .addOption(inputOption)
       .addOption(modelOption)
+      .addOption(featureQueryOption)
+      .addOption(segmentsOption)
       .addOption(profileOption)
     )
   }
@@ -85,6 +91,8 @@ object ModelBuilderTestingJob extends AbstractJob {
 
     val inputName = jobConfig.getString(inputOption.getLongOpt)
     
+    val featureQuery = getBooleanOption(jobConfig, featureQueryOption)
+    val segmentsString = getOptionalString(jobConfig, segmentsOption);
     val serviceProfile = getOptionalString(jobConfig, profileOption)
         
     var inputRDDName : String = null
@@ -97,6 +105,8 @@ object ModelBuilderTestingJob extends AbstractJob {
     println("Input name/path: " + inputName)
     println("Model path: " + modelPath)
     
+    println("feature query ? " + featureQuery)
+    println("segments: " + segmentsString)
     println("service profile: " + serviceProfile)
     
 //    val modelManager = new ModelManager()
@@ -114,8 +124,33 @@ object ModelBuilderTestingJob extends AbstractJob {
     
     println("Model loaded successfully")
     
+    val queryString = aspenModel.getModelConfig.getQuery
+    
     val segmentsList = new ArrayList[VitalSegment]()
     
+    if(featureQuery) {
+      if(queryString == null || queryString.isEmpty() ) {
+        throw new RuntimeException("Cannot use feture-query - the model builder does not provide query string")
+      }
+      
+      if(segmentsString == null || segmentsString.isEmpty()) {
+        throw new RuntimeException("segments param is required with feature-query")
+      }
+      
+      for( s <- segmentsString.split(",") ) {
+        val t = s.trim()
+        if(t.length() > 0) {
+          segmentsList.add(VitalSegment.withId(t))
+        }
+      }
+      
+      if(segmentsList.size() < 1) throw new RuntimeException("No segments decoded from string: " + segmentsString)
+      
+      if(serviceProfile != null) {
+        VitalServiceFactory.setServiceProfile(serviceProfile)
+      }
+      
+    }
     
       //URI, category, text
     var inputBlockRDD : RDD[(String, Array[Byte])] = null
@@ -176,16 +211,64 @@ object ModelBuilderTestingJob extends AbstractJob {
     //matched, morethan1 input target, no targets
     val results : RDD[(Int, Int, Int, Int)] = inputBlockRDD.map { pair =>
       
+        var block : java.util.List[GraphObject] = null
       
-      if(VitalSigns.get.getCurrentApp == null) {
-        val app = new App()
-        app.setID("app")
-        VitalSigns.get.setCurrentApp(app);
-      }
-      
-      val block : java.util.List[GraphObject] = VitalSigns.get.decodeBlock(pair._2, 0, pair._2.length)
+        if(featureQuery) {
         
-      val vitalBlock = new VitalBlock(block)
+        val _uri = pair._1
+        val qString = queryString.replace("$URI", _uri)
+        val vitalQuery = new VitalBuilder().queryString(qString).toQuery()
+        
+        if(serviceProfile != null && !VitalServiceFactory.getServiceProfile.equals(serviceProfile)) {
+          VitalServiceFactory.setServiceProfile(serviceProfile)
+        }
+        
+        vitalQuery.setSegments(segmentsList)
+        
+        if(vitalQuery.isInstanceOf[VitalGraphQuery]) {
+          vitalQuery.asInstanceOf[VitalGraphQuery].setPayloads(true)
+        }
+        
+        val rs = VitalServiceFactory.getVitalService.query(vitalQuery)
+        
+        if(rs.getStatus().getStatus != VitalStatus.Status.ok) {
+          throw new RuntimeException("Query exception: " + rs.getStatus.getMessage)
+        }
+        
+        block = new ArrayList[GraphObject]()
+        
+        for(g <- rs) {
+          if(g.isInstanceOf[GraphMatch]) {
+            //make sure payloads is e
+            for( e <- g.getPropertiesMap.entrySet() ) {
+              
+              val un = e.getValue.unwrapped();
+              
+              if(un.isInstanceOf[URIProperty]) {
+                
+                try {
+                  val uri = un.asInstanceOf[URIProperty].get()
+                  val x = CompactStringSerializer.fromString(g.getProperty(uri).toString())
+                  if(x != null) {
+                    block.add(x)
+                  }
+                } catch {
+                  case ex : Exception => {}
+                }
+                
+              }
+              
+            }
+          } else {
+            block.add(g)
+          }
+        }
+        
+      } else {
+        
+    	  block = VitalSigns.get.decodeBlock(pair._2, 0, pair._2.length)
+        
+      }
       
       var targetValue : String = null 
       
@@ -210,7 +293,7 @@ object ModelBuilderTestingJob extends AbstractJob {
       
       if(aspenModel.getType.equals(KMeansPredictionModel.spark_kmeans_prediction)) {
         
-    	  val predictions = aspenModel.predict(vitalBlock)
+    	  val predictions = aspenModel.predict(block)
         
         for(p <- predictions) {
                 
@@ -230,7 +313,7 @@ object ModelBuilderTestingJob extends AbstractJob {
         
     	  if(targetValue != null) {
     		  
-    		  val predictions = aspenModel.predict(vitalBlock)
+    		  val predictions = aspenModel.predict(block)
     				  
     				  for(p <- predictions) {
     					  
