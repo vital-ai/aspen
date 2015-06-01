@@ -1,10 +1,15 @@
 package ai.vital.aspen.groovy.modelmanager;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectStreamClass;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.SerializationUtils;
+import org.apache.commons.io.IOUtils;
 
 import ai.vital.aspen.groovy.featureextraction.PredictionModelAnalyzer;
 import ai.vital.predictmodel.PredictionModel;
@@ -77,7 +82,7 @@ public class ModelCreator {
 
 	public AspenModel createModelFromObject(byte[] objectFileContent) throws Exception {
 		
-		AspenModel modelEl = SerializationUtils.deserialize(objectFileContent);
+		AspenModel modelEl = deserialize(objectFileContent);//SerializationUtils.deserialize(objectFileContent);
 		
 		String type = modelEl.getType();
 		
@@ -90,6 +95,38 @@ public class ModelCreator {
 		if(uri == null || uri.isEmpty()) throw new Exception("Null or empty model URI");
 		
 		return modelEl;
+	}
+	
+	public static AspenModel deserialize(byte[] objectFileContent) {
+		
+		AspenObjectInputStream ois = null;
+		
+		try {
+			ois = new AspenObjectInputStream(new ByteArrayInputStream(objectFileContent));
+			return (AspenModel) ois.readObject();
+		} catch (IOException | ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		} finally {
+			IOUtils.closeQuietly(ois);
+		}
+		
+	}
+	
+	public static class AspenObjectInputStream extends ObjectInputStream {
+
+		public AspenObjectInputStream(InputStream in) throws IOException {
+			super(in);
+		}
+
+		@Override
+		protected Class<?> resolveClass(ObjectStreamClass desc)
+				throws IOException, ClassNotFoundException {
+			try {
+				return super.resolveClass(desc);
+			} catch(ClassNotFoundException e) {
+				return ModelCreator.class.getClassLoader().loadClass(desc.getName());
+			}
+		}
 	}
 	
 }
