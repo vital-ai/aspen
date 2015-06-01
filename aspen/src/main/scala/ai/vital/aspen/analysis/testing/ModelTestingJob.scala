@@ -41,9 +41,9 @@ import org.apache.spark.Accumulator
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 import ai.vital.vitalservice.model.App
 
-class ModelBuilderTestingJob {}
+class ModelTestingJob {}
 
-object ModelBuilderTestingJob extends AbstractJob {
+object ModelTestingJob extends AbstractJob {
   
    def main(args: Array[String]): Unit = {
     
@@ -52,11 +52,11 @@ object ModelBuilderTestingJob extends AbstractJob {
   }
   
   def getJobClassName(): String = {
-    classOf[ModelBuilderTestingJob].getCanonicalName
+    classOf[ModelTestingJob].getCanonicalName
   }
   
   def getJobName(): String = {
-     "Model Builder Testing Job"
+     "Model Testing Job"
   }
 
   
