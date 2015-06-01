@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -52,7 +53,6 @@ import ai.vital.predictmodel.builder.ToModelImpl;
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock;
 import ai.vital.vitalsigns.model.GraphObject;
 
-import com.google.common.io.Files;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
@@ -511,7 +511,7 @@ public abstract class AspenModel implements Serializable {
 		
 		try {
 			
-			tempDir = Files.createTempDir();
+			tempDir = Files.createTempDirectory("aspenmodel").toFile();
 			
 			FileUtils.writeByteArrayToFile(new File(tempDir, ModelManager.MODEL_OBJECT_FILE), SerializationUtils.serialize(this));
 

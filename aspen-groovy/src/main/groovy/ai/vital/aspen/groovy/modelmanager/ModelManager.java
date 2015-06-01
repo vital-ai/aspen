@@ -1,7 +1,6 @@
 package ai.vital.aspen.groovy.modelmanager;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,7 +12,6 @@ import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -22,8 +20,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ai.vital.aspen.groovy.AspenGroovyConfig;
-
-import com.google.common.io.Files;
 
 /** 
  * Manages a list of loaded models
@@ -174,10 +170,6 @@ public class ModelManager {
 		
 		ZipInputStream inputS = null;
 		
-		File tempDirectory = Files.createTempDir();
-		
-		tempDirectory.deleteOnExit();
-		
 		byte[] objectFileContent= null;
 		
 		InputStream objectInputStream = null;
@@ -293,7 +285,6 @@ public class ModelManager {
 		} finally {
 			IOUtils.closeQuietly(objectInputStream);
 			IOUtils.closeQuietly(inputS);
-			FileUtils.deleteQuietly(tempDirectory);
 			IOUtils.closeQuietly(fs);
 		}
 	
