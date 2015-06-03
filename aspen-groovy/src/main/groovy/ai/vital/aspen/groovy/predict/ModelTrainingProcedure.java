@@ -1,9 +1,11 @@
 package ai.vital.aspen.groovy.predict;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import ai.vital.aspen.groovy.featureextraction.CategoricalFeatureData;
 import ai.vital.aspen.groovy.featureextraction.FeatureData;
@@ -42,13 +44,7 @@ public class ModelTrainingProcedure {
 	//the model being trained
 	public AspenModel model;
 
-	public Integer trainingDocsCount = null;
-//	public Integer testingDocsCount = null;
-
 	private ArrayList<ModelTrainingTask> tasks;
-	
-	private Integer minDF = null;
-	private Integer maxDF = null;
 	
 	
 	protected String inputDatasetName = "input-dataset";
@@ -63,27 +59,7 @@ public class ModelTrainingProcedure {
 		
 	}
 	
-	ModelTrainingTask currentTask = null;
-	
-	Iterator<ModelTrainingTask> iterator = null;
-	
-	public ModelTrainingTask getNextTask() {
-		
-		if(tasks == null) throw new RuntimeException("Tasks list not generated!");
-		
-		if(currentTask != null) throw new RuntimeException("Task in progress: " + currentTask);
-		
-		if(iterator == null) iterator = tasks.iterator();
-		
-		if(iterator.hasNext()) {
-			currentTask = iterator.next();
-			return currentTask;
-		}
-		
-		return null;
-		
-	}
-	
+	public Map<String, Object> paramsMap = Collections.synchronizedMap(new HashMap<String, Object>());
 	
 	
 	public List<ModelTrainingTask> generateTasks() throws Exception {
@@ -106,14 +82,14 @@ public class ModelTrainingProcedure {
 		
 		if(inputPath == null) throw new RuntimeException("No input path set!");
 		
-		tasks.add(new LoadDataSetTask(inputPath, inputDatasetName));
+		tasks.add(new LoadDataSetTask(paramsMap, inputPath, inputDatasetName));
 		
 		if(model.isSupervised()) {
 			
 			trainDatasetName = "train-dataset";
 			testDatasetName = "test-dataset";
 			
-			tasks.add(new SplitDatasetTask(inputDatasetName, trainDatasetName, testDatasetName, 0.6));
+			tasks.add(new SplitDatasetTask(paramsMap, inputDatasetName, trainDatasetName, testDatasetName, 0.6));
 			
 		} else {
 			
@@ -121,14 +97,14 @@ public class ModelTrainingProcedure {
 			
 		}
 		
-		tasks.add(new CollectTargetCategoriesTask(trainDatasetName));
+		tasks.add(new CollectTargetCategoriesTask(model, paramsMap, trainDatasetName));
 		
 		//check if text features exist, then demand 
 		
 		for(Feature f : cfg.getFeatures()) {
 			if(f instanceof TextFeature) {
-				tasks.add(new CountDatasetTask(trainDatasetName));
-				tasks.add(new ProvideMinDFMaxDF(trainDatasetName, null));
+				tasks.add(new CountDatasetTask(paramsMap, trainDatasetName));
+				tasks.add(new ProvideMinDFMaxDF(paramsMap, trainDatasetName, null));
 				break;
 			}
 		}
@@ -136,14 +112,14 @@ public class ModelTrainingProcedure {
 		
 		if(aggregates != null) {
 			for(Aggregate a : aggregates) {
-				tasks.add(new CalculateAggregationValueTask(a, trainDatasetName));
+				tasks.add(new CalculateAggregationValueTask(model, paramsMap, a, trainDatasetName));
 			}
 		}
 
 		
 		for(Feature f : cfg.getFeatures()) {
 			if(f instanceof TextFeature) {
-				tasks.add(new CollectTextFeatureDataTask((TextFeature) f, trainDatasetName, minDF, maxDF));
+				tasks.add(new CollectTextFeatureDataTask(model, paramsMap, (TextFeature) f, trainDatasetName));
 			} else if(f instanceof CategoricalFeature) {
 
 				CategoricalFeature cf = (CategoricalFeature) f;
@@ -175,100 +151,15 @@ public class ModelTrainingProcedure {
 			}
 		}
 		
-		tasks.add(new TrainModelTask(trainDatasetName, model.getModelConfig().getType()));
+		tasks.add(new TrainModelTask(paramsMap, trainDatasetName, model.getModelConfig().getType()));
 		
 		
-		if(testDatasetName != null) tasks.add(new TestModelTask(testDatasetName));
+		if(testDatasetName != null) tasks.add(new TestModelTask(paramsMap, testDatasetName));
 		
-		tasks.add(new SaveModelTask());
+		tasks.add(new SaveModelTask(paramsMap));
 		
 		return tasks;
 	}
-	
-	public void onTaskComplete(ModelTrainingTask task) {
-	
-		if(task == null) throw new NullPointerException("Task must not be null");
-		
-		if(currentTask == null) throw new RuntimeException("No active task!");
-		
-		if(task != currentTask) throw new RuntimeException("Complete task is different that ");
-		
-		task.validateResult();
-		
-		if(task instanceof CalculateAggregationValueTask) {
-		
-			CalculateAggregationValueTask cavt = (CalculateAggregationValueTask) task;
-			Aggregate a = cavt.aggregate;
-			model.getAggregationResults().put(a.getProvides(), cavt.value);
-			
-		} else if(task instanceof CollectCategoricalFeaturesDataTask) {
-			throw new RuntimeException("Disconnected task: " + task.getClass().getCanonicalName());
-		} else if(task instanceof CollectNumericalFeatureDataTask) {
-			throw new RuntimeException("Disconnected task: " + task.getClass().getCanonicalName());
-		} else if(task instanceof CollectTargetCategoriesTask) {
-			
-			CollectTargetCategoriesTask ctct = (CollectTargetCategoriesTask) task;
-			if(ctct.nonCategoricalPredictions != null && ctct.nonCategoricalPredictions.booleanValue()) {
-				
-			} else {
-				
-				CategoricalFeatureData cfd = new CategoricalFeatureData();
-				cfd.setCategories(ctct.categories);
-				model.setTrainedCategories(cfd);
-				
-			}
-			
-		} else if(task instanceof CollectTextFeatureDataTask) {
-			
-			CollectTextFeatureDataTask ctfdt = (CollectTextFeatureDataTask) task;
-			
-	        model.getFeaturesData().put(ctfdt.feature.getName(), ctfdt.results);
-			
-		} else if(task instanceof CountDatasetTask) {
-			
-			CountDatasetTask ctst = (CountDatasetTask) task;
-			trainingDocsCount = ctst.result;
-			
-			for(ModelTrainingTask t : tasks) {
-				if(t instanceof ProvideMinDFMaxDF) {
-					((ProvideMinDFMaxDF)t).docsCount = trainingDocsCount;
-				}
-			}
-			
-		} else if(task instanceof LoadDataSetTask) {
-			
-		} else if(task instanceof ProvideMinDFMaxDF) {
-			
-			ProvideMinDFMaxDF pmm = (ProvideMinDFMaxDF) task;
-			minDF = pmm.minDF;
-			maxDF = pmm.maxDF;
-			
-			for(ModelTrainingTask t : tasks) {
-				
-				if( t instanceof CollectTextFeatureDataTask) {
-					CollectTextFeatureDataTask ctfdt = (CollectTextFeatureDataTask)t;
-					ctfdt.minDF = minDF;
-					ctfdt.maxDF = maxDF;
-				}
-			}
-			
-		} else if(task instanceof SaveModelTask) {
-			
-			//do nothing
-		} else if(task instanceof SplitDatasetTask) {
-			
-		} else if(task instanceof TrainModelTask) {
-			
-		} else if(task instanceof TestModelTask) {
-			
-		} else {
-			throw new RuntimeException("Unhandled task completion type: " + task.getClass().getCanonicalName());
-		}
-		
-		currentTask = null;
-		
-	}
-	
 	
 	
 }

@@ -308,19 +308,20 @@ object ModelTrainingJob extends AbstractJob {
     
 //    procedure.inputPath = in
     
-    val totalTasks = procedure.generateTasks().size()
+    val tasks = procedure.generateTasks()
     
-    var task : ModelTrainingTask = null
-    
-    task = procedure.getNextTask
+    val totalTasks = tasks.size()
     
     var currentTask = 0
     
-    while ( task != null) {
+    for( task <- tasks ) {
+    
       
       currentTask = currentTask + 1
       
       println ( "Executing task: " + task.getClass.getCanonicalName + " [" + currentTask + " of " + totalTasks + "]")
+      
+      task.checkDepenedencies()
       
       if(task.isInstanceOf[CalculateAggregationValueTask]) {
         
@@ -375,7 +376,7 @@ object ModelTrainingJob extends AbstractJob {
         
         checkDependencies_provideMinDFMaxDF(sc, aspenModel, pmm)
         
-        var maxDF : Int = procedure.trainingDocsCount * maxDFPercent / 100
+        var maxDF : Int = pmm.docsCount * maxDFPercent / 100
             
         println("MinDF: " + minDF)
         println("MaxDF: " + maxDF)
@@ -425,9 +426,7 @@ object ModelTrainingJob extends AbstractJob {
         throw new RuntimeException("Unhandled task: " + task.getClass.getCanonicalName);
       }
 
-      procedure.onTaskComplete(task)
-      
-      task = procedure.getNextTask
+      task.onTaskComplete()
       
     }
     

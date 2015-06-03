@@ -1,8 +1,10 @@
 package ai.vital.aspen.groovy.predict.tasks;
 
+import java.util.Map;
+
 import ai.vital.aspen.groovy.predict.ModelTrainingTask;
 
-public class SplitDatasetTask implements ModelTrainingTask {
+public class SplitDatasetTask extends ModelTrainingTask {
 
 	public String inputDatasetName;
 	
@@ -13,18 +15,19 @@ public class SplitDatasetTask implements ModelTrainingTask {
 	public Double firstSplitRatio;
 	
 	
-	public SplitDatasetTask(String inputDatasetName, String outputDatasetName1,
+	public SplitDatasetTask(Map<String, Object> paramsMap, String inputDatasetName, String outputDatasetName1,
 			String outputDatasetName2, Double firstSplitRatio) {
-		super();
+		super(paramsMap);
 		this.inputDatasetName = inputDatasetName;
 		this.outputDatasetName1 = outputDatasetName1;
 		this.outputDatasetName2 = outputDatasetName2;
 		this.firstSplitRatio = firstSplitRatio;
 	}
 
+	
 
 	@Override
-	public void validateResult() {
+	public void checkDepenedencies() {
 
 		if(firstSplitRatio == null) throw new RuntimeException("No firstSplitRatio");
 		
@@ -35,6 +38,11 @@ public class SplitDatasetTask implements ModelTrainingTask {
 		if(outputDatasetName1 == null) throw new RuntimeException("No outputDatasetName1");
 		
 		if(outputDatasetName2 == null) throw new RuntimeException("No outputDatasetName2");
+		
+	}
+	
+	@Override
+	public void onTaskComplete() {
 		
 	}
 
