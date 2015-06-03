@@ -102,5 +102,10 @@ public class OpenNLPModel extends AspenModel {
 		return true;
 	}
 
+	@Override
+	public boolean isCategorical() {
+		return true;
+	}
+
 
 }

@@ -60,4 +60,9 @@ public class ReferenceModel extends AspenModel {
 		return true;
 	}
 
+	@Override
+	public boolean isCategorical() {
+		return true;
+	}
+
 }

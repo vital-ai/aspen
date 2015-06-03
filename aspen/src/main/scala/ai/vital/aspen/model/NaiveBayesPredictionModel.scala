@@ -60,4 +60,9 @@ class NaiveBayesPredictionModel extends PredictionModel {
     return true;
   }
   
+  @Override
+  def isCategorical() : Boolean = {
+      return true;
+  }
+  
 }

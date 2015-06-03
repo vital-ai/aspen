@@ -89,6 +89,10 @@ public abstract class AspenModel implements Serializable {
 	
 	protected CategoricalFeatureData trainedCategories;
 	
+	//returns true if a model returns predictions as categories
+	public abstract boolean isCategorical();
+	
+	//returns true if input data should be split into train + test
 	public abstract boolean isSupervised();
 	
 	public String getName() {
@@ -140,6 +144,9 @@ public abstract class AspenModel implements Serializable {
 //	 */
 //	public abstract List<GraphObject> predict(List<GraphObject> input);
 	
+	public final List<GraphObject> predict(List<GraphObject> input) {
+		return this.predict(new VitalBlock(input));
+	}
 	
 	/**
 	 * The output list contains either updated objects or new only (diff to the input block)

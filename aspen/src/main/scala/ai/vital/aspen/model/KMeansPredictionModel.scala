@@ -64,4 +64,8 @@ class KMeansPredictionModel extends PredictionModel {
     return false;
   }
   
+  @Override
+  def isCategorical() : Boolean = {
+      return false;
+  }
 }

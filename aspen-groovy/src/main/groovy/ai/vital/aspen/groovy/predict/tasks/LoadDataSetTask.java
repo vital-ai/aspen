@@ -1,7 +1,11 @@
 package ai.vital.aspen.groovy.predict.tasks;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
+import ai.vital.aspen.groovy.modelmanager.AspenModel;
 import ai.vital.aspen.groovy.predict.ModelTrainingTask;
 
 public class LoadDataSetTask extends ModelTrainingTask {
@@ -10,37 +14,24 @@ public class LoadDataSetTask extends ModelTrainingTask {
 	
 	public String datasetName;
 	
-	
-	//result
-	public Boolean loaded = null;
-	
-	public LoadDataSetTask(Map<String, Object> paramsMap, String path, String datasetName) {
-		super(paramsMap);
+	public LoadDataSetTask(AspenModel model, Map<String, Object> paramsMap, String path, String datasetName) {
+		super(model, paramsMap);
 		this.path = path;
 		this.datasetName = datasetName;
 	}
 
 
-	
-
 	@Override
-	public void checkDepenedencies() {
-		
-		if(path == null) throw new NullPointerException("Null path");
-		
-		if(datasetName == null) throw new NullPointerException("Null datasetName");
-		
+	public List<String> getRequiredParams() {
+		return Collections.emptyList();
 	}
 
 
-
-
 	@Override
-	public void onTaskComplete() {
-
-		if(loaded == null) throw new NullPointerException("Loaded flag not set");
-		if(!loaded.booleanValue()) throw new RuntimeException("Dataset not loaded: " + datasetName);
-		
+	public List<String> getOutputParams() {
+		return Arrays.asList(datasetName);
 	}
+
+
 
 }

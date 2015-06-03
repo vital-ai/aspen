@@ -1,5 +1,7 @@
 package ai.vital.aspen.groovy.predict.tasks;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import ai.vital.aspen.groovy.modelmanager.AspenModel;
@@ -8,54 +10,27 @@ import ai.vital.predictmodel.Aggregate;
 
 public class CalculateAggregationValueTask extends ModelTrainingTask {
 
+	public final static String AGGREGATE_VALUE_SUFFIX = "-aggregate-value";
+	
 	public Aggregate aggregate;
 	
 	public String datasetName;
 	
-	public Double value;
-
-	private AspenModel model;
-
-	
 	public CalculateAggregationValueTask(AspenModel model, Map<String, Object> paramsMap, Aggregate aggregate, String datasetName) {
-		super(paramsMap);
-		this.model = model;
+		super(model, paramsMap);
 		this.aggregate = aggregate;
 		this.datasetName = datasetName;
 	}
 
 	@Override
-	public void checkDepenedencies() {
-		
-		if(aggregate == null) throw new NullPointerException("aggregation not set!");
-		if(datasetName == null) throw new NullPointerException("datasetName not set!");
+	public List<String> getRequiredParams() {
+		return Arrays.asList(datasetName);
+	}
 
-	}
-	
 	@Override
-	public void onTaskComplete() {
-		
-		if(value == null) throw new RuntimeException("No aggregation value returned, " + aggregate.getProvides() + " " + aggregate.getFunction());
-		
-		switch (aggregate.getFunction()) {
-			case AVERAGE : {
-			}
-			case MAX : {
-				
-			}
-			case MIN : {
-				
-			}
-			case SUM : {
-				
-			}
-			default : {
-				
-			}
-		}
-		
-		model.getAggregationResults().put(aggregate.getProvides(), value);
-		
+	public List<String> getOutputParams() {
+		return Arrays.asList(aggregate.getProvides() + AGGREGATE_VALUE_SUFFIX);
 	}
+
 	
 }

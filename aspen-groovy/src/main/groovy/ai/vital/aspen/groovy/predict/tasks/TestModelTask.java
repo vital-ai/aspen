@@ -1,32 +1,33 @@
 package ai.vital.aspen.groovy.predict.tasks;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
+import ai.vital.aspen.groovy.modelmanager.AspenModel;
 import ai.vital.aspen.groovy.predict.ModelTrainingTask;
 
 public class TestModelTask extends ModelTrainingTask {
 
 	public String datasetName;
 	
-	public TestModelTask(Map<String, Object> paramsMap, String datasetName) {
-		super(paramsMap);
+	public TestModelTask(AspenModel model, Map<String, Object> paramsMap, String datasetName) {
+		super(model, paramsMap);
 		this.datasetName = datasetName;
 	}
 
 	
-	
 	@Override
-	public void checkDepenedencies() {
-		
-		if(datasetName == null) throw new NullPointerException("No datasetName set");
-		
+	public List<String> getRequiredParams() {
+		return Arrays.asList(datasetName, TrainModelTask.MODEL_BINARY);
 	}
 
 
 
 	@Override
-	public void onTaskComplete() {
-		
+	public List<String> getOutputParams() {
+		return Collections.emptyList();
 	}
 
 

@@ -1,7 +1,10 @@
 package ai.vital.aspen.groovy.predict.tasks;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
+import ai.vital.aspen.groovy.modelmanager.AspenModel;
 import ai.vital.aspen.groovy.predict.ModelTrainingTask;
 
 /**
@@ -15,34 +18,20 @@ public class CountDatasetTask extends ModelTrainingTask {
 
 	public String datasetName;
 	
-	public Integer result = null;
-	
-	public CountDatasetTask(Map<String, Object> paramsMap, String datasetName) {
-		super(paramsMap);
+	public CountDatasetTask(AspenModel model, Map<String, Object> paramsMap, String datasetName) {
+		super(model, paramsMap);
 		this.datasetName = datasetName;
 	}
 
 
-	
 	@Override
-	public void checkDepenedencies() {
-		
-		if(datasetName == null) throw new RuntimeException("No datasetName set");
-		
+	public List<String> getRequiredParams() {
+		return Arrays.asList(datasetName);
 	}
 
-
-
 	@Override
-	public void onTaskComplete() {
-
-		CountDatasetTask ctst = this;
-		if(ctst.result == null || ctst.result < 0) throw new RuntimeException("Documents count must not be lesser than 0!");
-		if(ctst.result < 2) throw new RuntimeException("Cannot progress, training documents count is lesser than 2");		
-		
-		paramsMap.put(datasetName + DOCS_COUNT_SUFFIX, result);
-		
-		
+	public List<String> getOutputParams() {
+		return Arrays.asList(datasetName + DOCS_COUNT_SUFFIX);
 	}
 
 }

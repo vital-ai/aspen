@@ -1,7 +1,10 @@
 package ai.vital.aspen.groovy.predict.tasks;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
+import ai.vital.aspen.groovy.modelmanager.AspenModel;
 import ai.vital.aspen.groovy.predict.ModelTrainingTask;
 
 public class ProvideMinDFMaxDF extends ModelTrainingTask {
@@ -12,41 +15,22 @@ public class ProvideMinDFMaxDF extends ModelTrainingTask {
 	
 	public String datasetName;
 
-	public Integer docsCount;
-	
-	public Integer minDF;
-	
-	public Integer maxDF;
-	
-	public ProvideMinDFMaxDF(Map<String, Object> paramsMap, String datasetName, Integer docsCount) {
-		super(paramsMap);
+	public ProvideMinDFMaxDF(AspenModel model, Map<String, Object> paramsMap, String datasetName) {
+		super(model, paramsMap);
 		this.datasetName = datasetName;
-		this.docsCount = docsCount;
+	}
+
+	@Override
+	public List<String> getRequiredParams() {
+		return Arrays.asList(datasetName + CountDatasetTask.DOCS_COUNT_SUFFIX);
+	}
+
+	@Override
+	public List<String> getOutputParams() {
+		return Arrays.asList(datasetName + MIN_DF_SUFFIX, datasetName + MAX_DF_SUFFIX);
 	}
 
 	
-	@Override
-	public void checkDepenedencies() {
-		
-		if(datasetName == null) throw new NullPointerException("No datasetName set");
-		
-		docsCount = (Integer) paramsMap.get(datasetName + CountDatasetTask.DOCS_COUNT_SUFFIX);
-		
-		if(docsCount == null) throw new NullPointerException("No docs count found for dataset: " + datasetName);
-		 
-	}
-
-	@Override
-	public void onTaskComplete() {
-		
-		if(minDF == null) throw new NullPointerException("No minDF");
-		
-		if(maxDF == null) throw new NullPointerException("No maxDF");
-
-		paramsMap.put(datasetName + MIN_DF_SUFFIX, minDF);
-		paramsMap.put(datasetName + MAX_DF_SUFFIX, maxDF);
-		
-	}
 
 
 }

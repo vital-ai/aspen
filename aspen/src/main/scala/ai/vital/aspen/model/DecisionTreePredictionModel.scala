@@ -65,4 +65,9 @@ class DecisionTreePredictionModel extends PredictionModel {
   	return true;
   }
   
+  @Override
+  def isCategorical() : Boolean = {
+		  return true;
+  }
+  
 }

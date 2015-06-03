@@ -1,9 +1,7 @@
 package ai.vital.aspen.groovy.predict;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -52,14 +50,18 @@ public class ModelTrainingProcedure {
 	protected String trainDatasetName = null; 
 	protected String testDatasetName = null; 
 	
-	public ModelTrainingProcedure(AspenModel model) {
+	private Map<String, Object> paramsMap = null;
+	
+	public ModelTrainingProcedure(AspenModel model, Map<String, String> commandParams, Map<String, Object> globalParamsMap) {
 		super();
-		
 		this.model = model;
+		paramsMap = globalParamsMap;
+		
+		inputPath = commandParams.get("input");
+		if(inputPath == null) throw new RuntimeException("No input procedure param");
 		
 	}
 	
-	public Map<String, Object> paramsMap = Collections.synchronizedMap(new HashMap<String, Object>());
 	
 	
 	public List<ModelTrainingTask> generateTasks() throws Exception {
@@ -82,14 +84,16 @@ public class ModelTrainingProcedure {
 		
 		if(inputPath == null) throw new RuntimeException("No input path set!");
 		
-		tasks.add(new LoadDataSetTask(paramsMap, inputPath, inputDatasetName));
+		tasks.add(new LoadDataSetTask(model, paramsMap, inputPath, inputDatasetName));
+		
+		List<String> trainingRequiredParams = new ArrayList<String>();
 		
 		if(model.isSupervised()) {
 			
 			trainDatasetName = "train-dataset";
 			testDatasetName = "test-dataset";
 			
-			tasks.add(new SplitDatasetTask(paramsMap, inputDatasetName, trainDatasetName, testDatasetName, 0.6));
+			tasks.add(new SplitDatasetTask(model, paramsMap, inputDatasetName, trainDatasetName, testDatasetName, 0.6));
 			
 		} else {
 			
@@ -97,14 +101,20 @@ public class ModelTrainingProcedure {
 			
 		}
 		
-		tasks.add(new CollectTargetCategoriesTask(model, paramsMap, trainDatasetName));
+		trainingRequiredParams.add(trainDatasetName);
+		
+		if(model.isCategorical()) {
+			tasks.add(new CollectTargetCategoriesTask(model, paramsMap, trainDatasetName));
+			trainingRequiredParams.add(CollectTargetCategoriesTask.TARGET_CATEGORIES_DATA);
+		}
+		
 		
 		//check if text features exist, then demand 
 		
 		for(Feature f : cfg.getFeatures()) {
 			if(f instanceof TextFeature) {
-				tasks.add(new CountDatasetTask(paramsMap, trainDatasetName));
-				tasks.add(new ProvideMinDFMaxDF(paramsMap, trainDatasetName, null));
+				tasks.add(new CountDatasetTask(model, paramsMap, trainDatasetName));
+				tasks.add(new ProvideMinDFMaxDF(model, paramsMap, trainDatasetName));
 				break;
 			}
 		}
@@ -119,7 +129,9 @@ public class ModelTrainingProcedure {
 		
 		for(Feature f : cfg.getFeatures()) {
 			if(f instanceof TextFeature) {
-				tasks.add(new CollectTextFeatureDataTask(model, paramsMap, (TextFeature) f, trainDatasetName));
+				CollectTextFeatureDataTask ctfdt = new CollectTextFeatureDataTask(model, paramsMap, (TextFeature) f, trainDatasetName);
+				tasks.add(ctfdt);
+				trainingRequiredParams.addAll(ctfdt.getOutputParams());
 			} else if(f instanceof CategoricalFeature) {
 
 				CategoricalFeature cf = (CategoricalFeature) f;
@@ -137,26 +149,30 @@ public class ModelTrainingProcedure {
 				if(thisTaxonomy == null) throw new RuntimeException("Taxonomy not found: " + cf.getTaxonomy());
 				        
 				CategoricalFeatureData cfd = CategoricalFeatureData.fromTaxonomy(thisTaxonomy);
-				        
 				model.getFeaturesData().put(f.getName(), cfd);
-//				tasks.add(new CollectCategoricalFeaturesDataTask(cf));
+				
+//				CollectCategoricalFeaturesDataTask ccfdt = new CollectCategoricalFeaturesDataTask(model, paramsMap, cf, trainDatasetName);
+//				tasks.add(ccfdt);
+//				trainingRequiredParams.addAll(ccfdt.getOutputParams());
 				
 			} else if(f instanceof NumericalFeature) {
 				
 				NumericalFeature nf = (NumericalFeature) f;
-				
-//				tasks.add(new CollectNumericalFeatureDataTask(nf));
 				model.getFeaturesData().put(nf.getName(), new NumericalFeatureData());
+				
+//				CollectNumericalFeatureDataTask cnfdt = new CollectNumericalFeatureDataTask(model, paramsMap, nf, trainDatasetName);
+//				tasks.add(cnfdt);
+//				trainingRequiredParams.addAll(cnfdt.getOutputParams());
 				
 			}
 		}
 		
-		tasks.add(new TrainModelTask(paramsMap, trainDatasetName, model.getModelConfig().getType()));
+		tasks.add(new TrainModelTask(model, paramsMap, trainDatasetName, model.getModelConfig().getType(),trainingRequiredParams));
 		
 		
-		if(testDatasetName != null) tasks.add(new TestModelTask(paramsMap, testDatasetName));
+		if(testDatasetName != null) tasks.add(new TestModelTask(model, paramsMap, testDatasetName));
 		
-		tasks.add(new SaveModelTask(paramsMap));
+		tasks.add(new SaveModelTask(model, paramsMap));
 		
 		return tasks;
 	}

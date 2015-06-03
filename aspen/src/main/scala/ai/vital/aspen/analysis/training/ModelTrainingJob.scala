@@ -82,6 +82,8 @@ import ai.vital.predictmodel.Taxonomy
 import ai.vital.aspen.groovy.predict.ModelTrainingProcedure
 import ai.vital.aspen.groovy.predict.ModelTrainingTask
 import ai.vital.aspen.groovy.predict.tasks.CalculateAggregationValueTask
+import ai.vital.aspen.groovy.predict.tasks.CollectCategoricalFeaturesDataTask
+import ai.vital.aspen.groovy.predict.tasks.CollectNumericalFeatureDataTask
 import ai.vital.aspen.groovy.predict.tasks.CollectTargetCategoriesTask
 import ai.vital.aspen.groovy.predict.tasks.CollectTextFeatureDataTask
 import ai.vital.aspen.groovy.predict.tasks.CountDatasetTask
@@ -92,8 +94,8 @@ import ai.vital.aspen.groovy.predict.tasks.SplitDatasetTask
 import ai.vital.aspen.groovy.predict.tasks.TrainModelTask
 import ai.vital.aspen.groovy.predict.tasks.TestModelTask
 import ai.vital.predictmodel.Feature
-import ai.vital.aspen.groovy.predict.tasks.CollectCategoricalFeaturesDataTask
 import ai.vital.aspen.model.PredictionModel
+import ai.vital.aspen.util.SetOnceHashMap
 
 class ModelTrainingJob {}
 
@@ -123,9 +125,12 @@ object ModelTrainingJob extends AbstractJob {
   
   def MAX_DF_PERCENT = 100
   
+  //this is only used when namedRDDs support is disabled
   var datasetsMap : java.util.HashMap[String, RDD[(String, Array[Byte])]] = null;
   
   var hadoopConfig : Configuration = null
+  
+  val globalContext = new SetOnceHashMap()
   
   def getOptions(): Options = {
     addJobServerOptions(
@@ -301,10 +306,10 @@ object ModelTrainingJob extends AbstractJob {
 //    }
     
     
+    val commandParams = new HashMap[String, String]()
+    commandParams.put(inputOption.getLongOpt, inputName)
     
-    val procedure = new ModelTrainingProcedure(aspenModel)
-    
-    procedure.inputPath = inputName;
+    val procedure = new ModelTrainingProcedure(aspenModel, commandParams, globalContext)
     
 //    procedure.inputPath = in
     
@@ -321,39 +326,63 @@ object ModelTrainingJob extends AbstractJob {
       
       println ( "Executing task: " + task.getClass.getCanonicalName + " [" + currentTask + " of " + totalTasks + "]")
       
+      for(i <- task.getRequiredParams) {
+    	  if(!globalContext.containsKey(i)) throw new RuntimeException("Task " + task.getClass.getSimpleName + " input param not set: " + i)
+      }
+      
+      //any inner dependencies
       task.checkDepenedencies()
+      
       
       if(task.isInstanceOf[CalculateAggregationValueTask]) {
         
         val cavt = task.asInstanceOf[CalculateAggregationValueTask]
 
-        checkDependencies_calculateAggregationValue(sc, aspenModel, cavt)
+        checkDependencies_calculateAggregationValue(sc, cavt)
         
-        calculateAggregationValue(sc, aspenModel, cavt)
+        calculateAggregationValue(sc, cavt)
+        
+//      } else if(task.isInstanceOf[Collect])
+        
+      } else if(task.isInstanceOf[CollectCategoricalFeaturesDataTask]) {
+        
+        val ccfdt = task.asInstanceOf[CollectCategoricalFeaturesDataTask]
+        
+        checkDependencies_collectCategoricalFeatureDataTask(sc, ccfdt)
+        
+        collectCategoricalFeatureDataTask(sc, ccfdt)
+        
+      } else if(task.isInstanceOf[CollectNumericalFeatureDataTask]) {
+        
+        val cnfdt = task.asInstanceOf[CollectNumericalFeatureDataTask]
+        
+        checkDependencies_collectNumericalFeatureDataTask(sc, cnfdt)
+        
+        collectNumericalFeatureDataTask(sc, cnfdt)
         
       } else if(task.isInstanceOf[CollectTargetCategoriesTask]) {
         
     	  val ctct = task.asInstanceOf[CollectTargetCategoriesTask]
 
-        checkDependencies_collectTargetCategories(sc, aspenModel, ctct)
+        checkDependencies_collectTargetCategories(sc, ctct)
           
-        collectTargetCategories(sc, aspenModel, ctct)
+        collectTargetCategories(sc, ctct)
           
       } else if(task.isInstanceOf[CollectTextFeatureDataTask]) {
         
         val ctfdt = task.asInstanceOf[CollectTextFeatureDataTask]
         
-        checkDependencies_collectTextFeatureData(sc, aspenModel, ctfdt)
+        checkDependencies_collectTextFeatureData(sc, ctfdt)
         
-        collectTextFeatureData(sc, aspenModel, ctfdt)
+        collectTextFeatureData(sc, ctfdt)
         
       } else if(task.isInstanceOf[CountDatasetTask]) {
         
         val cdt = task.asInstanceOf[CountDatasetTask]
         
-        checkDependencies_countDataset(sc, aspenModel, cdt);
+        checkDependencies_countDataset(sc, cdt);
         
-        countDataset(sc, aspenModel, cdt);
+        countDataset(sc, cdt);
         
 //        val docsCount = countDataset(sc, aspenModel, ctst.datasetName)
 //        
@@ -365,23 +394,18 @@ object ModelTrainingJob extends AbstractJob {
         
         val ldt = task.asInstanceOf[LoadDataSetTask]
         
-        checkDependencies_loadDataset(sc, aspenModel, ldt)
+        checkDependencies_loadDataset(sc, ldt)
         
-        loadDataset(sc, aspenModel, ldt)
+        loadDataset(sc, ldt)
         
       } else if(task.isInstanceOf[ProvideMinDFMaxDF]) {
         
         
         val pmm = task.asInstanceOf[ProvideMinDFMaxDF]
         
-        checkDependencies_provideMinDFMaxDF(sc, aspenModel, pmm)
+        checkDependencies_provideMinDFMaxDF(sc, pmm)
         
-        var maxDF : Int = pmm.docsCount * maxDFPercent / 100
-            
-        println("MinDF: " + minDF)
-        println("MaxDF: " + maxDF)
-
-        provideMinDFMaxDF(sc, aspenModel, pmm, minDF, maxDF)
+        provideMinDFMaxDF(sc, pmm, minDF, maxDFPercent)
         
       } else if(task.isInstanceOf[SaveModelTask]) {
         
@@ -395,38 +419,46 @@ object ModelTrainingJob extends AbstractJob {
           aspenModel.persist(modelFS, outputModelPath, zipContainer || jarContainer)
         }
         
+        //no output
+        
       } else if(task.isInstanceOf[SplitDatasetTask]) {
         
         val sdt = task.asInstanceOf[SplitDatasetTask]
         
-        checkDependencies_splitDataset(sc, aspenModel, sdt)
+        checkDependencies_splitDataset(sc, sdt)
         
-        splitDataset(sc, aspenModel, sdt)
+        splitDataset(sc, sdt)
         
       } else if(task.isInstanceOf[TrainModelTask]) {
 
         val tmt = task.asInstanceOf[TrainModelTask]
         
-        checkDependencies_trainModel(sc, aspenModel, tmt)
+        checkDependencies_trainModel(sc, tmt)
         
         println("Training model...")
         
-        trainModel(sc, aspenModel, tmt)
+        trainModel(sc, tmt)
 
       } else if(task.isInstanceOf[TestModelTask]) {
 
         var tmt = task.asInstanceOf[TestModelTask]
         
-        checkDependencies_testModel(sc, aspenModel, tmt)
+        checkDependencies_testModel(sc, tmt)
         
-        testModel(sc, aspenModel, tmt)
+        testModel(sc, tmt)
         
         
       } else {
         throw new RuntimeException("Unhandled task: " + task.getClass.getCanonicalName);
       }
 
+      for(x <- task.getOutputParams) {
+        if(!globalContext.containsKey(x)) throw new RuntimeException("Task " + task.getClass.getCanonicalName + " did not return param: " + x);
+      }
+      
+      //inner validation
       task.onTaskComplete()
+      
       
     }
     
@@ -535,14 +567,14 @@ object ModelTrainingJob extends AbstractJob {
     
   }
   
-  def checkDependencies_calculateAggregationValue(sc : SparkContext, aspenModel: AspenModel, cavt: CalculateAggregationValueTask) : Unit = {
+  def checkDependencies_calculateAggregationValue(sc : SparkContext, cavt: CalculateAggregationValueTask) : Unit = {
   
     val datasetName = cavt.datasetName;
     val trainRDD = getDataset(datasetName)
     
   }
   
-  def calculateAggregationValue(sc : SparkContext, aspenModel: AspenModel, cavt: CalculateAggregationValueTask) : Unit = {
+  def calculateAggregationValue(sc : SparkContext, cavt: CalculateAggregationValueTask) : Unit = {
  
     val datasetName = cavt.datasetName;
     
@@ -553,6 +585,8 @@ object ModelTrainingJob extends AbstractJob {
     if(a.getFunction == Function.AVERAGE) {
           acc = sc.accumulator(0);
     }
+    
+    val aspenModel = cavt.getModel
     
     val trainRDD = getDataset(datasetName)
         
@@ -614,17 +648,21 @@ object ModelTrainingJob extends AbstractJob {
         } else {
           throw new RuntimeException("Unhandled aggregation function: " + a.getFunction)
         }
-        
-        cavt.value = aggV
+
+        aspenModel.getAggregationResults.put(a.getProvides, aggV)
     
+        globalContext.put(a.getProvides + CalculateAggregationValueTask.AGGREGATE_VALUE_SUFFIX, aggV);
+        
   }
   
-  def checkDependencies_collectTargetCategories(sc: SparkContext, aspenModel: AspenModel, ctct : CollectTargetCategoriesTask) : Unit = {
+  def checkDependencies_collectTargetCategories(sc: SparkContext, ctct : CollectTargetCategoriesTask) : Unit = {
     val trainRDD = getDataset(ctct.datasetName)       
   }
   
-  def collectTargetCategories(sc: SparkContext, aspenModel: AspenModel, ctct : CollectTargetCategoriesTask) : Unit = {
+  def collectTargetCategories(sc: SparkContext, ctct : CollectTargetCategoriesTask) : Unit = {
  
+    val aspenModel = ctct.getModel
+    
     if(aspenModel.getType.equals(KMeansPredictionModel.spark_kmeans_prediction)) {
           
       return
@@ -655,27 +693,31 @@ object ModelTrainingJob extends AbstractJob {
               
           println("categories count: " + categories.size)
           
-          ctct.categories = categories.toList
+          val trainedCategories = new CategoricalFeatureData()
+          trainedCategories.setCategories(categories.toList)
+          aspenModel.setTrainedCategories(trainedCategories)
               
+          globalContext.put(CollectTargetCategoriesTask.TARGET_CATEGORIES_DATA, categories)
     }
     
   }
   
-  def checkDependencies_collectTextFeatureData(sc : SparkContext, aspenModel: AspenModel, ctfdt : CollectTextFeatureDataTask) : Unit = {
+  def checkDependencies_collectTextFeatureData(sc : SparkContext, ctfdt : CollectTextFeatureDataTask) : Unit = {
     
 		  val trainRDD = getDataset(ctfdt.datasetName)
       
   }
   
-  def collectTextFeatureData(sc : SparkContext, aspenModel: AspenModel, ctfdt : CollectTextFeatureDataTask) : Unit = {
+  def collectTextFeatureData(sc : SparkContext, ctfdt : CollectTextFeatureDataTask) : Unit = {
  
     val trainRDD = getDataset(ctfdt.datasetName)  
     
     val feature = ctfdt.feature
     
-    val minDF = ctfdt.minDF.intValue()
-    val maxDF = ctfdt.maxDF.intValue()
+    val minDF = globalContext.get(ctfdt.datasetName + ProvideMinDFMaxDF.MIN_DF_SUFFIX).asInstanceOf[Int]
+    val maxDF = globalContext.get(ctfdt.datasetName + ProvideMinDFMaxDF.MAX_DF_SUFFIX).asInstanceOf[Int]
     
+    val aspenModel = ctfdt.getModel
     
     val wordsRDD: RDD[String] = trainRDD.flatMap { pair =>
 
@@ -714,32 +756,36 @@ object ModelTrainingJob extends AbstractJob {
         val tfd = new TextFeatureData()
         tfd.setDictionary(dict)
         
-        ctfdt.results = tfd
+        aspenModel.getFeaturesData.put(ctfdt.feature.getName, tfd)
+        globalContext.put(ctfdt.feature.getName + CollectTextFeatureDataTask.TEXT_FEATURE_DATA_SUFFIX, tfd)
   }
   
-  def checkDependencies_provideMinDFMaxDF(sc: SparkContext, aspenModel: AspenModel, pmm : ProvideMinDFMaxDF) : Unit= {
+  def checkDependencies_provideMinDFMaxDF(sc: SparkContext, pmm : ProvideMinDFMaxDF) : Unit= {
     
   }
   
-  def provideMinDFMaxDF(sc: SparkContext, aspenModel: AspenModel, pmm : ProvideMinDFMaxDF, minDF : Int, maxDF : Int) : Unit= {
+  def provideMinDFMaxDF(sc: SparkContext, pmm : ProvideMinDFMaxDF, minDF: Int, maxDFPercent : Int) : Unit= {
     
-    pmm.minDF = minDF
-    pmm.maxDF = maxDF
+    val totalDocs = globalContext.get(pmm.datasetName + CountDatasetTask.DOCS_COUNT_SUFFIX).asInstanceOf[Integer]
+    
+    var maxDF : Int = totalDocs * maxDFPercent / 100
+
+    globalContext.put(pmm.datasetName + ProvideMinDFMaxDF.MIN_DF_SUFFIX, minDF)
+    globalContext.put(pmm.datasetName + ProvideMinDFMaxDF.MAX_DF_SUFFIX, maxDF)
 
   }
   
-  def checkDependencies_loadDataset(sc: SparkContext, aspenModel: AspenModel, ldt : LoadDataSetTask) : Unit= {
+  def checkDependencies_loadDataset(sc: SparkContext, ldt : LoadDataSetTask) : Unit= {
     
     if(isNamedRDDSupported()) {
-   		if( this.namedRdds.get(ldt.datasetName).isDefined ) throw new RuntimeException("Dataset already loaded: " + ldt.datasetName)
+//   		if( this.namedRdds.get(ldt.datasetName).isDefined ) throw new RuntimeException("Dataset already loaded: " + ldt.datasetName)
    	} else {
-  		if( datasetsMap.get(ldt.datasetName) != null) throw new RuntimeException("Dataset already loaded: " + ldt.datasetName);
+//  		if( datasetsMap.get(ldt.datasetName) != null) throw new RuntimeException("Dataset already loaded: " + ldt.datasetName);
   	}
-      
     
   }
   
-  def loadDataset(sc: SparkContext, aspenModel: AspenModel, ldt : LoadDataSetTask) : Unit= {
+  def loadDataset(sc: SparkContext, ldt : LoadDataSetTask) : Unit= {
 
     val inputName = ldt.path
     
@@ -794,29 +840,35 @@ object ModelTrainingJob extends AbstractJob {
       datasetsMap.put(ldt.datasetName, inputBlockRDD)
     }
     
-    ldt.loaded = true
+    globalContext.put(ldt.datasetName, inputBlockRDD)
     
   }
   
-  def checkDependencies_countDataset(sc: SparkContext, aspenModel: AspenModel, cdt: CountDatasetTask) : Unit= {
+  def checkDependencies_countDataset(sc: SparkContext, cdt: CountDatasetTask) : Unit= {
     
 		  val trainRDD = getDataset(cdt.datasetName)
       
   }
-  def countDataset(sc: SparkContext, aspenModel: AspenModel, cdt: CountDatasetTask) : Unit= {
+  def countDataset(sc: SparkContext, cdt: CountDatasetTask) : Unit= {
  
     val trainRDD = getDataset(cdt.datasetName)
-    cdt.result = trainRDD.count().intValue();
+    val x = trainRDD.count().intValue();
+    
+    globalContext.put(cdt.datasetName + CountDatasetTask.DOCS_COUNT_SUFFIX, x)
     
   }
  
-  def checkDependencies_trainModel(sc: SparkContext, aspenModel: AspenModel, tmt : TrainModelTask) : Unit = {
+  def checkDependencies_trainModel(sc: SparkContext, tmt : TrainModelTask) : Unit = {
 		  val trainRDD = getDataset(tmt.datasetName)
   }
   
-  def trainModel(sc: SparkContext, aspenModel: AspenModel, tmt : TrainModelTask) : Unit = {
+  def trainModel(sc: SparkContext, tmt : TrainModelTask) : Unit = {
  
 		  val trainRDD = getDataset(tmt.datasetName)
+      
+      val aspenModel = tmt.getModel
+      
+      var outputModel : Serializable = null;
       
       if( DecisionTreePredictionModel.spark_decision_tree_prediction.equals(aspenModel.getType)) {
     
@@ -833,7 +885,7 @@ object ModelTrainingJob extends AbstractJob {
         
           aspenModel.asInstanceOf[DecisionTreePredictionModel].setModel(model)
           
-          tmt.modelBinary = model
+          outputModel = model
           
         } else if( KMeansPredictionModel.spark_kmeans_prediction.equals(aspenModel.getType)) {
           
@@ -864,7 +916,7 @@ object ModelTrainingJob extends AbstractJob {
           println(msg)
           aspenModel.asInstanceOf[KMeansPredictionModel].setError(msg)
           
-          tmt.modelBinary = clusters
+          outputModel = clusters
           
         } else if( NaiveBayesPredictionModel.spark_naive_bayes_prediction.equals(aspenModel.getType)) {
           
@@ -874,7 +926,7 @@ object ModelTrainingJob extends AbstractJob {
           
           aspenModel.asInstanceOf[NaiveBayesPredictionModel].setModel(model)
           
-          tmt.modelBinary = model
+          outputModel = model
           
         } else if( RandomForestPredictionModel.spark_randomforest_prediction.equals(aspenModel.getType ) ) {
           
@@ -893,21 +945,23 @@ object ModelTrainingJob extends AbstractJob {
               
           aspenModel.asInstanceOf[RandomForestPredictionModel].setModel(model)
           
-          tmt.modelBinary = model
+          outputModel = model
           
         } else {
           throw new RuntimeException("Unhandled aspen model type: " + aspenModel.getType)
         } 
+      
+      globalContext.put(TrainModelTask.MODEL_BINARY, outputModel)
     
   }
   
-  def checkDependencies_splitDataset(sc: SparkContext, aspenModel: AspenModel, sdt : SplitDatasetTask) : Unit = {
+  def checkDependencies_splitDataset(sc: SparkContext, sdt : SplitDatasetTask) : Unit = {
     
     getDataset(sdt.inputDatasetName)
     
   }
   
-  def splitDataset(sc: SparkContext, aspenModel: AspenModel, sdt : SplitDatasetTask) : Unit = {
+  def splitDataset(sc: SparkContext, sdt : SplitDatasetTask) : Unit = {
 		  
 		  val inputRDD = getDataset(sdt.inputDatasetName)
       
@@ -925,15 +979,20 @@ object ModelTrainingJob extends AbstractJob {
         
       }
       
+      globalContext.put(sdt.outputDatasetName1, splits(0))
+      globalContext.put(sdt.outputDatasetName2, splits(1))
+      
   }
   
-  def checkDependencies_testModel(sc: SparkContext, aspenModel: AspenModel, tmt : TestModelTask) : Unit = {
+  def checkDependencies_testModel(sc: SparkContext, tmt : TestModelTask) : Unit = {
  
     val testRDD = getDataset(tmt.datasetName)
   }
   
-  def testModel(sc: SparkContext, aspenModel: AspenModel, tmt : TestModelTask) : Unit = {
+  def testModel(sc: SparkContext, tmt : TestModelTask) : Unit = {
  
+    val aspenModel = tmt.getModel
+    
     val testRDD = getDataset(tmt.datasetName)
     
         if( DecisionTreePredictionModel.spark_decision_tree_prediction.equals(aspenModel.getType)) {
@@ -1003,6 +1062,39 @@ object ModelTrainingJob extends AbstractJob {
         } else {
           throw new RuntimeException("Unhandled model testing: " + aspenModel.getType)
         } 
+  }
+ 
+  def checkDependencies_collectCategoricalFeatureDataTask(sc : SparkContext, ccfdt: CollectCategoricalFeaturesDataTask) : Unit = {
+    
+  }
+  def collectCategoricalFeatureDataTask(sc : SparkContext, ccfdt: CollectCategoricalFeaturesDataTask) : Unit = {
+    
+    val aspenModel = ccfdt.getModel
+    
+    if(!aspenModel.getFeaturesData.containsKey(ccfdt.feature.getName)) {
+    	//TODO
+      val cfd = new CategoricalFeatureData()
+    	ccfdt.getModel.getFeaturesData.put(ccfdt.feature.getName, cfd);
+    }
+    
+    globalContext.put(ccfdt.feature.getName + CollectCategoricalFeaturesDataTask.CATEGORICAL_FEATURE_DATA_SUFFIX, aspenModel.getFeaturesData.get(ccfdt.feature.getName))
+    
+  }
+  
+  def checkDependencies_collectNumericalFeatureDataTask(sc : SparkContext, cnfdt: CollectNumericalFeatureDataTask) : Unit = {
+    
+  }
+  
+  def collectNumericalFeatureDataTask(sc : SparkContext, cnfdt: CollectNumericalFeatureDataTask) : Unit = {
+  
+    if( cnfdt.getModel.getFeaturesData.get(cnfdt.feature.getName) == null ) {
+      
+    	cnfdt.getModel.getFeaturesData.put(cnfdt.feature.getName, new NumericalFeatureData())
+      
+    }
+    
+    globalContext.put(cnfdt.feature.getName + CollectNumericalFeatureDataTask.NUMERICAL_FEATURE_DATA_SUFFIX, cnfdt.getModel.getFeaturesData.get(cnfdt.feature.getName))
+    
   }
   
 }
