@@ -130,7 +130,7 @@ object ModelTrainingJob extends AbstractJob {
   
   var hadoopConfig : Configuration = null
   
-  val globalContext = new SetOnceHashMap()
+  var globalContext : SetOnceHashMap = null
   
   def getOptions(): Options = {
     addJobServerOptions(
@@ -245,6 +245,7 @@ object ModelTrainingJob extends AbstractJob {
     
     hadoopConfig = new Configuration()
     
+    globalContext = new SetOnceHashMap()
     
     val builderFS = FileSystem.get(builderPath.toUri(), hadoopConfig)
     if(!builderFS.exists(builderPath)) {
