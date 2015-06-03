@@ -6,6 +6,18 @@ import ai.vital.aspen.groovy.predict.ModelTrainingTask;
 
 public class TrainModelTask implements ModelTrainingTask {
 
+	public String datasetName;
+	
+	public String algorithm;
+	
+	
+	public TrainModelTask(String datasetName, String algorithm) {
+		super();
+		this.datasetName = datasetName;
+		this.algorithm = algorithm;
+	}
+
+	//result
 	public Serializable modelBinary;
 	
 	@Override

@@ -239,6 +239,7 @@ abstract class PredictionModel extends AspenModel {
   
   
   //assing each feature vector range
+  @transient
   var sortedFeaturesData : java.util.List[Entry[String, FeatureData]] = null 
   
   private def initVectorData() : Unit = {
@@ -248,6 +249,34 @@ abstract class PredictionModel extends AspenModel {
     
   }
   
+  
+  def getCategoricalFeaturesMap() : HashMap[Int, Int] = {
+    
+    initVectorData()
+    
+    var m = new HashMap[Int, Int](); 
+    
+    //categorical features are first!
+    
+    var start = 0;
+    
+    for(x <- sortedFeaturesData) {
+      
+    	var len = 1 
+    
+      if(x.getValue.isInstanceOf[CategoricalFeatureData]) {
+        
+        m.put(start,  x.getValue.asInstanceOf[CategoricalFeatureData].getCategories.size() )
+        
+      }
+      
+      start = start + len
+      
+    }
+    
+    return m
+    
+  } 
   
   def vectorizeLabels(block : VitalBlock, featuresMap : java.util.Map[String, Object]) : LabeledPoint = {
     

@@ -30,6 +30,10 @@ class DecisionTreePredictionModel extends PredictionModel {
   def setModel(_model: DecisionTreeModel) : Unit = {
     model = _model
   }
+  
+  def getModel() : DecisionTreeModel = {
+    model
+  }
 
   def deserializeModel(stream: InputStream): Unit = {
     
@@ -54,6 +58,11 @@ class DecisionTreePredictionModel extends PredictionModel {
     os.close()
 	  
   }
-  
+
+
+  @Override
+  def isSupervised() : Boolean = {
+  	return true;
+  }
   
 }

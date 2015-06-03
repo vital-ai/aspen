@@ -305,4 +305,15 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       options.addOption(jobServerOption).addOption(appNameOption).addOption(contextOption).addOption(syncOption)
     }
 
+    def isNamedRDDSupported() : Boolean = {
+      try{
+        if(this.namedRdds != null) {
+          return true
+        } else {
+        	return false;        
+        }
+      } catch { case ex: NullPointerException => {
+        return false;        
+      }}
+    }
 }

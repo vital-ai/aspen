@@ -26,6 +26,10 @@ class NaiveBayesPredictionModel extends PredictionModel {
   def setModel(_model: NaiveBayesModel) : Unit = {
     model = _model
   }
+  
+  def getModel() : NaiveBayesModel = {
+    model
+  }
 
   def deserializeModel(stream: InputStream): Unit = {
     
@@ -49,6 +53,11 @@ class NaiveBayesPredictionModel extends PredictionModel {
     SerializationUtils.serialize(model, os)
     os.close()
     
+  }
+  
+  @Override
+  def isSupervised() : Boolean = {
+    return true;
   }
   
 }

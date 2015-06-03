@@ -84,10 +84,16 @@ import ai.vital.aspen.groovy.predict.ModelTrainingTask
 import ai.vital.aspen.groovy.predict.tasks.CalculateAggregationValueTask
 import ai.vital.aspen.groovy.predict.tasks.CollectTargetCategoriesTask
 import ai.vital.aspen.groovy.predict.tasks.CollectTextFeatureDataTask
-import ai.vital.aspen.groovy.predict.tasks.CountTrainingSetTask
+import ai.vital.aspen.groovy.predict.tasks.CountDatasetTask
+import ai.vital.aspen.groovy.predict.tasks.LoadDataSetTask
 import ai.vital.aspen.groovy.predict.tasks.ProvideMinDFMaxDF
 import ai.vital.aspen.groovy.predict.tasks.SaveModelTask
+import ai.vital.aspen.groovy.predict.tasks.SplitDatasetTask
 import ai.vital.aspen.groovy.predict.tasks.TrainModelTask
+import ai.vital.aspen.groovy.predict.tasks.TestModelTask
+import ai.vital.predictmodel.Feature
+import ai.vital.aspen.groovy.predict.tasks.CollectCategoricalFeaturesDataTask
+import ai.vital.aspen.model.PredictionModel
 
 class ModelTrainingJob {}
 
@@ -117,6 +123,9 @@ object ModelTrainingJob extends AbstractJob {
   
   def MAX_DF_PERCENT = 100
   
+  var datasetsMap : java.util.HashMap[String, RDD[(String, Array[Byte])]] = null;
+  
+  var hadoopConfig : Configuration = null
   
   def getOptions(): Options = {
     addJobServerOptions(
@@ -215,6 +224,13 @@ object ModelTrainingJob extends AbstractJob {
     println("maxDFPercent: " + maxDFPercent)
     
     
+    if(isNamedRDDSupported()) {
+    	println("named RDDs supported")
+    } else {
+    	println("named RDDs not supported, storing RDD references in a local cache")
+    	datasetsMap = new java.util.HashMap[String, RDD[(String, Array[Byte])]]();
+    }
+    
     val creatorMap = new HashMap[String, Class[_ <: AspenModel]];
     creatorMap.put(DecisionTreePredictionModel.spark_decision_tree_prediction, classOf[DecisionTreePredictionModel]);
     creatorMap.put(KMeansPredictionModel.spark_kmeans_prediction, classOf[KMeansPredictionModel]);
@@ -222,7 +238,7 @@ object ModelTrainingJob extends AbstractJob {
     creatorMap.put(RandomForestPredictionModel.spark_randomforest_prediction, classOf[RandomForestPredictionModel])
     val modelCreator = new ModelCreator(creatorMap)
     
-    val hadoopConfig = new Configuration()
+    hadoopConfig = new Configuration()
     
     
     val builderFS = FileSystem.get(builderPath.toUri(), hadoopConfig)
@@ -271,68 +287,26 @@ object ModelTrainingJob extends AbstractJob {
       
     }
     
-    var inputBlockRDD : RDD[(String, Array[Byte])] = null
-    
-    if(inputRDDName == null) {
-        
-        println("input path: " + inputName)
-        
-        val inputPath = new Path(inputName)
-        
-        val inputFS = FileSystem.get(inputPath.toUri(), hadoopConfig)
-        
-        if (!inputFS.exists(inputPath) /*|| !inputFS.isDirectory(inputPath)*/) {
-          throw new RuntimeException("Input train path does not exist " + /*or is not a directory*/ ": " + inputPath.toString())
-        }
-        
-        val inputFileStatus = inputFS.getFileStatus(inputPath)
-        
-        if(inputName.endsWith(".vital") || inputName.endsWith(".vital.gz")) {
-      	    
-      	    if(!inputFileStatus.isFile()) {
-      	      throw new RuntimeException("input path indicates a block file but does not denote a file: " + inputName)
-      	    }
-      	    throw new RuntimeException("Vital block files not supported yet")
-      	    
-        } else {
-          
-          inputBlockRDD = sc.sequenceFile(inputPath.toString(), classOf[Text], classOf[VitalBytesWritable]).map { pair =>
-            (pair._1.toString(), pair._2.get)
-          }
-         
-          inputBlockRDD.cache()
-          
-        }
-        
-    } else {
-      
-      inputBlockRDD = this.namedRdds.get[(String, Array[Byte])](inputRDDName).get
-      
-    }
-
-    
-    var trainRDD : RDD[(String, Array[Byte])] = null
-    
-    var testRDD : RDD[(String, Array[Byte])] = null
-    
-    if(false) {
-      
       //use full set
 //      trainRDD = inputRDD
       
-    } else {
-      
-      val splits = inputBlockRDD.randomSplit(Array(0.6, 0.4), seed = 11L)
-          
-      trainRDD = splits(0)
-          
-      testRDD = splits(1)
-      
-    }
+//    } else {
+//      
+//      val splits = inputBlockRDD.randomSplit(Array(0.6, 0.4), seed = 11L)
+//          
+//      trainRDD = splits(0)
+//          
+//      testRDD = splits(1)
+//      
+//    }
     
     
     
     val procedure = new ModelTrainingProcedure(aspenModel)
+    
+    procedure.inputPath = inputName;
+    
+//    procedure.inputPath = in
     
     val totalTasks = procedure.generateTasks().size()
     
@@ -351,181 +325,62 @@ object ModelTrainingJob extends AbstractJob {
       if(task.isInstanceOf[CalculateAggregationValueTask]) {
         
         val cavt = task.asInstanceOf[CalculateAggregationValueTask]
+
+        checkDependencies_calculateAggregationValue(sc, aspenModel, cavt)
         
-        val a = cavt.aggregate
-        
-        var acc : Accumulator[Int] = null; 
-      
-        if(a.getFunction == Function.AVERAGE) {
-          acc = sc.accumulator(0);
-        }
-        
-        val numerics = trainRDD.map { pair =>
-              
-          val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
-              
-          val vitalBlock = new VitalBlock(inputObjects)
-              
-          val aggFunctions = PredictionModelAnalyzer.getAggregationFunctions(aspenModel.getModelConfig, a)
-          
-          val ex = new FeatureExtraction(aspenModel.getModelConfig, aspenModel.getAggregationResults);
-              
-          val features = ex.extractFeatures(vitalBlock, aggFunctions)
-              
-          val fv = features.get( a.getRequires().get(0) )
-          
-          if(fv == null) {
-            0d
-          } else {
-            if( ! fv.isInstanceOf[Number] ) {
-              throw new RuntimeException("Expected double value")
-            }
-            
-            if(acc != null) {
-              acc += 1
-            }
-            
-            fv.asInstanceOf[Number].doubleValue()
-          }
-              
-        }
-      
-        var aggV : java.lang.Double = null
-        
-        if(a.getFunction == Function.AVERAGE) {
-          
-          if(acc.value == 0) {
-            
-            aggV = 0d;
-            
-          } else {
-            
-            val reduced = numerics.reduce { (a1, a2) =>
-              a1 + a2
-            }
-            
-            aggV = reduced /acc.value
-            
-          } 
-          
-          
-        } else if(a.getFunction == Function.SUM) {
-          aggV = numerics.sum()
-        } else if(a.getFunction == Function.MIN) {
-          aggV = numerics.min()
-        } else if(a.getFunction == Function.MAX) {
-          aggV = numerics.max()
-        } else {
-          throw new RuntimeException("Unhandled aggregation function: " + a.getFunction)
-        }
-        
-        cavt.value = aggV
+        calculateAggregationValue(sc, aspenModel, cavt)
         
       } else if(task.isInstanceOf[CollectTargetCategoriesTask]) {
         
-        
     	  val ctct = task.asInstanceOf[CollectTargetCategoriesTask]
-        
-        if(aspenModel.getType.equals(KMeansPredictionModel.spark_kmeans_prediction)) {
+
+        checkDependencies_collectTargetCategories(sc, aspenModel, ctct)
           
-          ctct.nonCategoricalPredictions = true
+        collectTargetCategories(sc, aspenModel, ctct)
           
-        } else {
-          
-        	//gather target categories
-        	val categoriesRDD = trainRDD.map { pair =>
-          	val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
-          	
-          	val vitalBlock = new VitalBlock(inputObjects)
-          	
-          	val ex = new FeatureExtraction(aspenModel.getModelConfig, aspenModel.getAggregationResults);
-          	
-          	val featuresMap = ex.extractFeatures(vitalBlock)
-          			
-        		val category = aspenModel.getModelConfig.getTrain.call(vitalBlock, featuresMap)
-          			
-        		if(category == null) throw new RuntimeException("No category returned: " + pair._1)
-          	
-          	category.asInstanceOf[String]
-          			
-        	}
-        	
-        	val categories: Array[String] = categoriesRDD.distinct().toArray().sortWith((s1, s2) => s1.compareTo(s2) < 0)
-        			
-          println("categories count: " + categories.size)
-        			
-        	ctct.categories = categories.toList
-          
-        }
-        
       } else if(task.isInstanceOf[CollectTextFeatureDataTask]) {
         
         val ctfdt = task.asInstanceOf[CollectTextFeatureDataTask]
         
-        val feature = ctfdt.feature
+        checkDependencies_collectTextFeatureData(sc, aspenModel, ctfdt)
         
-        val minDF = procedure.minDF
+        collectTextFeatureData(sc, aspenModel, ctfdt)
         
-        val maxDF = procedure.maxDF
+      } else if(task.isInstanceOf[CountDatasetTask]) {
         
-        val wordsRDD: RDD[String] = trainRDD.flatMap { pair =>
+        val cdt = task.asInstanceOf[CountDatasetTask]
+        
+        checkDependencies_countDataset(sc, aspenModel, cdt);
+        
+        countDataset(sc, aspenModel, cdt);
+        
+//        val docsCount = countDataset(sc, aspenModel, ctst.datasetName)
+//        
+//        println("Documents count: " + docsCount)
+//        
+//        ctst.result = docsCount.intValue()
 
-          val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
-              
-          val vitalBlock = new VitalBlock(inputObjects)
-            
-          var l = new HashSet[String]()
-  
-          val ex = new FeatureExtraction(aspenModel.getModelConfig, aspenModel.getAggregationResults);
-          
-          val featuresMap = ex.extractFeatures(vitalBlock)
-          
-          val textObj = featuresMap.get(feature.getName)
-          
-          if(textObj != null) {
-            
-            for (x <- textObj.asInstanceOf[String].toLowerCase().split("\\s+") ) {
-              if (x.isEmpty()) {
-                
-              } else {
-                l.add(x)
-              }
-            }
-          }
-      
-  
-          l.toSeq
-
-        }
+      } else if(task.isInstanceOf[LoadDataSetTask]) {
         
-        val wordsOccurences = wordsRDD.map(x => (x, new Integer(1))).reduceByKey((i1, i2) => i1 + i2).filter(wordc => wordc._2 >= minDF && wordc._2 <= maxDF)
-
-        val dict = Dictionary.createDictionary(mapAsJavaMap( wordsOccurences.collectAsMap() ) , minDF, maxDF) 
-
-        ctfdt.results = new TextFeatureData()
-        ctfdt.results.setDictionary(dict)
+        val ldt = task.asInstanceOf[LoadDataSetTask]
         
-      } else if(task.isInstanceOf[CountTrainingSetTask]) {
+        checkDependencies_loadDataset(sc, aspenModel, ldt)
         
-        val ctst = task.asInstanceOf[CountTrainingSetTask]
-        
-        val docsCount = trainRDD.count();
-        
-        println("Documents count: " + docsCount)
-        
-        
-        ctst.result = docsCount.intValue()
+        loadDataset(sc, aspenModel, ldt)
         
       } else if(task.isInstanceOf[ProvideMinDFMaxDF]) {
         
         
         val pmm = task.asInstanceOf[ProvideMinDFMaxDF]
+        
+        checkDependencies_provideMinDFMaxDF(sc, aspenModel, pmm)
+        
         var maxDF : Int = procedure.trainingDocsCount * maxDFPercent / 100
-        		
+            
         println("MinDF: " + minDF)
         println("MaxDF: " + maxDF)
-        pmm.minDF = minDF
-        pmm.maxDF = maxDF
+
+        provideMinDFMaxDF(sc, aspenModel, pmm, minDF, maxDF)
         
       } else if(task.isInstanceOf[SaveModelTask]) {
         
@@ -539,164 +394,32 @@ object ModelTrainingJob extends AbstractJob {
           aspenModel.persist(modelFS, outputModelPath, zipContainer || jarContainer)
         }
         
+      } else if(task.isInstanceOf[SplitDatasetTask]) {
+        
+        val sdt = task.asInstanceOf[SplitDatasetTask]
+        
+        checkDependencies_splitDataset(sc, aspenModel, sdt)
+        
+        splitDataset(sc, aspenModel, sdt)
+        
       } else if(task.isInstanceOf[TrainModelTask]) {
 
         val tmt = task.asInstanceOf[TrainModelTask]
         
+        checkDependencies_trainModel(sc, aspenModel, tmt)
+        
         println("Training model...")
-    
-        val catMap = new HashMap[Int, Int]()
-        val categoricalFeaturesTotal = 0/*allEntities.size + allSpanTypes.size*/
         
-        var x = 0
-        while ( x < categoricalFeaturesTotal) {
-          catMap.put(x, 2)
-          x = x + 1
-        }
-    
-        if( DecisionTreePredictionModel.spark_decision_tree_prediction.equals(aspenModel.getType)) {
-    
-          val vectorized = vectorize(trainRDD, aspenModel);
-          
-          val numClasses = aspenModel.getTrainedCategories.getCategories.size()
-          val categoricalFeaturesInfo = catMap.toMap
-          val impurity = "gini"
-          val maxDepth = 5
-          val maxBins = 100
-          
-          val model = DecisionTree.trainClassifier(vectorized, numClasses, categoricalFeaturesInfo, impurity,
-            maxDepth, maxBins)
+        trainModel(sc, aspenModel, tmt)
+
+      } else if(task.isInstanceOf[TestModelTask]) {
+
+        var tmt = task.asInstanceOf[TestModelTask]
         
-          aspenModel.asInstanceOf[DecisionTreePredictionModel].setModel(model)
-          
-          println("Testing ...")
-          
-          println("Test documents count: " + testRDD.count())
-          
-          val vectorizedTest = vectorize(testRDD, aspenModel)
-          
-          val labelAndPreds = vectorizedTest.map { point =>
-            val prediction = model.predict(point.features)
-            (point.label, prediction)
-          }
-          
-          val testErr = labelAndPreds.filter(r => r._1 != r._2).count.toDouble / vectorizedTest.count()
-          
-          val msg = "Test Error = " + testErr
-          println(msg)
-          aspenModel.asInstanceOf[DecisionTreePredictionModel].setError(msg)
-          
-          tmt.modelBinary = model
-          
-        } else if( KMeansPredictionModel.spark_kmeans_prediction.equals(aspenModel.getType)) {
-          
-          val parsedData = vectorizeNoLabels(trainRDD, aspenModel)
-          
-          
-          var clustersCount = 10
-          var clustersCountSetting = aspenModel.getModelConfig.getAlgorithmConfig.get("clustersCount");
-          if(clustersCountSetting != null && clustersCountSetting.isInstanceOf[Number]) {
-            clustersCount = clustersCountSetting.asInstanceOf[Number].intValue()
-          }
-          
-          
-          // Cluster the data into two classes using KMeans
-          val numIterations = 20
-          val clusters = KMeans.train(parsedData, clustersCount, numIterations)
-          
-          
-          aspenModel.asInstanceOf[KMeansPredictionModel].setModel(clusters)
-          
-          // Evaluate clustering by computing Within Set Sum of Squared Errors
-          val WSSSE = clusters.computeCost(parsedData)
-          val msg = "Within Set Sum of Squared Errors = " + WSSSE
-    
-          println(msg)
-          aspenModel.asInstanceOf[KMeansPredictionModel].setError(msg)
-          
-          tmt.modelBinary = clusters
-          
-        } else if( NaiveBayesPredictionModel.spark_naive_bayes_prediction.equals(aspenModel.getType)) {
-          
-          val vectorized = vectorize(trainRDD, aspenModel);
-          
-          val model = NaiveBayes.train(vectorized, lambda = 1.0)
-          
-          aspenModel.asInstanceOf[NaiveBayesPredictionModel].setModel(model)
-          
-          val vectorizedTest = vectorize(testRDD, aspenModel)
-          
-          val predictionAndLabel = vectorizedTest.map(p => (model.predict(p.features), p.label))
-          val accuracy = 1.0 * predictionAndLabel.filter(x => x._1 == x._2).count() / vectorizedTest.count()
-          
-          val msg = "Accuracy: " + accuracy;
-          
-          println(msg)
-          
-          aspenModel.asInstanceOf[NaiveBayesPredictionModel].setError(msg);
-          
-          tmt.modelBinary = model
-          
-        } else if( RandomForestPredictionModel.spark_randomforest_prediction.equals(aspenModel.getType ) ) {
-          
-          val vectorized = vectorize(trainRDD, aspenModel);
-          
-          val numClasses = aspenModel.getTrainedCategories.getCategories.size()
-          val categoricalFeaturesInfo = catMap.toMap
-          val numTrees = 20 // Use more in practice.
-          val featureSubsetStrategy = "auto" // Let the algorithm choose.
-          val impurity = "gini"
-          val maxDepth = 20
-          val maxBins = 32
-          
-          val model = RandomForest.trainClassifier(vectorized, numClasses, categoricalFeaturesInfo,
-              numTrees, featureSubsetStrategy, impurity, maxDepth, maxBins)
-              
-              //not until spark 1.3.0
-              //model.save(sc, "myModelPath")
-              
-          aspenModel.asInstanceOf[RandomForestPredictionModel].setModel(model)
-          
-          // Evaluate model on training instances and compute training error
-          /*
-         val labelAndPreds = vectorized.map { point =>
-          val prediction = model.predict(point.features)
-          (point.label, prediction)
-         }
-          val trainErr = labelAndPreds.filter(r => r._1 != r._2).count.toDouble / vectorized.count
-          println("Training Error = " + trainErr)
-          println("Learned classification tree model:\n" + model)
-           */
-          
-          println("Testing ...")
-          
-          println("Test documents count: " + testRDD.count())
-          
-          val vectorizedTest = vectorize(testRDD, aspenModel)
-          
-          
-    //    val predictionAndLabel = vectorizedTest.map(p => (model.predict(p.features), p.label))
-    //    val accuracy = 1.0 * predictionAndLabel.filter(x => x._1 == x._2).count() / vectorizedTest.count()
-    //
-    //    println("Accuracy: " + accuracy)
-          
-          // Evaluate model on test instances and compute test error
-          val labelAndPreds = vectorizedTest.map { point =>
-            val prediction = model.predict(point.features)
-            (point.label, prediction)
-          }
-          
-          val testErr = labelAndPreds.filter(r => r._1 != r._2).count.toDouble / vectorizedTest.count()
-    //    println("Learned classification forest model:\n" + model.toDebugString)
-              
-          val msg = "Test Error = " + testErr
-          println(msg)
-          
-          aspenModel.asInstanceOf[RandomForestPredictionModel].setError(msg)
-          
-          tmt.modelBinary = model
-          
-        } 
+        checkDependencies_testModel(sc, aspenModel, tmt)
+        
+        testModel(sc, aspenModel, tmt)
+        
         
       } else {
         throw new RuntimeException("Unhandled task: " + task.getClass.getCanonicalName);
@@ -775,13 +498,9 @@ object ModelTrainingJob extends AbstractJob {
       
       val inputRDDName = inputValue.substring("name:".length)
       
-      try{
-        if(this.namedRdds == null) {
-        } 
-      } catch { case ex: NullPointerException => {
-        return new SparkJobInvalid("Cannot use named RDD output - no spark job context")
-        
-      }}
+      if(!isNamedRDDSupported()) {
+    	  return new SparkJobInvalid("Cannot use named RDD output - no spark job context")
+      }
       
       val inputRDD = this.namedRdds.get[(String, Array[Byte])](inputRDDName)
 //      val rdd = this.namedRdds.get[(Long, scala.Seq[String])]("dictionary")
@@ -794,7 +513,497 @@ object ModelTrainingJob extends AbstractJob {
     SparkJobValid
     
   }
+ 
+  def getDataset(datasetName :String) : RDD[(String, Array[Byte])] = {
+    
+    if(isNamedRDDSupported()) {
+      
+    	val ds = this.namedRdds.get[(String, Array[Byte])](datasetName)
+    			
+ 			if(!ds.isDefined) throw new RuntimeException("Dataset not loaded: " + datasetName)
+    	
+    	return ds.get;
+      
+    } else {
+      
+    	val ds = datasetsMap.get(datasetName)
+    			
+    	if(ds == null) throw new RuntimeException("Dataset not loaded: " + datasetName)
+    	
+    	return ds;
+      
+    }
+    
+  }
   
+  def checkDependencies_calculateAggregationValue(sc : SparkContext, aspenModel: AspenModel, cavt: CalculateAggregationValueTask) : Unit = {
   
+    val datasetName = cavt.datasetName;
+    val trainRDD = getDataset(datasetName)
+    
+  }
+  
+  def calculateAggregationValue(sc : SparkContext, aspenModel: AspenModel, cavt: CalculateAggregationValueTask) : Unit = {
+ 
+    val datasetName = cavt.datasetName;
+    
+    val a = cavt.aggregate
+    
+    var acc : Accumulator[Int] = null; 
+      
+    if(a.getFunction == Function.AVERAGE) {
+          acc = sc.accumulator(0);
+    }
+    
+    val trainRDD = getDataset(datasetName)
+        
+        val numerics = trainRDD.map { pair =>
+              
+          val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
+              
+          val vitalBlock = new VitalBlock(inputObjects)
+              
+          val aggFunctions = PredictionModelAnalyzer.getAggregationFunctions(aspenModel.getModelConfig, a)
+          
+          val ex = new FeatureExtraction(aspenModel.getModelConfig, aspenModel.getAggregationResults);
+              
+          val features = ex.extractFeatures(vitalBlock, aggFunctions)
+              
+          val fv = features.get( a.getRequires().get(0) )
+          
+          if(fv == null) {
+            0d
+          } else {
+            if( ! fv.isInstanceOf[Number] ) {
+              throw new RuntimeException("Expected double value")
+            }
+            
+            if(acc != null) {
+              acc += 1
+            }
+            
+            fv.asInstanceOf[Number].doubleValue()
+          }
+              
+        }
+      
+        var aggV : java.lang.Double = null
+        
+        if(a.getFunction == Function.AVERAGE) {
+          
+          if(acc.value == 0) {
+            
+            aggV = 0d;
+            
+          } else {
+            
+            val reduced = numerics.reduce { (a1, a2) =>
+              a1 + a2
+            }
+            
+            aggV = reduced /acc.value
+            
+          } 
+          
+          
+        } else if(a.getFunction == Function.SUM) {
+          aggV = numerics.sum()
+        } else if(a.getFunction == Function.MIN) {
+          aggV = numerics.min()
+        } else if(a.getFunction == Function.MAX) {
+          aggV = numerics.max()
+        } else {
+          throw new RuntimeException("Unhandled aggregation function: " + a.getFunction)
+        }
+        
+        cavt.value = aggV
+    
+  }
+  
+  def checkDependencies_collectTargetCategories(sc: SparkContext, aspenModel: AspenModel, ctct : CollectTargetCategoriesTask) : Unit = {
+    val trainRDD = getDataset(ctct.datasetName)       
+  }
+  
+  def collectTargetCategories(sc: SparkContext, aspenModel: AspenModel, ctct : CollectTargetCategoriesTask) : Unit = {
+ 
+    if(aspenModel.getType.equals(KMeansPredictionModel.spark_kmeans_prediction)) {
+          
+      return
+          
+    } else {
+    
+        val trainRDD = getDataset(ctct.datasetName)       
+      
+          //gather target categories
+          val categoriesRDD = trainRDD.map { pair =>
+            val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
+            
+            val vitalBlock = new VitalBlock(inputObjects)
+            
+            val ex = new FeatureExtraction(aspenModel.getModelConfig, aspenModel.getAggregationResults);
+            
+            val featuresMap = ex.extractFeatures(vitalBlock)
+                
+            val category = aspenModel.getModelConfig.getTrain.call(vitalBlock, featuresMap)
+                
+            if(category == null) throw new RuntimeException("No category returned: " + pair._1)
+            
+            category.asInstanceOf[String]
+                
+          }
+          
+          val categories: Array[String] = categoriesRDD.distinct().toArray().sortWith((s1, s2) => s1.compareTo(s2) < 0)
+              
+          println("categories count: " + categories.size)
+          
+          ctct.categories = categories.toList
+              
+    }
+    
+  }
+  
+  def checkDependencies_collectTextFeatureData(sc : SparkContext, aspenModel: AspenModel, ctfdt : CollectTextFeatureDataTask) : Unit = {
+    
+		  val trainRDD = getDataset(ctfdt.datasetName)
+      
+  }
+  
+  def collectTextFeatureData(sc : SparkContext, aspenModel: AspenModel, ctfdt : CollectTextFeatureDataTask) : Unit = {
+ 
+    val trainRDD = getDataset(ctfdt.datasetName)  
+    
+    val feature = ctfdt.feature
+    
+    val minDF = ctfdt.minDF.intValue()
+    val maxDF = ctfdt.maxDF.intValue()
+    
+    
+    val wordsRDD: RDD[String] = trainRDD.flatMap { pair =>
+
+          val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
+              
+          val vitalBlock = new VitalBlock(inputObjects)
+            
+          var l = new HashSet[String]()
+  
+          val ex = new FeatureExtraction(aspenModel.getModelConfig, aspenModel.getAggregationResults);
+          
+          val featuresMap = ex.extractFeatures(vitalBlock)
+          
+          val textObj = featuresMap.get(feature.getName)
+          
+          if(textObj != null) {
+            
+            for (x <- textObj.asInstanceOf[String].toLowerCase().split("\\s+") ) {
+              if (x.isEmpty()) {
+                
+              } else {
+                l.add(x)
+              }
+            }
+          }
+      
+  
+          l.toSeq
+
+        }
+        
+        val wordsOccurences = wordsRDD.map(x => (x, new Integer(1))).reduceByKey((i1, i2) => i1 + i2).filter(wordc => wordc._2 >= minDF && wordc._2 <= maxDF)
+
+        val dict = Dictionary.createDictionary(mapAsJavaMap( wordsOccurences.collectAsMap() ) , minDF, maxDF) 
+    
+        val tfd = new TextFeatureData()
+        tfd.setDictionary(dict)
+        
+        ctfdt.results = tfd
+  }
+  
+  def checkDependencies_provideMinDFMaxDF(sc: SparkContext, aspenModel: AspenModel, pmm : ProvideMinDFMaxDF) : Unit= {
+    
+  }
+  
+  def provideMinDFMaxDF(sc: SparkContext, aspenModel: AspenModel, pmm : ProvideMinDFMaxDF, minDF : Int, maxDF : Int) : Unit= {
+    
+    pmm.minDF = minDF
+    pmm.maxDF = maxDF
+
+  }
+  
+  def checkDependencies_loadDataset(sc: SparkContext, aspenModel: AspenModel, ldt : LoadDataSetTask) : Unit= {
+    
+    if(isNamedRDDSupported()) {
+   		if( this.namedRdds.get(ldt.datasetName).isDefined ) throw new RuntimeException("Dataset already loaded: " + ldt.datasetName)
+   	} else {
+  		if( datasetsMap.get(ldt.datasetName) != null) throw new RuntimeException("Dataset already loaded: " + ldt.datasetName);
+  	}
+      
+    
+  }
+  
+  def loadDataset(sc: SparkContext, aspenModel: AspenModel, ldt : LoadDataSetTask) : Unit= {
+
+    val inputName = ldt.path
+    
+    var inputBlockRDD : RDD[(String, Array[Byte])] = null
+    
+    var inputRDDName : String = null
+    if(inputName.startsWith("name:")) {
+      inputRDDName = inputName.substring("name:".length())
+    }
+
+    
+    if(inputRDDName == null) {
+        
+        println("input path: " + inputName)
+        
+        val inputPath = new Path(inputName)
+        
+        val inputFS = FileSystem.get(inputPath.toUri(), hadoopConfig)
+        
+        if (!inputFS.exists(inputPath) /*|| !inputFS.isDirectory(inputPath)*/) {
+          throw new RuntimeException("Input train path does not exist " + /*or is not a directory*/ ": " + inputPath.toString())
+        }
+        
+        val inputFileStatus = inputFS.getFileStatus(inputPath)
+        
+        if(inputName.endsWith(".vital") || inputName.endsWith(".vital.gz")) {
+            
+            if(!inputFileStatus.isFile()) {
+              throw new RuntimeException("input path indicates a block file but does not denote a file: " + inputName)
+            }
+            throw new RuntimeException("Vital block files not supported yet")
+            
+        } else {
+          
+          inputBlockRDD = sc.sequenceFile(inputPath.toString(), classOf[Text], classOf[VitalBytesWritable]).map { pair =>
+            (pair._1.toString(), pair._2.get)
+          }
+         
+          inputBlockRDD.cache()
+          
+        }
+        
+    } else {
+      
+      inputBlockRDD = this.namedRdds.get[(String, Array[Byte])](inputRDDName).get
+      
+    }
+    
+    if(isNamedRDDSupported()) {
+    	this.namedRdds.update(ldt.datasetName, inputBlockRDD);
+    } else {
+      datasetsMap.put(ldt.datasetName, inputBlockRDD)
+    }
+    
+    ldt.loaded = true
+    
+  }
+  
+  def checkDependencies_countDataset(sc: SparkContext, aspenModel: AspenModel, cdt: CountDatasetTask) : Unit= {
+    
+		  val trainRDD = getDataset(cdt.datasetName)
+      
+  }
+  def countDataset(sc: SparkContext, aspenModel: AspenModel, cdt: CountDatasetTask) : Unit= {
+ 
+    val trainRDD = getDataset(cdt.datasetName)
+    cdt.result = trainRDD.count().intValue();
+    
+  }
+ 
+  def checkDependencies_trainModel(sc: SparkContext, aspenModel: AspenModel, tmt : TrainModelTask) : Unit = {
+		  val trainRDD = getDataset(tmt.datasetName)
+  }
+  
+  def trainModel(sc: SparkContext, aspenModel: AspenModel, tmt : TrainModelTask) : Unit = {
+ 
+		  val trainRDD = getDataset(tmt.datasetName)
+      
+      if( DecisionTreePredictionModel.spark_decision_tree_prediction.equals(aspenModel.getType)) {
+    
+          val vectorized = vectorize(trainRDD, aspenModel);
+          
+          val numClasses = aspenModel.getTrainedCategories.getCategories.size()
+          val categoricalFeaturesInfo = aspenModel.asInstanceOf[PredictionModel].getCategoricalFeaturesMap()
+          val impurity = "gini"
+          val maxDepth = 5
+          val maxBins = 100
+          
+          val model = DecisionTree.trainClassifier(vectorized, numClasses, categoricalFeaturesInfo.toMap, impurity,
+            maxDepth, maxBins)
+        
+          aspenModel.asInstanceOf[DecisionTreePredictionModel].setModel(model)
+          
+          tmt.modelBinary = model
+          
+        } else if( KMeansPredictionModel.spark_kmeans_prediction.equals(aspenModel.getType)) {
+          
+          val parsedData = vectorizeNoLabels(trainRDD, aspenModel)
+          
+          var clustersCount = 10
+          var clustersCountSetting = aspenModel.getModelConfig.getAlgorithmConfig.get("clustersCount");
+          if(clustersCountSetting != null && clustersCountSetting.isInstanceOf[Number]) {
+            clustersCount = clustersCountSetting.asInstanceOf[Number].intValue()
+          }
+          
+          
+          // Cluster the data into two classes using KMeans
+          var numIterations = 20
+          var numIterationsSetting = aspenModel.getModelConfig.getAlgorithmConfig.get("numIterations")
+          if(numIterationsSetting != null && numIterationsSetting.isInstanceOf[Number]) {
+            numIterations = numIterationsSetting.asInstanceOf[Number].intValue()
+          }
+          val clusters = KMeans.train(parsedData, clustersCount, numIterations)
+          
+          
+          aspenModel.asInstanceOf[KMeansPredictionModel].setModel(clusters)
+          
+          // Evaluate clustering by computing Within Set Sum of Squared Errors
+          val WSSSE = clusters.computeCost(parsedData)
+          val msg = "Within Set Sum of Squared Errors = " + WSSSE
+    
+          println(msg)
+          aspenModel.asInstanceOf[KMeansPredictionModel].setError(msg)
+          
+          tmt.modelBinary = clusters
+          
+        } else if( NaiveBayesPredictionModel.spark_naive_bayes_prediction.equals(aspenModel.getType)) {
+          
+          val vectorized = vectorize(trainRDD, aspenModel);
+          
+          val model = NaiveBayes.train(vectorized, lambda = 1.0)
+          
+          aspenModel.asInstanceOf[NaiveBayesPredictionModel].setModel(model)
+          
+          tmt.modelBinary = model
+          
+        } else if( RandomForestPredictionModel.spark_randomforest_prediction.equals(aspenModel.getType ) ) {
+          
+          val vectorized = vectorize(trainRDD, aspenModel);
+          
+          val numClasses = aspenModel.getTrainedCategories.getCategories.size()
+          val categoricalFeaturesInfo = aspenModel.asInstanceOf[PredictionModel].getCategoricalFeaturesMap()
+          val numTrees = 20 // Use more in practice.
+          val featureSubsetStrategy = "auto" // Let the algorithm choose.
+          val impurity = "gini"
+          val maxDepth = 20
+          val maxBins = 32
+          
+          val model = RandomForest.trainClassifier(vectorized, numClasses, categoricalFeaturesInfo.toMap,
+              numTrees, featureSubsetStrategy, impurity, maxDepth, maxBins)
+              
+          aspenModel.asInstanceOf[RandomForestPredictionModel].setModel(model)
+          
+          tmt.modelBinary = model
+          
+        } else {
+          throw new RuntimeException("Unhandled aspen model type: " + aspenModel.getType)
+        } 
+    
+  }
+  
+  def checkDependencies_splitDataset(sc: SparkContext, aspenModel: AspenModel, sdt : SplitDatasetTask) : Unit = {
+    
+    getDataset(sdt.inputDatasetName)
+    
+  }
+  
+  def splitDataset(sc: SparkContext, aspenModel: AspenModel, sdt : SplitDatasetTask) : Unit = {
+		  
+		  val inputRDD = getDataset(sdt.inputDatasetName)
+      
+      val splits = inputRDD.randomSplit(Array(sdt.firstSplitRatio, 1 - sdt.firstSplitRatio), seed = 11L)
+      
+      if(isNamedRDDSupported()) {
+        
+        this.namedRdds.update(sdt.outputDatasetName1, splits(0))
+        this.namedRdds.update(sdt.outputDatasetName2, splits(1))
+        
+      } else {
+        
+        datasetsMap.put(sdt.outputDatasetName1, splits(0))
+        datasetsMap.put(sdt.outputDatasetName2, splits(1))
+        
+      }
+      
+  }
+  
+  def checkDependencies_testModel(sc: SparkContext, aspenModel: AspenModel, tmt : TestModelTask) : Unit = {
+ 
+    val testRDD = getDataset(tmt.datasetName)
+  }
+  
+  def testModel(sc: SparkContext, aspenModel: AspenModel, tmt : TestModelTask) : Unit = {
+ 
+    val testRDD = getDataset(tmt.datasetName)
+    
+        if( DecisionTreePredictionModel.spark_decision_tree_prediction.equals(aspenModel.getType)) {
+    
+          println("Testing ...")
+          
+          println("Test documents count: " + testRDD.count())
+          
+          val vectorizedTest = vectorize(testRDD, aspenModel)
+          
+          val labelAndPreds = vectorizedTest.map { point =>
+          val prediction = aspenModel.asInstanceOf[DecisionTreePredictionModel].getModel().predict(point.features)
+            (point.label, prediction)
+          }
+          
+          val testErr = labelAndPreds.filter(r => r._1 != r._2).count.toDouble / vectorizedTest.count()
+          
+          val msg = "Test Error = " + testErr
+          println(msg)
+          aspenModel.asInstanceOf[DecisionTreePredictionModel].setError(msg)
+          
+        } else if( NaiveBayesPredictionModel.spark_naive_bayes_prediction.equals(aspenModel.getType)) {
+
+          println("Testing ...")
+          
+          println("Test documents count: " + testRDD.count())
+          
+          val vectorizedTest = vectorize(testRDD, aspenModel)
+          
+          val predictionAndLabel = vectorizedTest.map(p => (aspenModel.asInstanceOf[NaiveBayesPredictionModel].getModel.predict(p.features), p.label))
+          val accuracy = 1.0 * predictionAndLabel.filter(x => x._1 == x._2).count() / vectorizedTest.count()
+          
+          val msg = "Accuracy: " + accuracy;
+          
+          println(msg)
+          
+          aspenModel.asInstanceOf[NaiveBayesPredictionModel].setError(msg);
+          
+        } else if( RandomForestPredictionModel.spark_randomforest_prediction.equals(aspenModel.getType ) ) {
+          
+          println("Testing ...")
+          
+          println("Test documents count: " + testRDD.count())
+          
+          val vectorizedTest = vectorize(testRDD, aspenModel)
+          
+          
+    //    val predictionAndLabel = vectorizedTest.map(p => (model.predict(p.features), p.label))
+    //    val accuracy = 1.0 * predictionAndLabel.filter(x => x._1 == x._2).count() / vectorizedTest.count()
+    //
+    //    println("Accuracy: " + accuracy)
+          
+          // Evaluate model on test instances and compute test error
+          val labelAndPreds = vectorizedTest.map { point =>
+            val prediction = aspenModel.asInstanceOf[RandomForestPredictionModel].getModel.predict(point.features)
+            (point.label, prediction)
+          }
+          
+          val testErr = labelAndPreds.filter(r => r._1 != r._2).count.toDouble / vectorizedTest.count()
+    //    println("Learned classification forest model:\n" + model.toDebugString)
+              
+          val msg = "Test Error = " + testErr
+          println(msg)
+          
+          aspenModel.asInstanceOf[RandomForestPredictionModel].setError(msg)
+          
+        } else {
+          throw new RuntimeException("Unhandled model testing: " + aspenModel.getType)
+        } 
+  }
   
 }

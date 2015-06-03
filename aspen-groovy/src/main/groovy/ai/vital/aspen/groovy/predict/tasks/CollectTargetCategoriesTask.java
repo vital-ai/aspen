@@ -6,12 +6,21 @@ import ai.vital.aspen.groovy.predict.ModelTrainingTask;
 
 public class CollectTargetCategoriesTask implements ModelTrainingTask {
 
+	public String datasetName;
+	
 	public Boolean nonCategoricalPredictions = null;
 	
 	public List<String> categories = null;
 	
+	public CollectTargetCategoriesTask(String datasetName) {
+		super();
+		this.datasetName = datasetName;
+	}
+
 	@Override
 	public void validateResult() {
+		
+		if(datasetName == null) throw new NullPointerException("No datasetName set");
 		
 		if(nonCategoricalPredictions != null && nonCategoricalPredictions.booleanValue()) {
 			//non categorical predictions model - either regression or clsutering?

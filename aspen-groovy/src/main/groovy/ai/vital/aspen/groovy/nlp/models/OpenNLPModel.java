@@ -97,5 +97,10 @@ public class OpenNLPModel extends AspenModel {
 		
 	}
 
+	@Override
+	public boolean isSupervised() {
+		return true;
+	}
+
 
 }

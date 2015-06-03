@@ -6,18 +6,24 @@ import ai.vital.predictmodel.NumericalFeature;
 
 public class CollectNumericalFeatureDataTask implements ModelTrainingTask {
 
-	NumericalFeature feature;
+	public NumericalFeature feature;
 	
-	NumericalFeatureData results;
+	public String datasetName;
+	
+	public NumericalFeatureData results;
 
-	public CollectNumericalFeatureDataTask(NumericalFeature f) {
+	
+	public CollectNumericalFeatureDataTask(NumericalFeature f, String datasetName) {
 		this.feature = f;
+		this.datasetName = datasetName;
 	}
 
 	@Override
 	public void validateResult() {
 		
 		if(feature == null) throw new NullPointerException("No feature set");
+		
+		if(datasetName == null) throw new NullPointerException("No datasetName set");
 		
 		if(results == null) throw new NullPointerException("No numerical feature data: " + feature.getName());
 		

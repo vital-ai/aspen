@@ -89,6 +89,8 @@ public abstract class AspenModel implements Serializable {
 	
 	protected CategoricalFeatureData trainedCategories;
 	
+	public abstract boolean isSupervised();
+	
 	public String getName() {
 		return modelConfig.getName();
 	}

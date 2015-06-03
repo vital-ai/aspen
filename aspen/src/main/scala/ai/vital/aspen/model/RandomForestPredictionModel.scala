@@ -23,6 +23,10 @@ class RandomForestPredictionModel extends PredictionModel {
     model = _model
   }
   
+  def getModel() : RandomForestModel = {
+    model
+  }
+  
   def supportedType(): String = {
     return RandomForestPredictionModel.spark_randomforest_prediction
   }
@@ -49,6 +53,11 @@ class RandomForestPredictionModel extends PredictionModel {
     SerializationUtils.serialize(model, os)
     os.close()
     
+  }
+  
+  @Override
+  def isSupervised() : Boolean = {
+    return true;
   }
   
 }

@@ -55,4 +55,9 @@ public class ReferenceModel extends AspenModel {
 		
 	}
 
+	@Override
+	public boolean isSupervised() {
+		return true;
+	}
+
 }
