@@ -7,6 +7,8 @@ import org.apache.spark.mllib.clustering.KMeansModel
 import org.apache.commons.io.IOUtils
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.charset.StandardCharsets
+import org.apache.commons.io.FileUtils
 
 object KMeansPredictionModel {
   
@@ -57,6 +59,9 @@ class KMeansPredictionModel extends PredictionModel {
     SerializationUtils.serialize(model, os)
     os.close()
     
+    if(error != null) {
+      FileUtils.writeStringToFile(new File(tempDir, error_txt), error, StandardCharsets.UTF_8.name())
+    }
   }
   
   @Override

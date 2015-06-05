@@ -98,6 +98,8 @@ public class FeatureExtraction {
 				
 				extractedFeatures.put(feature.getName(), null);
 				
+				continue;
+				
 			}
 			
 			List<Object> vals = new ArrayList<Object>();

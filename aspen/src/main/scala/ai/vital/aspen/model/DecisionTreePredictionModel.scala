@@ -11,6 +11,8 @@ import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 import ai.vital.predictmodel.Prediction
 import ai.vital.aspen.groovy.modelmanager.AspenPrediction
 import ai.vital.vitalsigns.model.GraphObject
+import org.apache.commons.io.FileUtils
+import java.nio.charset.StandardCharsets
 
 object DecisionTreePredictionModel {
   
@@ -56,6 +58,10 @@ class DecisionTreePredictionModel extends PredictionModel {
     val os = new FileOutputStream(new File(tempDir, model_bin))
     SerializationUtils.serialize(model, os)
     os.close()
+    
+    if(error != null) {
+      FileUtils.writeStringToFile(new File(tempDir, error_txt), error, StandardCharsets.UTF_8.name())
+    }
 	  
   }
 

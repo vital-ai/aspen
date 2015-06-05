@@ -161,6 +161,10 @@
                 </transformer>
                 -->
                 
+				<transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                  <resource>reference.conf</resource>
+                </transformer>
+                
               </transformers>
               <artifactSet>
               <!--  
@@ -249,6 +253,7 @@
                   <exclude>vital-ai:vital-triplestore</exclude>
                   <exclude>vital-ai:vitalservice</exclude>
                   <exclude>vital-ai:twentynews</exclude>
+                  <exclude>vital-ai:movielens</exclude>
                   <exclude>junit:*</exclude>
                   <exclude>commons-cli:*</exclude>
                   <exclude>commons-codec:*</exclude>
@@ -328,6 +333,12 @@
   <dependency>
 	<groupId>vital-ai</groupId>
 	<artifactId>twentynews</artifactId>
+	<version>1.0.0</version>
+  </dependency>
+  
+  <dependency>
+	<groupId>vital-ai</groupId>
+	<artifactId>movielens</artifactId>
 	<version>1.0.0</version>
   </dependency>
   

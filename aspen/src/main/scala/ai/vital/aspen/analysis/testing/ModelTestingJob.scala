@@ -40,6 +40,7 @@ import ai.vital.aspen.model.KMeansPredictionModel
 import org.apache.spark.Accumulator
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 import ai.vital.vitalservice.model.App
+import ai.vital.aspen.model.CollaborativeFilteringPredictionModel
 
 class ModelTestingJob {}
 
@@ -102,6 +103,7 @@ object ModelTestingJob extends AbstractJob {
 //    val modelManager = new ModelManager()
     val mt2c = AspenGroovyConfig.get.modelType2Class
 
+    mt2c.put(CollaborativeFilteringPredictionModel.spark_collaborative_filtering_prediction, classOf[CollaborativeFilteringPredictionModel].getCanonicalName)
     mt2c.put(DecisionTreePredictionModel.spark_decision_tree_prediction, classOf[DecisionTreePredictionModel].getCanonicalName)
     mt2c.put(KMeansPredictionModel.spark_kmeans_prediction, classOf[KMeansPredictionModel].getCanonicalName)
     mt2c.put(NaiveBayesPredictionModel.spark_naive_bayes_prediction, classOf[NaiveBayesPredictionModel].getCanonicalName)
@@ -172,6 +174,12 @@ object ModelTestingJob extends AbstractJob {
       }
     }
     
+    var collaborativeFilteringError : Accumulator[Double] = null;
+    
+    if(aspenModel.isInstanceOf[CollaborativeFilteringPredictionModel]) {
+      collaborativeFilteringError = sc.accumulator(0d)
+      throw new RuntimeException("TODO!")
+    }
     
     //matched, morethan1 input target, no targets
     val results : RDD[(Int, Int, Int, Int)] = inputBlockRDD.map { pair =>
@@ -226,6 +234,11 @@ object ModelTestingJob extends AbstractJob {
             }
           }
         }
+      } else if(aspenModel.getType.equals(CollaborativeFilteringPredictionModel.spark_collaborative_filtering_prediction)) {
+
+        //extract features
+        //TODO
+        
       } else {
         
     	  if(targetValue != null) {

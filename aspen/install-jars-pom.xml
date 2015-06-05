@@ -47,6 +47,23 @@
                     </configuration>
                     
                 </execution>
+                
+                
+				<execution>
+                    <id>movielens-groovy-1.0.0.jar</id>
+                    <phase>validate</phase>
+                    <goals>
+                        <goal>install-file</goal>
+                    </goals>
+                    <configuration>
+				      <groupId>vital-ai</groupId>
+				      <artifactId>movielens</artifactId>
+				      <version>1.0.0</version>
+				      <packaging>jar</packaging>
+					  <file>${VITAL_HOME}/domain-groovy-jar/movielens-groovy-1.0.0.jar</file>
+                    </configuration>
+                    
+                </execution>
 
             </executions>
         </plugin>            

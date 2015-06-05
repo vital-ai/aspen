@@ -7,6 +7,8 @@ import org.apache.spark.mllib.linalg.Vector
 import org.apache.commons.io.IOUtils
 import java.io.File
 import java.io.FileOutputStream
+import org.apache.commons.io.FileUtils
+import java.nio.charset.StandardCharsets
 
 object RandomForestPredictionModel {
   
@@ -53,6 +55,9 @@ class RandomForestPredictionModel extends PredictionModel {
     SerializationUtils.serialize(model, os)
     os.close()
     
+    if(error != null) {
+      FileUtils.writeStringToFile(new File(tempDir, error_txt), error, StandardCharsets.UTF_8.name())
+    }
   }
   
   @Override

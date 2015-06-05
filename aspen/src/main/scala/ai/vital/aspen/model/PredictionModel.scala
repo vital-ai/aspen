@@ -80,6 +80,10 @@ abstract class PredictionModel extends AspenModel {
     error = _error
   }
   
+  def getError() : String = {
+    error
+  }
+  
   var modelBinaryLoaded = false;
   
   def acceptResource(s: String): Boolean = {

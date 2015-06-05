@@ -36,6 +36,20 @@ public class Dictionary implements Serializable {
 		return this.source.get(word);
 	}
 	
+	public String getReverse(Integer value) {
+		
+		for( Entry<String, Integer> e : this.source.entrySet()) {
+			
+			if(e.getValue().intValue() == value.intValue()) {
+				return e.getKey();
+			}
+			
+		}
+		
+		return null;
+		
+	}
+	
 	public int size() {
 		return this.source.size();
 	}
@@ -58,7 +72,7 @@ public class Dictionary implements Serializable {
 		});
 	
 		for(Entry<String, Integer> e : entries) {
-			writer.write(e.getValue() + "\t" + e.getKey());
+			writer.write(e.getValue() + "\t" + e.getKey() + "\n");
 		}
 		
 		writer.flush();

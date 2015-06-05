@@ -96,6 +96,9 @@ import ai.vital.aspen.groovy.predict.tasks.TestModelTask
 import ai.vital.predictmodel.Feature
 import ai.vital.aspen.model.PredictionModel
 import ai.vital.aspen.util.SetOnceHashMap
+import ai.vital.aspen.model.CollaborativeFilteringPredictionModel
+import org.apache.spark.mllib.recommendation.ALS
+import org.apache.spark.mllib.recommendation.Rating
 
 class ModelTrainingJob {}
 
@@ -237,6 +240,7 @@ object ModelTrainingJob extends AbstractJob {
     }
     
     val creatorMap = new HashMap[String, Class[_ <: AspenModel]];
+    creatorMap.put(CollaborativeFilteringPredictionModel.spark_collaborative_filtering_prediction, classOf[CollaborativeFilteringPredictionModel])
     creatorMap.put(DecisionTreePredictionModel.spark_decision_tree_prediction, classOf[DecisionTreePredictionModel]);
     creatorMap.put(KMeansPredictionModel.spark_kmeans_prediction, classOf[KMeansPredictionModel]);
     creatorMap.put(NaiveBayesPredictionModel.spark_naive_bayes_prediction, classOf[NaiveBayesPredictionModel]);
@@ -464,9 +468,17 @@ object ModelTrainingJob extends AbstractJob {
     }
     
     
+    var response : String = null
 
+    if(aspenModel.isInstanceOf[PredictionModel]) {
+      
+      response = aspenModel.asInstanceOf[PredictionModel].getError()
+      
+    }
     
-    println("DONE " + new Date().toString())
+    if(response == null) response  = "DONE " + new Date().toString()
+    
+    return response
 		  
   }
   
@@ -871,7 +883,72 @@ object ModelTrainingJob extends AbstractJob {
       
       var outputModel : Serializable = null;
       
-      if( DecisionTreePredictionModel.spark_decision_tree_prediction.equals(aspenModel.getType)) {
+      if( CollaborativeFilteringPredictionModel.spark_collaborative_filtering_prediction.equals(aspenModel.getType)) {
+      
+        //first pass to collect user and products ids -> uris
+        
+        val cfpm = aspenModel.asInstanceOf[CollaborativeFilteringPredictionModel]
+        
+        val values = collaborativeFilteringCollectData(trainRDD, cfpm)
+        
+        val ac = aspenModel.getModelConfig.getAlgorithmConfig
+        // Build the recommendation model using ALS
+        var rank = 10
+        val rankVal = ac.get("rank")
+        if( rankVal != null && rankVal.isInstanceOf[Number]) {
+          rank = rankVal.asInstanceOf[Number].intValue() 
+        }
+        
+        var lambda = 0.01d
+        val lambdaVal = ac.get("lambda")
+        if(lambdaVal != null && lambdaVal.isInstanceOf[Number]) {
+          lambda = lambdaVal.asInstanceOf[Number].doubleValue()
+        }
+        
+        var iterations = 20
+        val iterationsVal = ac.get("iterations")
+        if(iterationsVal != null && iterationsVal.isInstanceOf[Number]) {
+          iterations = iterationsVal.asInstanceOf[Number].intValue()
+        }
+        
+        val ratings = values.map(quad => {
+          new Rating(cfpm.getUserURI2ID().get(quad._1), cfpm.getProductURI2ID().get(quad._2), quad._3)
+        })
+        
+        ratings.cache()
+        
+        globalContext.put("collaborative-filtering-ratings", ratings)
+        
+        val model = ALS.train(ratings, rank, iterations, lambda)
+        
+        cfpm.setModel(model)
+        
+        outputModel = model
+        
+        val usersProducts = values.map( triple => {
+          (cfpm.getUserURI2ID().get(triple._1).toInt, cfpm.getProductURI2ID().get(triple._2).toInt )
+        }) 
+          
+        val predictions = cfpm.getModel().predict(usersProducts).map { case Rating(user, product, rate) => 
+          ((user, product), rate)
+        }
+          
+        val ratesAndPreds = ratings.map { case Rating(user, product, rate) => 
+            ((user, product), rate)
+        }.join(predictions)
+        val MSE = ratesAndPreds.map { case ((user, product), (r1, r2)) => 
+        val err = (r1 - r2)
+          err * err
+        }.mean()
+          
+        val msg = "Mean Squared Error = " + MSE
+          
+        println(msg)
+        cfpm.setError(msg)
+        
+//        val vectorized = vectorizeCollaborativeFiltering(trainRDD, aspenModel.asInstanceOf[CollaborativeFilteringPredictionModel])    
+        
+      } else if( DecisionTreePredictionModel.spark_decision_tree_prediction.equals(aspenModel.getType)) {
     
           val vectorized = vectorize(trainRDD, aspenModel);
           
@@ -996,7 +1073,35 @@ object ModelTrainingJob extends AbstractJob {
     
     val testRDD = getDataset(tmt.datasetName)
     
-        if( DecisionTreePredictionModel.spark_decision_tree_prediction.equals(aspenModel.getType)) {
+        if(CollaborativeFilteringPredictionModel.spark_collaborative_filtering_prediction.equals(aspenModel.getType)) {
+          
+          val cfpm = aspenModel.asInstanceOf[CollaborativeFilteringPredictionModel]
+          
+          val values = globalContext.get("collaborative-filtering-rdd").asInstanceOf[RDD[(String, String, Double)]] 
+          
+          val usersProducts = values.map( triple => {
+            (cfpm.getUserURI2ID().get(triple._1).toInt, cfpm.getProductURI2ID().get(triple._2).toInt )
+          }) 
+          
+          val predictions = cfpm.getModel().predict(usersProducts).map { case Rating(user, product, rate) => 
+            ((user, product), rate)
+          }
+          
+          val ratings = globalContext.get("collaborative-filtering-ratings").asInstanceOf[RDD[Rating]]
+          val ratesAndPreds = ratings.map { case Rating(user, product, rate) => 
+            ((user, product), rate)
+          }.join(predictions)
+          val MSE = ratesAndPreds.map { case ((user, product), (r1, r2)) => 
+          val err = (r1 - r2)
+            err * err
+          }.mean()
+          
+          val msg = "Mean Squared Error = " + MSE
+          
+          println(msg)
+          cfpm.setError(msg)
+          
+        } else if( DecisionTreePredictionModel.spark_decision_tree_prediction.equals(aspenModel.getType)) {
     
           println("Testing ...")
           
@@ -1095,6 +1200,66 @@ object ModelTrainingJob extends AbstractJob {
     }
     
     globalContext.put(cnfdt.feature.getName + CollectNumericalFeatureDataTask.NUMERICAL_FEATURE_DATA_SUFFIX, cnfdt.getModel.getFeaturesData.get(cnfdt.feature.getName))
+    
+  }
+  
+  def collaborativeFilteringCollectData(trainRDD : RDD[(String, Array[Byte])], model : CollaborativeFilteringPredictionModel) : RDD[(String, String, Double)] = {
+    
+    val values = trainRDD.map( pair => {
+ 
+      val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
+      
+      val fe = new FeatureExtraction(model.getModelConfig, model.getAggregationResults) 
+      
+      val features = fe.extractFeatures(new VitalBlock(inputObjects))
+      
+      val userURI = features.get(CollaborativeFilteringPredictionModel.feature_user_uri)
+      if(userURI == null) throw new RuntimeException("No " + CollaborativeFilteringPredictionModel.feature_user_uri)
+      if(!userURI.isInstanceOf[String]) throw new RuntimeException("Feature " + CollaborativeFilteringPredictionModel.feature_user_uri + " must be a string")
+      
+      val productURI = features.get(CollaborativeFilteringPredictionModel.feature_product_uri)
+      if(productURI == null) throw new RuntimeException("No " + CollaborativeFilteringPredictionModel.feature_product_uri)
+      if(!productURI.isInstanceOf[String]) throw new RuntimeException("Feature " + CollaborativeFilteringPredictionModel.feature_product_uri + " must be a string")      
+      
+      val rating = features.get(CollaborativeFilteringPredictionModel.feature_rating)
+      if(rating == null) throw new RuntimeException("No " + CollaborativeFilteringPredictionModel.feature_rating)
+      if(!rating.isInstanceOf[Number]) throw new RuntimeException("Feature " + CollaborativeFilteringPredictionModel.feature_rating + " must be a number (double)")
+      
+      (userURI.asInstanceOf[String], productURI.asInstanceOf[String], rating.asInstanceOf[Number].doubleValue())
+      
+    })
+    
+    values.cache()
+    
+    val usersList = values.map( triple => {
+      (triple._1)
+    }).distinct().collect()
+    
+    val userURI2IDdic = new HashMap[String, Integer]
+
+    var c = 0
+    for(u <- usersList) {
+      userURI2IDdic.put(u, c)
+      c = c+1
+    }
+    
+    val productsList = values.map ( triple => {
+      (triple._2)
+    }).distinct().collect()
+    
+    c = 0
+    val productURI2IDdic = new HashMap[String, Integer]
+    for(p <- productsList) {
+      productURI2IDdic.put(p, c)
+      c = c+1
+    }
+    
+    model.setUserURI2ID(new Dictionary(userURI2IDdic))
+    model.setProductURI2ID(new Dictionary(productURI2IDdic))
+    
+    globalContext.put("collaborative-filtering-rdd", values)
+    values
+    
     
   }
   

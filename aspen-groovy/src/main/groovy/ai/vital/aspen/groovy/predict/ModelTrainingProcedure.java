@@ -8,6 +8,7 @@ import java.util.Map;
 import ai.vital.aspen.groovy.featureextraction.CategoricalFeatureData;
 import ai.vital.aspen.groovy.featureextraction.FeatureData;
 import ai.vital.aspen.groovy.featureextraction.NumericalFeatureData;
+import ai.vital.aspen.groovy.featureextraction.WordFeatureData;
 import ai.vital.aspen.groovy.modelmanager.AspenModel;
 import ai.vital.aspen.groovy.predict.tasks.CalculateAggregationValueTask;
 import ai.vital.aspen.groovy.predict.tasks.CollectCategoricalFeaturesDataTask;
@@ -28,6 +29,7 @@ import ai.vital.predictmodel.NumericalFeature;
 import ai.vital.predictmodel.PredictionModel;
 import ai.vital.predictmodel.Taxonomy;
 import ai.vital.predictmodel.TextFeature;
+import ai.vital.predictmodel.WordFeature;
 
 /**
  * A class that analyzes input model and generates the tasks list required to train a model
@@ -163,6 +165,11 @@ public class ModelTrainingProcedure {
 //				CollectNumericalFeatureDataTask cnfdt = new CollectNumericalFeatureDataTask(model, paramsMap, nf, trainDatasetName);
 //				tasks.add(cnfdt);
 //				trainingRequiredParams.addAll(cnfdt.getOutputParams());
+				
+			} else if(f instanceof WordFeature) {
+				
+				WordFeature wf = (WordFeature) f;
+				model.getFeaturesData().put(wf.getName(), new WordFeatureData());
 				
 			}
 		}
