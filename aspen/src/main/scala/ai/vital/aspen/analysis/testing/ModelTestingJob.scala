@@ -41,6 +41,10 @@ import org.apache.spark.Accumulator
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 import ai.vital.vitalservice.model.App
 import ai.vital.aspen.model.CollaborativeFilteringPredictionModel
+import ai.vital.aspen.groovy.featureextraction.FeatureExtraction
+import org.apache.spark.mllib.recommendation.Rating
+import org.apache.spark.mllib.recommendation.Rating
+import scala.collection.mutable.MutableList
 
 class ModelTestingJob {}
 
@@ -160,6 +164,93 @@ object ModelTestingJob extends AbstractJob {
       
     }
     
+    if(aspenModel.isInstanceOf[CollaborativeFilteringPredictionModel]) {
+      
+      //collaborative filtering model requires active spark context, it means it cannot be used inside workers
+      //only one active spark context may be 
+      
+      val cfpm = aspenModel.asInstanceOf[CollaborativeFilteringPredictionModel]
+      
+      cfpm.sc = sc
+      
+      cfpm.initModel()
+      
+      val acc = sc.accumulator(0);
+      val samplesCount = sc.accumulator(0);
+      
+      val ratingsAll = inputBlockRDD.map { pair =>
+        
+        val block : java.util.List[GraphObject] = VitalSigns.get.decodeBlock(pair._2, 0, pair._2.length)
+        
+        val vitalBlock = new VitalBlock(block)
+        
+ //in collaborative filtering there are no target nodes in input data, use feature extractor and get the special feature, then compare with target score values
+        val fe = new FeatureExtraction(aspenModel.getModelConfig, aspenModel.getAggregationResults)
+        
+        val featuresMap = fe.extractFeatures(vitalBlock)
+        
+        val ratingVal = featuresMap.get(CollaborativeFilteringPredictionModel.feature_rating)
+        
+        val userURI = featuresMap.get(CollaborativeFilteringPredictionModel.feature_user_uri)
+        
+        val productURI = featuresMap.get(CollaborativeFilteringPredictionModel.feature_product_uri)
+        
+        var rating : Rating = null;
+        
+        if(ratingVal == null || userURI == null || productURI == null) {
+          
+        } else {
+          
+        	val userID = cfpm.getUserURI2ID().get(userURI.asInstanceOf[String])
+          val productID = cfpm.getProductURI2ID().get(productURI.asInstanceOf[String])
+          var ratingDouble = ratingVal.asInstanceOf[Number].doubleValue()
+          
+          if(userID != null && productID != null) {
+            
+        	  rating = new Rating(userID, productID, ratingDouble)
+            
+        	  samplesCount.add(1)
+            
+          }
+
+          
+          
+          
+        }
+        
+        acc.add(1)
+        
+        (rating)
+        
+      }
+      
+      
+      val ratings = ratingsAll.filter { r => r != null } 
+      ratings.cache();
+      
+      val usersProducts = ratings.map( r => {
+        (r.user, r.product)
+       }) 
+          
+      val predictions = cfpm.getModel().predict(usersProducts).map { case Rating(user, product, rate) => 
+        ((user, product), rate)
+      }
+          
+      val ratesAndPreds = ratings.map { case Rating(user, product, rate) => 
+          ((user, product), rate)
+      }.join(predictions)
+      val MSE = ratesAndPreds.map { case ((user, product), (r1, r2)) => 
+      val err = (r1 - r2)
+         err * err
+      }.mean()
+          
+      val msg = "All samples: " + acc.value + "\nValid samples count: " + samplesCount + "\nMean Squared Error = " + MSE
+          
+      println(msg)
+        
+      return msg
+      
+    }
     
     //clustering stats
     var clustersStats : java.util.List[Accumulator[Int]] = null
@@ -174,16 +265,10 @@ object ModelTestingJob extends AbstractJob {
       }
     }
     
-    var collaborativeFilteringError : Accumulator[Double] = null;
-    
-    if(aspenModel.isInstanceOf[CollaborativeFilteringPredictionModel]) {
-      collaborativeFilteringError = sc.accumulator(0d)
-      throw new RuntimeException("TODO!")
-    }
+
     
     //matched, morethan1 input target, no targets
     val results : RDD[(Int, Int, Int, Int)] = inputBlockRDD.map { pair =>
-      
       
       if(VitalSigns.get.getCurrentApp == null) {
         val app = new App()
@@ -234,10 +319,6 @@ object ModelTestingJob extends AbstractJob {
             }
           }
         }
-      } else if(aspenModel.getType.equals(CollaborativeFilteringPredictionModel.spark_collaborative_filtering_prediction)) {
-
-        //extract features
-        //TODO
         
       } else {
         

@@ -109,8 +109,26 @@ class CollaborativeFilteringPredictionModel extends PredictionModel {
     throw new RuntimeException("Collaborative filtering does not use this method!")
   }
   
-  @Override
-  override def _predict(vitalBlock : VitalBlock, featuresMap : java.util.Map[String, Object]) : Prediction = {
+  
+  /**
+   * useful for tests
+   */
+  def getRating(userURI : String , productURI : String ) : Double = {
+    
+    initModel()
+    
+    val userID = userURI2ID.get(userURI)
+    if(userID == null) throw new RuntimeException("userID not found for URI: " + userURI)
+    
+    val productID = productURI2ID.get(productURI)
+    if(productID == null) throw new RuntimeException("productID not found for URI: " + productURI)
+    
+    return model.predict(userID, productID)
+    
+  }
+  
+  //it is important to initialize the model before it's being used
+  def initModel() {
     
     if(model == null) {
       //init model from wrapped model
@@ -121,6 +139,13 @@ class CollaborativeFilteringPredictionModel extends PredictionModel {
       model = new MatrixFactorizationModel(wrappedModel.rank, sc.parallelize(wrappedModel.userFeatures.toSeq), sc.parallelize(wrappedModel.productFeatures.toSeq))
       
     }
+    
+  }
+  
+  @Override
+  override def _predict(vitalBlock : VitalBlock, featuresMap : java.util.Map[String, Object]) : Prediction = {
+    
+    initModel()
     
     //each model has to provide two numerical feature
     
