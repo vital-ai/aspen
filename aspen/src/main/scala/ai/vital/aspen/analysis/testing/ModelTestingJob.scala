@@ -265,7 +265,6 @@ object ModelTestingJob extends AbstractJob {
       }
     }
     
-
     
     //matched, morethan1 input target, no targets
     val results : RDD[(Int, Int, Int, Int)] = inputBlockRDD.map { pair =>
@@ -288,17 +287,17 @@ object ModelTestingJob extends AbstractJob {
       
       var noTargets = 0
       
-      for( b <- block ) {
-        if(b.isInstanceOf[TargetNode]) {
-          val pv = b.getProperty("targetStringValue");
-          if(pv != null) {
-            if(targetValue != null) {
-              moreThanOne = 1           
-            }
-            targetValue = pv.asInstanceOf[IProperty].toString()
-          }
-        }
-      }
+//      for( b <- block ) {
+//        if(b.isInstanceOf[TargetNode]) {
+//          val pv = b.getProperty("targetStringValue");
+//          if(pv != null) {
+//            if(targetValue != null) {
+//              moreThanOne = 1           
+//            }
+//            targetValue = pv.asInstanceOf[IProperty].toString()
+//          }
+//        }
+//      }
       
       
       if(aspenModel.getType.equals(KMeansPredictionModel.spark_kmeans_prediction)) {
@@ -322,31 +321,78 @@ object ModelTestingJob extends AbstractJob {
         
       } else {
         
-    	  if(targetValue != null) {
-    		  
-    		  val predictions = aspenModel.predict(vitalBlock)
-    				  
-    				  for(p <- predictions) {
-    					  
-    					  if(p.isInstanceOf[TargetNode]) {
-    						  
-    						  val pv = p.getProperty("targetStringValue");
-    						  if(pv != null) {              
-    							  val prediction = pv.asInstanceOf[IProperty].toString()
-    									  
-    									  if(targetValue.equals(prediction)) {
-    										  matched = 1
-    									  }
-    							  
-    						  }
-    						  
-    					  }
-    					  
-    				  }
-    		  
-    	  } else {
-    		  noTargets = 1
-    	  }
+        //use train block to extract data
+          
+        val ex = new FeatureExtraction(aspenModel.getModelConfig, aspenModel.getAggregationResults)
+      
+        val featuresMap = ex.extractFeatures(vitalBlock)
+        
+        aspenModel.getModelConfig.getTrain.setDelegate(ex)
+        aspenModel.getModelConfig.getTarget.setDelegate(ex)
+        
+        var category : java.lang.Object = null
+        try {
+        	val categoryx = aspenModel.getModelConfig.getTrain.call(vitalBlock, featuresMap)
+          if(categoryx != null) category = categoryx.asInstanceOf[Object]
+        } catch { case ex : Exception =>{
+          ex.printStackTrace()
+        }
+        } 
+
+        if(category != null) {
+          
+           val predictions = aspenModel.predict(vitalBlock)
+              
+              for(p <- predictions) {
+                
+                if(p.isInstanceOf[TargetNode]) {
+                  
+                  val pv = p.getProperty("targetStringValue");
+                  if(pv != null) {              
+                    val prediction = pv.asInstanceOf[IProperty].toString()
+                        
+                        if(category.equals(prediction)) {
+                          matched = 1
+                        }
+                    
+                  }
+                  
+                }
+                
+              }
+          
+        } else {
+          
+          noTargets = 1 
+          
+        }
+          
+        
+//    	  if(targetValue != null) {
+//    		  
+//    		  val predictions = aspenModel.predict(vitalBlock)
+//    				  
+//    				  for(p <- predictions) {
+//    					  
+//    					  if(p.isInstanceOf[TargetNode]) {
+//    						  
+//    						  val pv = p.getProperty("targetStringValue");
+//    						  if(pv != null) {              
+//    							  val prediction = pv.asInstanceOf[IProperty].toString()
+//    									  
+//    									  if(targetValue.equals(prediction)) {
+//    										  matched = 1
+//    									  }
+//    							  
+//    						  }
+//    						  
+//    					  }
+//    					  
+//    				  }
+//    		  
+//    	  } else {
+//    		  noTargets = 1
+//    	  }
         
       }
        

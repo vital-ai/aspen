@@ -27,9 +27,7 @@ public class CollectTextFeatureDataTask extends ModelTrainingTask {
 	public List<String> getRequiredParams() {
 		return Arrays.asList(
 				datasetName, 
-				datasetName + CountDatasetTask.DOCS_COUNT_SUFFIX, 
-				datasetName + ProvideMinDFMaxDF.MIN_DF_SUFFIX, 
-				datasetName + ProvideMinDFMaxDF.MAX_DF_SUFFIX
+				datasetName + CountDatasetTask.DOCS_COUNT_SUFFIX 
 		);
 	}
 

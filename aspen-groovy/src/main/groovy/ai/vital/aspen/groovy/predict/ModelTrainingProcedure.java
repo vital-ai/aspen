@@ -11,13 +11,10 @@ import ai.vital.aspen.groovy.featureextraction.NumericalFeatureData;
 import ai.vital.aspen.groovy.featureextraction.WordFeatureData;
 import ai.vital.aspen.groovy.modelmanager.AspenModel;
 import ai.vital.aspen.groovy.predict.tasks.CalculateAggregationValueTask;
-import ai.vital.aspen.groovy.predict.tasks.CollectCategoricalFeaturesDataTask;
-import ai.vital.aspen.groovy.predict.tasks.CollectNumericalFeatureDataTask;
 import ai.vital.aspen.groovy.predict.tasks.CollectTargetCategoriesTask;
 import ai.vital.aspen.groovy.predict.tasks.CollectTextFeatureDataTask;
 import ai.vital.aspen.groovy.predict.tasks.CountDatasetTask;
 import ai.vital.aspen.groovy.predict.tasks.LoadDataSetTask;
-import ai.vital.aspen.groovy.predict.tasks.ProvideMinDFMaxDF;
 import ai.vital.aspen.groovy.predict.tasks.SaveModelTask;
 import ai.vital.aspen.groovy.predict.tasks.SplitDatasetTask;
 import ai.vital.aspen.groovy.predict.tasks.TestModelTask;
@@ -116,7 +113,6 @@ public class ModelTrainingProcedure {
 		for(Feature f : cfg.getFeatures()) {
 			if(f instanceof TextFeature) {
 				tasks.add(new CountDatasetTask(model, paramsMap, trainDatasetName));
-				tasks.add(new ProvideMinDFMaxDF(model, paramsMap, trainDatasetName));
 				break;
 			}
 		}

@@ -8,6 +8,7 @@ import ai.vital.predictmodel.PredictionModel;
 import ai.vital.predictmodel.Taxonomy;
 import ai.vital.vitalservice.VitalService;
 import ai.vital.vitalservice.VitalStatus;
+import ai.vital.vitalservice.factory.VitalServiceFactory;
 import ai.vital.vitalservice.query.ResultList;
 import ai.vital.vitalservice.query.VitalPathQuery;
 import ai.vital.vitalsigns.VitalSigns;
@@ -22,7 +23,7 @@ public class ModelTaxonomySetter {
 
 	//performs a pass over PredictionModel object and loads taxonomies objects either from VitalSigns/Vitalservice (rootURI)
 	//path
-	public static void loadTaxonomies(PredictionModel model, VitalService service) throws Exception {
+	public static void loadTaxonomies(PredictionModel model, VitalService forcedService) throws Exception {
 		
 		List<Taxonomy> taxonomies = model.getTaxonomies();
 		
@@ -59,9 +60,12 @@ public class ModelTaxonomySetter {
 				
 				if(rootCategory == null) {
 					
-					if(service == null) throw new RuntimeException("Service not set, cannot lookup taxonomy root");
+					if(forcedService == null) {
+						forcedService = VitalServiceFactory.getVitalService();
+//						throw new RuntimeException("Service not set, cannot lookup taxonomy root");
+					}
 					
-					individual = service.get(GraphContext.ServiceWide, URIProperty.withString(rootURI)).first();
+					individual = forcedService.get(GraphContext.ServiceWide, URIProperty.withString(rootURI)).first();
 					
 					if(individual != null) {
 						if(individual instanceof VITAL_Category) {
@@ -74,7 +78,7 @@ public class ModelTaxonomySetter {
 					if(rootCategory != null) {
 						
 						VitalPathQuery pq = ModelTaxonomyQueries.getTaxonomyPathQuery(rootURI);
-						rl = service.query(pq);
+						rl = forcedService.query(pq);
 						
 					}
 					

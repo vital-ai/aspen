@@ -46,6 +46,7 @@ import ai.vital.predictmodel.Function;
 import ai.vital.predictmodel.NumericalFeature;
 import ai.vital.predictmodel.Prediction;
 import ai.vital.predictmodel.PredictionModel;
+import ai.vital.predictmodel.Taxonomy;
 import ai.vital.predictmodel.TextFeature;
 import ai.vital.predictmodel.WordFeature;
 import ai.vital.predictmodel.builder.ModelString;
@@ -191,12 +192,11 @@ public abstract class AspenModel implements Serializable {
 		onResourcesProcessed();
 		
 		
+		ModelTaxonomySetter.loadTaxonomies(modelConfig, null);
+		
 		this.featureExtraction = new FeatureExtraction(modelConfig, aggregationResults);
 		
 		loaded = true;
-		
-		
-		
 		
 	}
 

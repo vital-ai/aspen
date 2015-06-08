@@ -88,7 +88,6 @@ import ai.vital.aspen.groovy.predict.tasks.CollectTargetCategoriesTask
 import ai.vital.aspen.groovy.predict.tasks.CollectTextFeatureDataTask
 import ai.vital.aspen.groovy.predict.tasks.CountDatasetTask
 import ai.vital.aspen.groovy.predict.tasks.LoadDataSetTask
-import ai.vital.aspen.groovy.predict.tasks.ProvideMinDFMaxDF
 import ai.vital.aspen.groovy.predict.tasks.SaveModelTask
 import ai.vital.aspen.groovy.predict.tasks.SplitDatasetTask
 import ai.vital.aspen.groovy.predict.tasks.TrainModelTask
@@ -118,16 +117,6 @@ object ModelTrainingJob extends AbstractJob {
   val overwriteOption = new Option("ow", "overwrite", false, "overwrite model if exists")
   overwriteOption.setRequired(false)
   
-  val minDFOption = new Option("minDF", "minimumDocFreq", true, "minimum term document frequency, default: " + MIN_DF)
-  minDFOption.setRequired(false)
-  
-  val maxDFPercentOption = new Option("maxDFP", "maxDocFreqPercent", true, "maximum term document frequency (percent), default: " + MAX_DF_PERCENT)
-  maxDFPercentOption.setRequired(false)
-  
-  def MIN_DF = 1
-  
-  def MAX_DF_PERCENT = 100
-  
   //this is only used when namedRDDs support is disabled
   var datasetsMap : java.util.HashMap[String, RDD[(String, Array[Byte])]] = null;
   
@@ -143,8 +132,6 @@ object ModelTrainingJob extends AbstractJob {
       .addOption(inputOption)
       .addOption(outputOption)
       .addOption(overwriteOption)
-      .addOption(minDFOption)
-      .addOption(maxDFPercentOption)
       .addOption(profileOption)
     )
   }
@@ -196,30 +183,6 @@ object ModelTrainingJob extends AbstractJob {
     val builderPath = new Path(jobConfig.getString(modelBuilderOption.getLongOpt))
     val serviceProfile = getOptionalString(jobConfig, profileOption)
     
-    var minDF = MIN_DF
-    var maxDFPercent = MAX_DF_PERCENT
-    
-    try {
-        minDF = Integer.parseInt(jobConfig.getString(minDFOption.getLongOpt))
-    } catch {
-      case ex: ConfigException.Missing => {}
-    }
-    
-    try {
-      maxDFPercent = Integer.parseInt(jobConfig.getString(maxDFPercentOption.getLongOpt))
-    } catch {
-      case ex: ConfigException.Missing => {}
-    }
-    
-    if(minDF < 1) {
-      throw new RuntimeException("minDF must be > 0")
-    }
-    
-    if(maxDFPercent > 100 || maxDFPercent < 1) {
-      throw new RuntimeException("maxDFPercent must be within range [1, 100]")
-    }
-    
-    
     
     println("input train name: " + inputName)
     println("builder path: " + builderPath)
@@ -228,9 +191,6 @@ object ModelTrainingJob extends AbstractJob {
     if(jarContainer) println("   output is a jar container (.jar)")
     println("overwrite if exists: " + overwrite)
     println("service profile: " + serviceProfile)
-    println("minDF: " + minDF)
-    println("maxDFPercent: " + maxDFPercent)
-    
     
     if(isNamedRDDSupported()) {
     	println("named RDDs supported")
@@ -402,15 +362,6 @@ object ModelTrainingJob extends AbstractJob {
         checkDependencies_loadDataset(sc, ldt)
         
         loadDataset(sc, ldt)
-        
-      } else if(task.isInstanceOf[ProvideMinDFMaxDF]) {
-        
-        
-        val pmm = task.asInstanceOf[ProvideMinDFMaxDF]
-        
-        checkDependencies_provideMinDFMaxDF(sc, pmm)
-        
-        provideMinDFMaxDF(sc, pmm, minDF, maxDFPercent)
         
       } else if(task.isInstanceOf[SaveModelTask]) {
         
@@ -727,8 +678,11 @@ object ModelTrainingJob extends AbstractJob {
     
     val feature = ctfdt.feature
     
-    val minDF = globalContext.get(ctfdt.datasetName + ProvideMinDFMaxDF.MIN_DF_SUFFIX).asInstanceOf[Int]
-    val maxDF = globalContext.get(ctfdt.datasetName + ProvideMinDFMaxDF.MAX_DF_SUFFIX).asInstanceOf[Int]
+    val minDF = feature.getMinDF
+    
+    val totalDocs = globalContext.get(ctfdt.datasetName + CountDatasetTask.DOCS_COUNT_SUFFIX)
+    
+    val maxDF = ( ( feature.getMaxDFP * totalDocs.asInstanceOf[Int] ) / 100f ).toInt
     
     val aspenModel = ctfdt.getModel
     
@@ -773,20 +727,6 @@ object ModelTrainingJob extends AbstractJob {
         globalContext.put(ctfdt.feature.getName + CollectTextFeatureDataTask.TEXT_FEATURE_DATA_SUFFIX, tfd)
   }
   
-  def checkDependencies_provideMinDFMaxDF(sc: SparkContext, pmm : ProvideMinDFMaxDF) : Unit= {
-    
-  }
-  
-  def provideMinDFMaxDF(sc: SparkContext, pmm : ProvideMinDFMaxDF, minDF: Int, maxDFPercent : Int) : Unit= {
-    
-    val totalDocs = globalContext.get(pmm.datasetName + CountDatasetTask.DOCS_COUNT_SUFFIX).asInstanceOf[Integer]
-    
-    var maxDF : Int = totalDocs * maxDFPercent / 100
-
-    globalContext.put(pmm.datasetName + ProvideMinDFMaxDF.MIN_DF_SUFFIX, minDF)
-    globalContext.put(pmm.datasetName + ProvideMinDFMaxDF.MAX_DF_SUFFIX, maxDF)
-
-  }
   
   def checkDependencies_loadDataset(sc: SparkContext, ldt : LoadDataSetTask) : Unit= {
     

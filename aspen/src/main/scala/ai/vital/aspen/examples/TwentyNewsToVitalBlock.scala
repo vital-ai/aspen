@@ -42,6 +42,11 @@ import ai.vital.vitalsigns.model.GraphObject
 import java.util.ArrayList
 import scala.collection.JavaConversions._
 import java.util.Random
+import ai.vital.vitalsigns.model.VITAL_Category
+import ai.vital.aspen.groovy.modelmanager.ModelTaxonomyQueries
+import ai.vital.vitalservice.query.ResultList
+import ai.vital.vitalservice.VitalStatus
+import ai.vital.domain.Edge_hasCategory
 
 object TwentyNewsToVitalBlock {
 
@@ -63,7 +68,10 @@ object TwentyNewsToVitalBlock {
       overwriteOption.setRequired(false)
       
       val targetNodesOption = new Option("tn", "target-nodes", false, "add target nodes")
-      targetNodesOption.setRequired(true)
+//      targetNodesOption.setRequired(true)
+      
+      val categoryEdgesOption = new Option("ce", "category-edges", false, "add category edge")
+      
       
       val percentOption = new Option("p", "percent", true, "optional output objects percent limit")
       percentOption.setRequired(false)
@@ -73,6 +81,7 @@ object TwentyNewsToVitalBlock {
         .addOption(outputOption)
         .addOption(overwriteOption)
         .addOption(targetNodesOption)
+        .addOption(categoryEdgesOption)
         .addOption(percentOption)
         
       if (args.length == 0) {
@@ -97,6 +106,7 @@ object TwentyNewsToVitalBlock {
       val outputBlockPath = new Path(cmd.getOptionValue(outputOption.getOpt))
       val overwrite = cmd.hasOption(overwriteOption.getOpt)
       val targetNodes = cmd.hasOption(targetNodesOption.getOpt)
+      val categoryEdges = cmd.hasOption(categoryEdgesOption.getOpt)
       
       val percentValue = cmd.getOptionValue(percentOption.getOpt)
       var percent = 100D
@@ -109,7 +119,13 @@ object TwentyNewsToVitalBlock {
       println("Output block path:  " + outputBlockPath.toString())
       println("Overwrite ? " + overwrite)
       println("Add target nodes ? " + targetNodes)
+      println("Add category edges ? " + categoryEdges)
       println("Output docs percent: " + percent)
+      
+      if(categoryEdges && targetNodes) {
+        error(categoryEdgesOption.getLongOpt + " and " + targetNodesOption.getLongOpt + " options are mutually exclusive")
+        return
+      }
       
       if(percent <= 0D || percent > 100D) {
         error("percent value must be in (0; 100] range: " + percent)
@@ -146,6 +162,37 @@ object TwentyNewsToVitalBlock {
           } 
         }
       }
+      
+      var categoriesResults : ResultList = null
+      
+      if(categoryEdges) {
+        
+        val taxonomyRoot = NS + "Taxonomy"
+        println("Checking 20news taxonomy, URI: " + taxonomyRoot)
+        
+        val root = VitalSigns.get.getIndividual(taxonomyRoot)
+        if(root == null) {
+          error("Taxonomy root not found: " + taxonomyRoot)
+          return
+        }
+        
+        if(!root.isInstanceOf[VITAL_Category]) {
+          error("Taxonomy root is not an instance of " + classOf[VITAL_Category].getCanonicalName)
+          return
+        }
+        
+        val query = ModelTaxonomyQueries.getTaxonomyPathQuery(root.asInstanceOf[VITAL_Category])
+        
+        categoriesResults = VitalSigns.get.query(query)
+        
+        if(categoriesResults.getStatus.getStatus != VitalStatus.Status.ok) {
+          error("taxonomy query error: " + categoriesResults.getStatus.getMessage )
+          return
+        }
+        
+        
+      }
+      
       
       var files = MutableList[Path]()
       
@@ -304,6 +351,27 @@ object TwentyNewsToVitalBlock {
         		outputObjs.add(targetEdge)
         		
         	}
+          
+          if(categoryEdges) {
+            
+        	  val categoryURI = NS + newsgroup
+            
+            val category = categoriesResults.get(categoryURI)
+            
+            if(category == null) {
+              error("Newsgroup category not found: " + categoryURI)
+              return;
+            }
+            
+            
+            val categoryEdge = new Edge_hasCategory()
+            categoryEdge.setURI(URIGenerator.generateURI(null, classOf[Edge_hasCategory], false))
+            categoryEdge.addSource(msg)
+            categoryEdge.setDestinationURI(categoryURI)
+            
+            outputObjs.add(categoryEdge)
+            
+          }
         	
         	if(blockWriter != null) {
         		
