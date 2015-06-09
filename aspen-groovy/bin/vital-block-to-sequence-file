@@ -11,9 +11,10 @@ if ( ! System.getenv('VITAL_HOME') ) {
 
 def vitalhome = System.getenv('VITAL_HOME')
 
-def mainClass = 'ai.vital.aspen.groovy.scripts.EntityAnnotatorScript'
+def mainClass = 'ai.vital.aspen.groovy.scripts.VitalBlock2VitalSeqScript'
 
 List jars = []
+
 
 new File(homeDir, "target").eachFile(FILES) {
   if(it.name.endsWith("-with-dependencies.jar")) {

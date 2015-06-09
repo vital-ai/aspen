@@ -185,7 +185,7 @@ object ModelTestingJob extends AbstractJob {
         val vitalBlock = new VitalBlock(block)
         
  //in collaborative filtering there are no target nodes in input data, use feature extractor and get the special feature, then compare with target score values
-        val fe = new FeatureExtraction(aspenModel.getModelConfig, aspenModel.getAggregationResults)
+        val fe = aspenModel.getFeatureExtraction
         
         val featuresMap = fe.extractFeatures(vitalBlock)
         
@@ -323,12 +323,9 @@ object ModelTestingJob extends AbstractJob {
         
         //use train block to extract data
           
-        val ex = new FeatureExtraction(aspenModel.getModelConfig, aspenModel.getAggregationResults)
+        val ex = aspenModel.getFeatureExtraction
       
         val featuresMap = ex.extractFeatures(vitalBlock)
-        
-        aspenModel.getModelConfig.getTrain.setDelegate(ex)
-        aspenModel.getModelConfig.getTarget.setDelegate(ex)
         
         var category : java.lang.Object = null
         try {

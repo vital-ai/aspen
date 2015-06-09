@@ -86,7 +86,7 @@ public abstract class AspenModel implements Serializable {
 	
 	protected Map<String, Double> aggregationResults;
 	
-	protected transient FeatureExtraction featureExtraction;
+	protected transient FeatureExtraction _featureExtraction;
 	
 	protected CategoricalFeatureData trainedCategories;
 	
@@ -138,6 +138,7 @@ public abstract class AspenModel implements Serializable {
 		this.builderContent = builderContent;
 	}
 
+	
 //	/**
 //	 * Returns prediction results with confidence, sorted in descending order
 //	 * @param input
@@ -156,9 +157,7 @@ public abstract class AspenModel implements Serializable {
 	 */
 	public final List<GraphObject> predict(VitalBlock input) {
 		
-		if(featureExtraction == null) {
-			this.featureExtraction = new FeatureExtraction(modelConfig, aggregationResults);
-		}
+		FeatureExtraction featureExtraction = getFeatureExtraction();
 		
 		Map<String, Object> features = featureExtraction.extractFeatures(input);
 		
@@ -194,7 +193,7 @@ public abstract class AspenModel implements Serializable {
 		
 		ModelTaxonomySetter.loadTaxonomies(modelConfig, null);
 		
-		this.featureExtraction = new FeatureExtraction(modelConfig, aggregationResults);
+		getFeatureExtraction();
 		
 		loaded = true;
 		
@@ -664,5 +663,20 @@ public abstract class AspenModel implements Serializable {
 		this.trainedCategories = trainedCategories;
 	}
 
-	
+	public FeatureExtraction getFeatureExtraction() {
+		if(_featureExtraction == null) {
+			_featureExtraction = new FeatureExtraction(modelConfig, aggregationResults);
+			
+			//rehydrate
+			this.modelConfig.setTarget(this.modelConfig.getTarget().rehydrate(_featureExtraction, _featureExtraction, _featureExtraction));
+			this.modelConfig.setTrain(this.modelConfig.getTrain().rehydrate(_featureExtraction, _featureExtraction, _featureExtraction));
+			
+			for(Function f : this.modelConfig.getFunctions()) {
+				f.setFunction(f.getFunction().rehydrate(_featureExtraction, _featureExtraction, _featureExtraction));
+			}
+			
+		}
+		return _featureExtraction;
+	}
+
 }

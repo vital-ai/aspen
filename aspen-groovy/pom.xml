@@ -200,6 +200,12 @@
 	<groupId>mx.bigdata.jcalais</groupId>
 	<artifactId>j-calais</artifactId>
 	<version>1.0</version>
+	<exclusions>
+		<exclusion>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</exclusion>
+	</exclusions>
 </dependency>
  
  <dependency>
