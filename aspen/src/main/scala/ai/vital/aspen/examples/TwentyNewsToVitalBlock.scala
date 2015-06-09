@@ -327,7 +327,6 @@ object TwentyNewsToVitalBlock {
         	msg.setURI(s) 
         	msg.setProperty("subject", subject)
         	msg.setProperty("body", body)
-        	msg.setProperty("newsgroup", newsgroup)
         	
 //        nquadsWriter.handleStatement(vf.createStatement(subjectURI, RDF.TYPE, MESSAGE, context))
 //        nquadsWriter.handleStatement(vf.createStatement(subjectURI, hasNewsgroup, vf.createLiteral(newsgroup), context))
