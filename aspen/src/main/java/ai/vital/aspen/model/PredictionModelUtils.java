@@ -12,11 +12,13 @@ import ai.vital.aspen.groovy.featureextraction.CategoricalFeatureData;
 import ai.vital.aspen.groovy.featureextraction.FeatureData;
 import ai.vital.aspen.groovy.featureextraction.NumericalFeatureData;
 import ai.vital.aspen.groovy.featureextraction.TextFeatureData;
+import ai.vital.aspen.groovy.featureextraction.WordFeatureData;
 
 public class PredictionModelUtils {
 
 	static List<Class<? extends FeatureData>> clazzToIndex = Arrays.asList(
 		(Class<? extends FeatureData>)CategoricalFeatureData.class,
+		WordFeatureData.class,
 		NumericalFeatureData.class,
 		TextFeatureData.class
 	);

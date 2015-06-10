@@ -36,6 +36,7 @@ import java.util.HashMap
 import ai.vital.aspen.groovy.modelmanager.ModelCreator
 import ai.vital.aspen.groovy.modelmanager.AspenModel
 import ai.vital.aspen.model.RandomForestPredictionModel
+import ai.vital.aspen.model.RandomForestRegressionModel
 import ai.vital.aspen.model.DecisionTreePredictionModel
 import ai.vital.aspen.model.KMeansPredictionModel
 import org.apache.commons.io.IOUtils
@@ -98,6 +99,11 @@ import ai.vital.aspen.util.SetOnceHashMap
 import ai.vital.aspen.model.CollaborativeFilteringPredictionModel
 import org.apache.spark.mllib.recommendation.ALS
 import org.apache.spark.mllib.recommendation.Rating
+import java.util.Arrays
+import org.apache.spark.mllib.classification.SVMWithSGD
+import ai.vital.aspen.model.SparkLinearRegressionModel
+import org.apache.spark.mllib.regression.LinearRegressionWithSGD
+import ai.vital.vitalsigns.model.URIReference
 
 class ModelTrainingJob {}
 
@@ -109,7 +115,7 @@ object ModelTrainingJob extends AbstractJob {
   
   //expects 20news messages
   val inputOption  = new Option("i", "input", true, "input RDD[(String, Array[Byte])], either named RDD name (name:<name>) or <path> (no prefix), where path is a .vital.seq or .vital file")
-  inputOption.setRequired(true)
+  inputOption.setRequired(false)
   
   val outputOption = new Option("mod", "model", true, "output model path (directory)")
   outputOption.setRequired(true)
@@ -154,12 +160,7 @@ object ModelTrainingJob extends AbstractJob {
   
   def runJob(sc: SparkContext, jobConfig: Config): Any = {
 		  
-    val inputName = jobConfig.getString(inputOption.getLongOpt)
-    
-    var inputRDDName : String = null
-    if(inputName.startsWith("name:")) {
-      inputRDDName = inputName.substring("name:".length())
-    }
+    var inputName = getOptionalString(jobConfig, inputOption)
     
     var modelPathParam = jobConfig.getString(outputOption.getLongOpt)
     
@@ -199,13 +200,7 @@ object ModelTrainingJob extends AbstractJob {
     	datasetsMap = new java.util.HashMap[String, RDD[(String, Array[Byte])]]();
     }
     
-    val creatorMap = new HashMap[String, Class[_ <: AspenModel]];
-    creatorMap.put(CollaborativeFilteringPredictionModel.spark_collaborative_filtering_prediction, classOf[CollaborativeFilteringPredictionModel])
-    creatorMap.put(DecisionTreePredictionModel.spark_decision_tree_prediction, classOf[DecisionTreePredictionModel]);
-    creatorMap.put(KMeansPredictionModel.spark_kmeans_prediction, classOf[KMeansPredictionModel]);
-    creatorMap.put(NaiveBayesPredictionModel.spark_naive_bayes_prediction, classOf[NaiveBayesPredictionModel]);
-    creatorMap.put(RandomForestPredictionModel.spark_randomforest_prediction, classOf[RandomForestPredictionModel])
-    val modelCreator = new ModelCreator(creatorMap)
+    val modelCreator = getModelCreator()
     
     hadoopConfig = new Configuration()
     
@@ -229,6 +224,28 @@ object ModelTrainingJob extends AbstractJob {
     //not loaded!
     val aspenModel = modelCreator.createModel(builderBytes)
     
+    if(inputName == null) {
+      
+      if( aspenModel.getModelConfig.getSourceDatasets == null || aspenModel.getModelConfig.getSourceDatasets.size() == 0 ) {
+        throw new RuntimeException("no input parameter nor source dataset param in builder file")
+      }
+      
+      if(aspenModel.getModelConfig.getSourceDatasets.size() > 1) {
+        println("Ignoring sourceDatasets other than first ")
+      }
+      
+      inputName = aspenModel.getModelConfig.getSourceDatasets.get(0)
+      
+      println("inputName from builder: " + inputName)
+      
+    } else {
+      
+      aspenModel.getModelConfig.setSourceDatasets(Arrays.asList(inputName))
+      
+    }
+    
+    val creatorMap = getCreatorMap()
+    
     if( !creatorMap.containsKey( aspenModel.getType ) ) {
       throw new RuntimeException("only the following model types are supported: " + creatorMap.keySet().toString())
     }
@@ -240,6 +257,8 @@ object ModelTrainingJob extends AbstractJob {
     if(serviceProfile != null) {
         VitalServiceFactory.setServiceProfile(serviceProfile)
     }
+    
+    VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
 
     val modelFS = FileSystem.get(outputModelPath.toUri(), hadoopConfig)
 
@@ -255,6 +274,11 @@ object ModelTrainingJob extends AbstractJob {
     	  modelFS.delete(outputContainerPath, true)
       }
       
+    }
+    
+    var inputRDDName : String = null
+    if(inputName.startsWith("name:")) {
+      inputRDDName = inputName.substring("name:".length())
     }
     
       //use full set
@@ -361,7 +385,7 @@ object ModelTrainingJob extends AbstractJob {
         
         checkDependencies_loadDataset(sc, ldt)
         
-        loadDataset(sc, ldt)
+        loadDataset(sc, ldt, serviceProfile)
         
       } else if(task.isInstanceOf[SaveModelTask]) {
         
@@ -487,22 +511,26 @@ object ModelTrainingJob extends AbstractJob {
   
   override def subvalidate(sc: SparkContext, config: Config) : SparkJobValidation = {
     
-    val inputValue = config.getString(inputOption.getLongOpt)
+    val inputValue = getOptionalString(config, inputOption)
     
-    if(!skipNamedRDDValidation && inputValue.startsWith("name:")) {
-      
-      val inputRDDName = inputValue.substring("name:".length)
-      
-      if(!isNamedRDDSupported()) {
-    	  return new SparkJobInvalid("Cannot use named RDD output - no spark job context")
-      }
-      
-      val inputRDD = this.namedRdds.get[(String, Array[Byte])](inputRDDName)
-//      val rdd = this.namedRdds.get[(Long, scala.Seq[String])]("dictionary")
-      
-      if( !inputRDD.isDefined ) SparkJobInvalid("Missing named RDD [" + inputRDDName + "]")
+    if(inputValue != null) {
+    
+      if(!skipNamedRDDValidation && inputValue.startsWith("name:")) {
         
-      
+        val inputRDDName = inputValue.substring("name:".length)
+        
+        if(!isNamedRDDSupported()) {
+      	  return new SparkJobInvalid("Cannot use named RDD output - no spark job context")
+        }
+        
+        val inputRDD = this.namedRdds.get[(String, Array[Byte])](inputRDDName)
+  //      val rdd = this.namedRdds.get[(Long, scala.Seq[String])]("dictionary")
+        
+        if( !inputRDD.isDefined ) SparkJobInvalid("Missing named RDD [" + inputRDDName + "]")
+          
+        
+      }
+    
     }
     
     SparkJobValid
@@ -738,7 +766,7 @@ object ModelTrainingJob extends AbstractJob {
     
   }
   
-  def loadDataset(sc: SparkContext, ldt : LoadDataSetTask) : Unit= {
+  def loadDataset(sc: SparkContext, ldt : LoadDataSetTask, serviceProfile: String) : Unit= {
 
     val inputName = ldt.path
     
@@ -749,6 +777,7 @@ object ModelTrainingJob extends AbstractJob {
       inputRDDName = inputName.substring("name:".length())
     }
 
+    val model = ldt.getModel
     
     if(inputRDDName == null) {
         
@@ -774,7 +803,29 @@ object ModelTrainingJob extends AbstractJob {
         } else {
           
           inputBlockRDD = sc.sequenceFile(inputPath.toString(), classOf[Text], classOf[VitalBytesWritable]).map { pair =>
-            (pair._1.toString(), pair._2.get)
+            
+            //make sure the URIReferences are resolved
+            val inputObjects = VitalSigns.get().decodeBlock(pair._2.get, 0, pair._2.get.length)
+            val vitalBlock = new VitalBlock(inputObjects)
+            
+            if(vitalBlock.getMainObject.isInstanceOf[URIReference]) {
+              
+              if( VitalSigns.get.getVitalService == null ) {
+                if(serviceProfile != null) VitalServiceFactory.setServiceProfile(serviceProfile)
+                VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
+              }
+              
+              //loads objects from features queries and train queries 
+              model.getFeatureExtraction.composeBlock(vitalBlock)
+              
+              (pair._1.toString(), VitalSigns.get.encodeBlock(vitalBlock.toList()))
+              
+            } else {
+              
+            	(pair._1.toString(), pair._2.get)
+            }
+
+            
           }
          
           inputBlockRDD.cache()
@@ -784,6 +835,34 @@ object ModelTrainingJob extends AbstractJob {
     } else {
       
       inputBlockRDD = this.namedRdds.get[(String, Array[Byte])](inputRDDName).get
+      
+      //quick scan to make sure the blocks are fetched
+      inputBlockRDD = inputBlockRDD.map { pair =>
+        
+        
+        //make sure the URIReferences are resolved
+        val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
+        val vitalBlock = new VitalBlock(inputObjects)
+            
+        if(vitalBlock.getMainObject.isInstanceOf[URIReference]) {
+          
+        	if( VitalSigns.get.getVitalService == null ) {
+        		if(serviceProfile != null) VitalServiceFactory.setServiceProfile(serviceProfile)
+        		VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
+        	}
+              
+          //loads objects from features queries and train queries 
+          model.getFeatureExtraction.composeBlock(vitalBlock)
+              
+          (pair._1.toString(), VitalSigns.get.encodeBlock(vitalBlock.toList()))
+              
+        } else {
+              
+          pair
+              
+        }
+        
+      }
       
     }
     
@@ -965,6 +1044,40 @@ object ModelTrainingJob extends AbstractJob {
           
           outputModel = model
           
+        } else if(RandomForestRegressionModel.spark_randomforest_regression.equals(aspenModel.getType)) {
+          
+          val vectorized = vectorize(trainRDD, aspenModel);
+          
+          val categoricalFeaturesInfo = aspenModel.asInstanceOf[PredictionModel].getCategoricalFeaturesMap()
+          val numTrees = 3 // Use more in practice.
+          val featureSubsetStrategy = "auto" // Let the algorithm choose.
+          val impurity = "variance"
+          val maxDepth = 4
+          val maxBins = 32
+
+          val model = RandomForest.trainRegressor(vectorized, categoricalFeaturesInfo.toMap,
+              numTrees, featureSubsetStrategy, impurity, maxDepth, maxBins)
+              
+          aspenModel.asInstanceOf[RandomForestRegressionModel].setModel(model)
+          
+          outputModel = model
+          
+        } else if(SparkLinearRegressionModel.spark_linear_regression.equals(aspenModel.getType)) {
+          
+          val vectorized = vectorize(trainRDD, aspenModel);
+                    
+          var numIterations = 10
+          var numIterationsSetting = aspenModel.getModelConfig.getAlgorithmConfig.get("numIterations")
+          if(numIterationsSetting != null && numIterationsSetting.isInstanceOf[Number]) {
+            numIterations = numIterationsSetting.asInstanceOf[Number].intValue()
+          }
+
+          val model = LinearRegressionWithSGD.train(vectorized, numIterations)
+          
+          aspenModel.asInstanceOf[SparkLinearRegressionModel].setModel(model)
+          
+          outputModel = model
+          
         } else {
           throw new RuntimeException("Unhandled aspen model type: " + aspenModel.getType)
         } 
@@ -1104,6 +1217,40 @@ object ModelTrainingJob extends AbstractJob {
           println(msg)
           
           aspenModel.asInstanceOf[RandomForestPredictionModel].setError(msg)
+          
+        } else if( RandomForestRegressionModel.spark_randomforest_regression.equals(aspenModel.getType)) {
+          
+          val rfrm = aspenModel.asInstanceOf[RandomForestRegressionModel];
+          
+          // Evaluate model on training examples and compute training error
+          val valuesAndPreds = vectorize(testRDD, aspenModel).map { point =>
+            val prediction = rfrm.getModel().predict(point.features)
+            (point.label, prediction)
+          }
+          
+          val MSE = valuesAndPreds.map{case(v, p) => math.pow((v - p), 2)}.mean()
+          var msg = "training Mean Squared Error = " + MSE
+          msg = msg + "\nLearned regression forest model:\n" + rfrm.getModel().toDebugString
+          println(msg)
+          
+          rfrm.setError(msg)
+          
+        } else if( SparkLinearRegressionModel.spark_linear_regression.equals(aspenModel.getType)) {
+          
+          val sprm = aspenModel.asInstanceOf[SparkLinearRegressionModel];
+          
+          // Evaluate model on training examples and compute training error
+          val valuesAndPreds = vectorize(testRDD, aspenModel).map { point =>
+            val prediction = sprm.getModel().predict(point.features)
+            (point.label, prediction)
+          }
+          
+          val MSE = valuesAndPreds.map{case(v, p) => math.pow((v - p), 2)}.mean()
+          val msg = "training Mean Squared Error = " + MSE
+          
+          println(msg)
+          
+          sprm.setError(msg)
           
         } else {
           throw new RuntimeException("Unhandled model testing: " + aspenModel.getType)

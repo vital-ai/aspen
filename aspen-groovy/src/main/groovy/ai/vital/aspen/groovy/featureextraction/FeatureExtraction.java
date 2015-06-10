@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,16 +17,33 @@ import org.slf4j.LoggerFactory;
 import ai.vital.predictmodel.CategoricalFeature;
 import ai.vital.predictmodel.Feature;
 import ai.vital.predictmodel.Feature.RestrictionLevel;
+import ai.vital.predictmodel.FeatureQuery;
 import ai.vital.predictmodel.Function;
 import ai.vital.predictmodel.NumericalFeature;
 import ai.vital.predictmodel.PredictionModel;
+import ai.vital.predictmodel.QueryElement;
 import ai.vital.predictmodel.Restriction;
 import ai.vital.predictmodel.Taxonomy;
 import ai.vital.predictmodel.TextFeature;
+import ai.vital.predictmodel.TrainQuery;
 import ai.vital.predictmodel.WordFeature;
+import ai.vital.vitalservice.VitalService;
+import ai.vital.vitalservice.VitalStatus;
+import ai.vital.vitalservice.query.GraphElement;
+import ai.vital.vitalservice.query.ResultList;
+import ai.vital.vitalservice.query.VitalGraphCriteriaContainer;
+import ai.vital.vitalservice.query.VitalGraphQuery;
+import ai.vital.vitalservice.query.VitalGraphQueryPropertyCriterion;
+import ai.vital.vitalservice.query.VitalQuery;
+import ai.vital.vitalsigns.VitalSigns;
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock;
+import ai.vital.vitalsigns.meta.GraphContext;
+import ai.vital.vitalsigns.model.GraphMatch;
 import ai.vital.vitalsigns.model.GraphObject;
+import ai.vital.vitalsigns.model.URIReference;
 import ai.vital.vitalsigns.model.VITAL_Category;
+import ai.vital.vitalsigns.model.property.IProperty;
+import ai.vital.vitalsigns.model.property.URIProperty;
 
 public class FeatureExtraction {
 
@@ -55,13 +73,156 @@ public class FeatureExtraction {
 	 * @param aggregationValues
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	
 	public Map<String, Object> extractFeatures(VitalBlock block) {
 		return extractFeatures(block, null);
 	}
 	
+	
+	public void composeBlock(VitalBlock block) {
+		
+		composeMainObject(block);
+		
+		for( FeatureQuery fq : model.getFeatureQueries()) {
+			
+			processQueryElement(block, fq);
+		}
+		
+		for(TrainQuery tq : model.getTrainQueries()) {
+			
+			processQueryElement(block, tq);
+			
+		}
+		
+	}
+	
+	public void composeMainObject(VitalBlock block) {
+		
+		//check if a block is a special use case
+		if(block.getMainObject() instanceof URIReference) {
+			
+//			if( modelConfig.getFeatureQueries().
+			
+			if(block.getDependentObjects().size() != 0) throw new RuntimeException("URIReference must be a single object in a block!");
+			URIReference ref = (URIReference) block.getMainObject();
+			Object v = ref.getProperty("uRIRef");
+			if(v == null) throw new RuntimeException("uRIRef property not set in URIReference");
+			URIProperty uri = (URIProperty) ((IProperty)v).unwrapped();
+			
+			VitalService service = VitalSigns.get().getVitalService();
+			if(service == null) throw new RuntimeException("No active vitalservice found in VitalSigns singleton");
+			ResultList rl = null;
+			try {
+				rl = service.get(GraphContext.ServiceWide, uri);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			
+			if(rl.getStatus().getStatus() != VitalStatus.Status.ok) throw new RuntimeException("Error when getting graph object " + uri + ":" + rl.getStatus().getMessage());
+			
+			GraphObject first = rl.first();
+			if(first == null) throw new RuntimeException("Graph object not found: " + uri);
+			
+			block.setMainObject(first);
+		
+		} else {
+			
+			throw new RuntimeException("Main object expected to be a URIReference");
+			
+		}
+		
+	}
+	
+	private void processQueryElement(VitalBlock block, QueryElement fq) {
+
+		Map<String, GraphObject> map = new HashMap<String, GraphObject>();
+		map.put(block.getMainObject().getURI(), block.getMainObject());
+		
+		for(GraphObject g : block.getDependentObjects()) {
+			map.put(g.getURI(), g);
+		}
+		
+		//execute the query
+		VitalQuery vq = null;
+		try {
+			vq = (VitalQuery) fq.getQuery().clone();
+		} catch (CloneNotSupportedException e) {
+			throw new RuntimeException(e);
+		}
+		
+		if(vq instanceof VitalGraphQuery) {
+			
+			VitalGraphQuery vgq = (VitalGraphQuery) vq;
+			VitalGraphCriteriaContainer cc = new VitalGraphCriteriaContainer();
+			URIProperty rootURI = URIProperty.withString(block.getMainObject().getURI());
+			VitalGraphQueryPropertyCriterion c = new VitalGraphQueryPropertyCriterion(VitalGraphQueryPropertyCriterion.URI).equalTo(rootURI);
+			c.setSymbol(GraphElement.Source);
+			cc.add(c);
+			vgq.getTopContainer().add(cc);
+			vgq.setPayloads(true);
+
+			//TODO $URI references properties filter
+			
+			VitalService service = VitalSigns.get().getVitalService();
+			if(service == null) throw new RuntimeException("No active vitalservice found in VitalSigns singleton");
+			
+			ResultList queryRS = null;
+			try {
+				queryRS = service.query(vq);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			
+			if(queryRS.getStatus().getStatus() != VitalStatus.Status.ok) {
+				throw new RuntimeException("Vital graph query exception: " + queryRS.getStatus().getMessage());
+			}
+			
+			for(GraphObject g : queryRS) {
+				GraphMatch gm = (GraphMatch) g;
+				for(Entry<String, IProperty> entry : gm.getPropertiesMap().entrySet() ) {
+					if(entry.getValue().unwrapped() instanceof URIProperty) {
+						String objURI = ((URIProperty)entry.getValue().unwrapped()).get();
+						if(map.containsKey(objURI)) continue;
+						Object property = gm.getProperty(objURI);
+						if(property != null) {
+							GraphObject x = (GraphObject) property;
+							map.put(x.getURI(), x);
+							block.getDependentObjects().add(x);
+						}
+					}
+					
+				}
+				
+			}
+			
+			
+		} else {
+			throw new RuntimeException("Query not supported in builder yet: " + vq.getClass().getCanonicalName());
+		}
+		
+		
+	}
+	
+	/**
+	 * extracts features for a given block
+	 * the block is updated while the extraction is progressing
+	 * @param block
+	 * @param functionsFilter
+	 * @return
+	 */
 	public Map<String, Object> extractFeatures(VitalBlock block, List<Function> functionsFilter) {
+		
+		//decompose block
+		boolean composeBlock = false;
+		
+		//check if a block is a special use case
+		if(block.getMainObject() instanceof URIReference) {
+			
+			composeMainObject(block);
+			
+			composeBlock = true;
+			
+		}
+		
 		
 		Map<String, Object> extractedFeatures = new HashMap<String, Object>();
 		
@@ -69,6 +230,23 @@ public class FeatureExtraction {
 		//Map<String, Number> 
 		
 		for( Function function : model.getFunctions()) {
+			
+			if(composeBlock) {
+				
+				if(model.getFeatureQueries() != null) {
+					
+					for(FeatureQuery fq : model.getFeatureQueries()) {
+
+						if(function.getProvides().equals( fq.getProvides() ) ) {
+							
+							processQueryElement(block, fq);
+							
+						}
+						
+					}
+				}
+				
+			}
 			
 			boolean fpassed = true;
 			if(functionsFilter != null) {
@@ -88,6 +266,7 @@ public class FeatureExtraction {
 			
 			if(feature == null) throw new RuntimeException("Feature with name not found");
 			
+			@SuppressWarnings("rawtypes")
 			Closure closure = function.getFunction();
 			closure = closure.rehydrate(this, this, this);
 			closure.setDelegate(this);
@@ -241,6 +420,7 @@ public class FeatureExtraction {
 		return extractedFeatures;
 		
 	}
+
 
 	private String validate(Object v, Object res, boolean max,
 			boolean inclusive) {

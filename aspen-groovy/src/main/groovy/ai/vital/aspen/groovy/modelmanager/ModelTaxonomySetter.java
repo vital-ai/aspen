@@ -8,7 +8,6 @@ import ai.vital.predictmodel.PredictionModel;
 import ai.vital.predictmodel.Taxonomy;
 import ai.vital.vitalservice.VitalService;
 import ai.vital.vitalservice.VitalStatus;
-import ai.vital.vitalservice.factory.VitalServiceFactory;
 import ai.vital.vitalservice.query.ResultList;
 import ai.vital.vitalservice.query.VitalPathQuery;
 import ai.vital.vitalsigns.VitalSigns;
@@ -61,7 +60,8 @@ public class ModelTaxonomySetter {
 				if(rootCategory == null) {
 					
 					if(forcedService == null) {
-						forcedService = VitalServiceFactory.getVitalService();
+						forcedService = VitalSigns.get().getVitalService();
+						if(forcedService == null) throw new RuntimeException("Vitalservice instance not set in vitalsigns singleton");
 //						throw new RuntimeException("Service not set, cannot lookup taxonomy root");
 					}
 					

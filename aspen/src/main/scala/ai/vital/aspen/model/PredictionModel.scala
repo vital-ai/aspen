@@ -4,56 +4,38 @@ import ai.vital.aspen.groovy.modelmanager.AspenModel
 import scala.collection.mutable.LinkedHashMap
 import ai.vital.vitalsigns.model.GraphObject
 import ai.vital.domain.TargetNode
-
 import java.io.InputStream
-
 import org.apache.commons.io.IOUtils
-
 import scala.collection.JavaConversions._
-
 import org.apache.commons.lang3.SerializationUtils
 import org.apache.spark.mllib.tree.model.RandomForestModel
-
 import java.util.List
-
 import ai.vital.vitalsigns.VitalSigns
 import ai.vital.vitalsigns.model.property.IProperty
 import groovy.lang.GString
-
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.linalg.Vector
-
 import java.util.Arrays
-
 import ai.vital.vitalsigns.uri.URIGenerator
-
 import java.util.ArrayList
-
 import ai.vital.domain.Edge_hasTargetNode
 import ai.vital.vitalsigns.model.VITAL_Node
-
 import java.nio.charset.StandardCharsets
-
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 import ai.vital.predictmodel.Feature
-import ai.vital.predictmodel.Prediction;
-
+import ai.vital.predictmodel.Prediction
 import java.util.HashMap
-
 import ai.vital.aspen.groovy.featureextraction.FeatureData
-
 import java.util.Collections
 import java.util.Comparator
 import java.util.Map.Entry
-
 import scala.collection.JavaConversions._
 import ai.vital.aspen.groovy.featureextraction.CategoricalFeatureData
 import ai.vital.aspen.groovy.featureextraction.NumericalFeatureData
 import ai.vital.aspen.groovy.featureextraction.TextFeatureData
-
 import java.util.Date
-
 import org.apache.spark.mllib.regression.LabeledPoint
+import ai.vital.aspen.groovy.featureextraction.WordFeatureData
 
 @SerialVersionUID(1L)
 abstract class PredictionModel extends AspenModel {
@@ -73,6 +55,10 @@ abstract class PredictionModel extends AspenModel {
   def deserializeModel(stream: InputStream) : Unit;
   
   def isClustering() : Boolean = {
+    false
+  }
+  
+  def isRegression() : Boolean = {
     false
   }
   
@@ -288,7 +274,16 @@ abstract class PredictionModel extends AspenModel {
     
     val category = getModelConfig.getTrain.call(block, featuresMap)
     
-    val categoryID = trainedCategories.getCategories.indexOf(category.asInstanceOf[String])
+    var categoryID : java.lang.Double = null;
+    if(isCategorical()) {
+      
+    	categoryID = trainedCategories.getCategories.indexOf(category.asInstanceOf[String])
+      
+    } else {
+      
+      categoryID = category.asInstanceOf[Double]
+      
+    }
     
     new LabeledPoint( categoryID, vectorizeNoLabels(block, featuresMap));
     
@@ -327,6 +322,21 @@ abstract class PredictionModel extends AspenModel {
      			elements.add((start, d))
           
         }
+        
+      } else if(fd.isInstanceOf[WordFeatureData]) {
+
+        val wfd = fd.asInstanceOf[WordFeatureData]
+        
+        if(v.isInstanceOf[Int] || v.isInstanceOf[java.lang.Integer] || v.isInstanceOf[Long] || v.isInstanceOf[java.lang.Long]) {
+          
+          elements.add((start, v.asInstanceOf[Number].doubleValue()))
+          
+        } else {
+          
+          throw new RuntimeException("word feature is expected to return an integer")
+          
+        }
+        
         
       } else if(fd.isInstanceOf[NumericalFeatureData]) {
         

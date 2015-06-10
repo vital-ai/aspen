@@ -46,7 +46,6 @@ import ai.vital.predictmodel.Function;
 import ai.vital.predictmodel.NumericalFeature;
 import ai.vital.predictmodel.Prediction;
 import ai.vital.predictmodel.PredictionModel;
-import ai.vital.predictmodel.Taxonomy;
 import ai.vital.predictmodel.TextFeature;
 import ai.vital.predictmodel.WordFeature;
 import ai.vital.predictmodel.builder.ModelString;
@@ -94,7 +93,10 @@ public abstract class AspenModel implements Serializable {
 	public abstract boolean isCategorical();
 	
 	//returns true if input data should be split into train + test
-	public abstract boolean isSupervised();
+//	public abstract boolean isSupervised();
+	
+	//non-supervised
+	public abstract boolean isTestedWithTrainData();
 	
 	public String getName() {
 		return modelConfig.getName();

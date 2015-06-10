@@ -20,6 +20,7 @@ import ai.vital.aspen.groovy.AspenGroovyConfig
 import ai.vital.aspen.model.DecisionTreePredictionModel
 import ai.vital.aspen.model.NaiveBayesPredictionModel
 import ai.vital.aspen.model.RandomForestPredictionModel
+import ai.vital.aspen.model.RandomForestRegressionModel
 import ai.vital.aspen.groovy.modelmanager.AspenModel
 import ai.vital.vitalsigns.VitalSigns
 import scala.collection.JavaConversions._
@@ -45,6 +46,10 @@ import ai.vital.aspen.groovy.featureextraction.FeatureExtraction
 import org.apache.spark.mllib.recommendation.Rating
 import org.apache.spark.mllib.recommendation.Rating
 import scala.collection.mutable.MutableList
+import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
+import ai.vital.aspen.model.SparkLinearRegressionModel
+import ai.vital.vitalsigns.model.URIReference
+import org.apache.spark.mllib.regression.LabeledPoint
 
 class ModelTestingJob {}
 
@@ -112,15 +117,21 @@ object ModelTestingJob extends AbstractJob {
     mt2c.put(KMeansPredictionModel.spark_kmeans_prediction, classOf[KMeansPredictionModel].getCanonicalName)
     mt2c.put(NaiveBayesPredictionModel.spark_naive_bayes_prediction, classOf[NaiveBayesPredictionModel].getCanonicalName)
     mt2c.put(RandomForestPredictionModel.spark_randomforest_prediction, classOf[RandomForestPredictionModel].getCanonicalName)
-
+    mt2c.put(RandomForestRegressionModel.spark_randomforest_regression, classOf[RandomForestRegressionModel].getCanonicalName)
+    mt2c.put(SparkLinearRegressionModel.spark_linear_regression, classOf[SparkLinearRegressionModel].getCanonicalName)
     
     val modelManager = new ModelManager()
     println("Loading model ...")
     val aspenModel = modelManager.loadModel(modelPath.toUri().toString())
     
     println("Model loaded successfully")
+
     
-    val segmentsList = new ArrayList[VitalSegment]()
+    if(serviceProfile != null) {
+        VitalServiceFactory.setServiceProfile(serviceProfile)
+    }
+    
+    VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
     
     
       //URI, category, text
@@ -151,7 +162,26 @@ object ModelTestingJob extends AbstractJob {
         } else {
           
           inputBlockRDD = sc.sequenceFile(inputPath.toString(), classOf[Text], classOf[VitalBytesWritable]).map { pair =>
-            (pair._1.toString(), pair._2.get)
+            //make sure the URIReferences are resolved
+            val inputObjects = VitalSigns.get().decodeBlock(pair._2.get, 0, pair._2.get.length)
+            val vitalBlock = new VitalBlock(inputObjects)
+            
+            if(vitalBlock.getMainObject.isInstanceOf[URIReference]) {
+              
+              if( VitalSigns.get.getVitalService == null ) {
+                if(serviceProfile != null) VitalServiceFactory.setServiceProfile(serviceProfile)
+                VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
+              }
+              
+              //loads objects from features queries and train queries 
+              aspenModel.getFeatureExtraction.composeBlock(vitalBlock)
+              
+              (pair._1.toString(), VitalSigns.get.encodeBlock(vitalBlock.toList()))
+              
+            } else {
+              
+              (pair._1.toString(), pair._2.get)
+            }
           }
           
         }
@@ -161,6 +191,34 @@ object ModelTestingJob extends AbstractJob {
       println("loading data from named rdd...")
       
       inputBlockRDD = this.namedRdds.get[(String, Array[Byte])](inputRDDName).get
+      
+      //quick scan to make sure the blocks are fetched
+      inputBlockRDD = inputBlockRDD.map { pair =>
+        
+        
+        //make sure the URIReferences are resolved
+        val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
+        val vitalBlock = new VitalBlock(inputObjects)
+            
+        if(vitalBlock.getMainObject.isInstanceOf[URIReference]) {
+          
+          if( VitalSigns.get.getVitalService == null ) {
+            if(serviceProfile != null) VitalServiceFactory.setServiceProfile(serviceProfile)
+            VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
+          }
+              
+          //loads objects from features queries and train queries 
+          aspenModel.getFeatureExtraction.composeBlock(vitalBlock)
+              
+          (pair._1.toString(), VitalSigns.get.encodeBlock(vitalBlock.toList()))
+              
+        } else {
+              
+          pair
+              
+        }
+        
+      }
       
     }
     
@@ -249,6 +307,67 @@ object ModelTestingJob extends AbstractJob {
       println(msg)
         
       return msg
+      
+    }
+    
+    if(aspenModel.isInstanceOf[SparkLinearRegressionModel]
+    || aspenModel.isInstanceOf[RandomForestRegressionModel]) {
+      
+      var slrm : SparkLinearRegressionModel = null 
+      
+      var rfrm : RandomForestRegressionModel = null
+      
+      if( aspenModel.isInstanceOf[SparkLinearRegressionModel] ) {
+        
+    	  slrm = aspenModel.asInstanceOf[SparkLinearRegressionModel]
+        
+      } else {
+        
+        rfrm = aspenModel.asInstanceOf[RandomForestRegressionModel]
+        
+      }
+      
+      
+      
+      val valuesAndPreds = inputBlockRDD.map { pair =>
+        
+        
+        val block : java.util.List[GraphObject] = VitalSigns.get.decodeBlock(pair._2, 0, pair._2.length)
+        
+        val vitalBlock = new VitalBlock(block)
+      
+        var point : LabeledPoint = null
+        
+        var prediction = 0D;
+        
+        if(slrm != null) {
+          
+        	val features = slrm.getFeatureExtraction.extractFeatures(vitalBlock)
+          point = slrm.vectorizeLabels(vitalBlock, features)
+          prediction = slrm.model.predict(point.features)
+          
+        } else {
+          
+        	val features = rfrm.getFeatureExtraction.extractFeatures(vitalBlock)
+          point = rfrm.vectorizeLabels(vitalBlock, features)
+        	prediction = rfrm.model.predict(point.features)
+          
+          
+        }
+        
+        (point.label, prediction)
+        
+      }
+      
+      val MSE = valuesAndPreds.map{case(v, p) => math.pow((v - p), 2)}.mean()
+      
+      val msg = "training Mean Squared Error = " + MSE
+        
+      println(msg)
+        
+      return msg
+      
+      
       
     }
     
@@ -344,15 +463,31 @@ object ModelTestingJob extends AbstractJob {
                 
                 if(p.isInstanceOf[TargetNode]) {
                   
-                  val pv = p.getProperty("targetStringValue");
-                  if(pv != null) {              
-                    val prediction = pv.asInstanceOf[IProperty].toString()
-                        
-                        if(category.equals(prediction)) {
-                          matched = 1
-                        }
+                  if(aspenModel.isCategorical()) {
+                    
+                	  val pv = p.getProperty("targetStringValue");
+                	  if(pv != null) {              
+                		  val prediction = pv.asInstanceOf[IProperty].toString()
+                				  
+                				  if(category.equals(prediction)) {
+                					  matched = 1
+                				  }
+                		  
+                	  }
+                    
+                  //regression
+                  } else {
+                    
+                    val pv = p.getProperty("targetDoubleValue");
+                    if(pv != null) {
+                      
+                    	val prediction = pv.asInstanceOf[IProperty].rawValue().asInstanceOf[Double]
+                      
+                      
+                    }
                     
                   }
+                  
                   
                 }
                 

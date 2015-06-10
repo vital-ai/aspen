@@ -46,16 +46,6 @@
     
 
 
-    <!-- http://vital.ai/ontology/movielens#hasRatedMovieURIs -->
-
-    <owl:DatatypeProperty rdf:about="http://vital.ai/ontology/movielens#hasRatedMovieURIs">
-        <vital-core:hasMultipleValues rdf:datatype="&xsd;boolean">true</vital-core:hasMultipleValues>
-        <rdfs:domain rdf:resource="http://vital.ai/ontology/movielens#User"/>
-        <rdfs:range rdf:resource="&xsd;string"/>
-    </owl:DatatypeProperty>
-    
-
-
     <!-- http://vital.ai/ontology/movielens#hasRating -->
 
     <owl:DatatypeProperty rdf:about="http://vital.ai/ontology/movielens#hasRating">

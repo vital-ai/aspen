@@ -55,14 +55,19 @@ public class ReferenceModel extends AspenModel {
 		
 	}
 
-	@Override
-	public boolean isSupervised() {
-		return true;
-	}
+//	@Override
+//	public boolean isSupervised() {
+//		return true;
+//	}
 
 	@Override
 	public boolean isCategorical() {
 		return true;
+	}
+
+	@Override
+	public boolean isTestedWithTrainData() {
+		return false;
 	}
 
 }

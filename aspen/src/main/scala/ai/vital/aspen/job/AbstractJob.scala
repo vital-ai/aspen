@@ -23,6 +23,15 @@ import com.typesafe.config.ConfigException
 import ai.vital.aspen.config.AspenConfig
 import ai.vital.aspen.jobserver.client.JobServerClient
 import org.codehaus.jackson.map.ObjectMapper
+import ai.vital.aspen.groovy.modelmanager.ModelCreator
+import ai.vital.aspen.groovy.modelmanager.AspenModel
+import ai.vital.aspen.model.CollaborativeFilteringPredictionModel
+import ai.vital.aspen.model.DecisionTreePredictionModel
+import ai.vital.aspen.model.KMeansPredictionModel
+import ai.vital.aspen.model.NaiveBayesPredictionModel
+import ai.vital.aspen.model.RandomForestPredictionModel
+import ai.vital.aspen.model.SparkLinearRegressionModel
+import ai.vital.aspen.model.RandomForestRegressionModel
 
 
 /* this is placeholder code */
@@ -315,5 +324,27 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       } catch { case ex: NullPointerException => {
         return false;        
       }}
+    }
+    
+    def getModelCreator() : ModelCreator = {
+      
+      val creatorMap = getCreatorMap()
+      val modelCreator = new ModelCreator(creatorMap)
+      return modelCreator
+      
+    }
+    
+    def getCreatorMap() : HashMap[String, Class[_ <: AspenModel]] = {
+      
+      val creatorMap = new HashMap[String, Class[_ <: AspenModel]];
+      creatorMap.put(CollaborativeFilteringPredictionModel.spark_collaborative_filtering_prediction, classOf[CollaborativeFilteringPredictionModel])
+      creatorMap.put(DecisionTreePredictionModel.spark_decision_tree_prediction, classOf[DecisionTreePredictionModel]);
+      creatorMap.put(KMeansPredictionModel.spark_kmeans_prediction, classOf[KMeansPredictionModel]);
+      creatorMap.put(NaiveBayesPredictionModel.spark_naive_bayes_prediction, classOf[NaiveBayesPredictionModel]);
+      creatorMap.put(RandomForestPredictionModel.spark_randomforest_prediction, classOf[RandomForestPredictionModel])
+      creatorMap.put(RandomForestRegressionModel.spark_randomforest_regression, classOf[RandomForestRegressionModel])
+      creatorMap.put(SparkLinearRegressionModel.spark_linear_regression, classOf[SparkLinearRegressionModel]);
+      
+      return creatorMap
     }
 }

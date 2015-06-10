@@ -87,7 +87,7 @@ public class ModelTrainingProcedure {
 		
 		List<String> trainingRequiredParams = new ArrayList<String>();
 		
-		if(model.isSupervised()) {
+		if(!model.isTestedWithTrainData()) {
 			
 			trainDatasetName = "train-dataset";
 			testDatasetName = "test-dataset";
@@ -97,6 +97,7 @@ public class ModelTrainingProcedure {
 		} else {
 			
 			trainDatasetName = inputDatasetName;
+			testDatasetName = inputDatasetName;
 			
 		}
 		

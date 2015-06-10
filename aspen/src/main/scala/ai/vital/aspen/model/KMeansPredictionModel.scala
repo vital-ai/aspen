@@ -65,8 +65,8 @@ class KMeansPredictionModel extends PredictionModel {
   }
   
   @Override
-  def isSupervised() : Boolean = {
-    return false;
+  def isTestedWithTrainData() : Boolean = {
+    return true;
   }
   
   @Override

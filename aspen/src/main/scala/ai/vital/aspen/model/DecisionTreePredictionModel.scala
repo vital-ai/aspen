@@ -67,8 +67,8 @@ class DecisionTreePredictionModel extends PredictionModel {
 
 
   @Override
-  def isSupervised() : Boolean = {
-  	return true;
+  def isTestedWithTrainData() : Boolean = {
+  	return false;
   }
   
   @Override

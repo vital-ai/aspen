@@ -302,6 +302,11 @@
 	<version>1.0.0</version>
   </dependency>
   
+  <dependency>
+	<groupId>vital-ai</groupId>
+	<artifactId>autompg</artifactId>
+	<version>1.0.0</version>
+  </dependency>
   
   	<dependency>
   		<groupId>org.apache.spark</groupId>
