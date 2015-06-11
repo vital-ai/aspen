@@ -44,7 +44,8 @@ static Map<String, Options> cmd2CLI = new LinkedHashMap<String, Options>();
 		
 		Options postOptions = new Options()
 			.addOption(jobServerOption)
-			.addOption(contextOption);
+			.addOption(contextOption)
+			.addOption(paramsOption);
 		cmd2CLI.put(CMD_POST, postOptions);
 		
 	}

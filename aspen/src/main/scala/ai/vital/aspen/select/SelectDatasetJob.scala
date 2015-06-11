@@ -371,6 +371,16 @@ object SelectDatasetJob extends AbstractJob {
       
       output = inputURIsList.map { pair =>
         
+        if(VitalSigns.get.getVitalService() == null) {
+          
+          if(profile != null) {
+            VitalServiceFactory.setServiceProfile(profile)
+          }
+    
+          VitalSigns.get.setVitalService( VitalServiceFactory.getVitalService() )
+          
+        }
+        
         val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
             
         val vitalBlock = new VitalBlock(inputObjects)
