@@ -10,6 +10,8 @@
 	
 	<property name="product.tar.gz" value="aspen-${dist.version}.tar.gz" />
 	
+	<property name="scaladocs.zip" value="aspen-${dist.version}-javadocs.zip" />
+	
 	<property name="module.jar" value="target/aspen-${dist.version}-module-assembly.jar" />
 	
 	<!-- generate distribution -->
@@ -19,6 +21,7 @@
 		
 		<delete file="${product.zip}" />
 		<delete file="${product.tar.gz}" />
+		<delete file="${scaladocs.zip}" />
 		
 		<delete dir="${dist.dir}" />
 		<mkdir dir="${dist.dir}"/>
@@ -28,9 +31,12 @@
 			<arg value="aspen-module-pom.xml" />
 			<arg value="clean" />
 			<arg value="package" />
+			<arg value="scala:doc" />
 		</exec>
 		
 		<copy file="${module.jar}" todir="${dist.dir}" />
+		
+		<zip destfile="${scaladocs.zip}" basedir="${basedir}/target/site/scaladocs" compress="yes" />
 		
 		<zip destfile="${product.zip}" compress="yes">
     		<zipfileset dir="${basedir}" filemode="755" defaultexcludes="true" prefix="${prefix}">
