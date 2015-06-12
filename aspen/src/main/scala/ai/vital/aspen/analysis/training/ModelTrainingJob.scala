@@ -104,6 +104,7 @@ import org.apache.spark.mllib.classification.SVMWithSGD
 import ai.vital.aspen.model.SparkLinearRegressionModel
 import org.apache.spark.mllib.regression.LinearRegressionWithSGD
 import ai.vital.vitalsigns.model.URIReference
+import org.apache.spark.mllib.feature.StandardScaler
 
 class ModelTrainingJob {}
 
@@ -251,9 +252,6 @@ object ModelTrainingJob extends AbstractJob {
     }
 
     
-    val segmentsList = new ArrayList[VitalSegment]()
-    
-      
     if(serviceProfile != null) {
         VitalServiceFactory.setServiceProfile(serviceProfile)
     }
@@ -507,6 +505,46 @@ object ModelTrainingJob extends AbstractJob {
     
     return vectorized
     
+  }
+
+  //this is a special vectorization
+  def vectorizeWithScaling (trainRDD: RDD[(String, Array[Byte])], model: SparkLinearRegressionModel) : RDD[LabeledPoint] = {
+		
+		  val vectorized = trainRDD.map { pair =>
+		  
+  		  val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
+  		  
+  		  val vitalBlock = new VitalBlock(inputObjects)
+  		  
+  		  val ex = new FeatureExtraction(model.getModelConfig, model.getAggregationResults)
+  		  
+  		  val featuresMap = ex.extractFeatures(vitalBlock)
+  		  
+  		  model.vectorizeLabelsNoScaling(vitalBlock, featuresMap);
+		  
+		  }
+      
+      //scaler initialized, we may now vectorize as usual
+      model.initScaler(vectorized)
+
+      //TODO use the input vectorized values for performance gains?
+      val vectorized2 = trainRDD.map { pair =>
+      
+        val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
+        
+        val vitalBlock = new VitalBlock(inputObjects)
+        
+        val ex = new FeatureExtraction(model.getModelConfig, model.getAggregationResults)
+        
+        val featuresMap = ex.extractFeatures(vitalBlock)
+        
+        val notScaled = model.vectorizeLabels(vitalBlock, featuresMap);
+        
+        model.scaleLabeledPoint(notScaled)
+      
+      }
+		  return vectorized2
+				  
   }
   
   override def subvalidate(sc: SparkContext, config: Config) : SparkJobValidation = {
@@ -1064,13 +1102,25 @@ object ModelTrainingJob extends AbstractJob {
           
         } else if(SparkLinearRegressionModel.spark_linear_regression.equals(aspenModel.getType)) {
           
-          val vectorized = vectorize(trainRDD, aspenModel);
-                    
+          val vectorized = vectorizeWithScaling(trainRDD, aspenModel.asInstanceOf[SparkLinearRegressionModel]);
+          
+//          val scaler = new StandardScaler(true, true).fit(vectorized.)
+          
           var numIterations = 10
           var numIterationsSetting = aspenModel.getModelConfig.getAlgorithmConfig.get("numIterations")
           if(numIterationsSetting != null && numIterationsSetting.isInstanceOf[Number]) {
             numIterations = numIterationsSetting.asInstanceOf[Number].intValue()
           }
+          
+          
+          var c = 0
+          val x = vectorized.collect()
+          while ( c < 10 ) {
+            println ("Point: " + x(c))
+            c = c+1
+          }
+          
+          //normalize
 
           val model = LinearRegressionWithSGD.train(vectorized, numIterations)
           
@@ -1241,8 +1291,14 @@ object ModelTrainingJob extends AbstractJob {
           
           // Evaluate model on training examples and compute training error
           val valuesAndPreds = vectorize(testRDD, aspenModel).map { point =>
-            val prediction = sprm.getModel().predict(point.features)
-            (point.label, prediction)
+            println ("Test Point: " + point)
+            val scaledPoint = sprm.scaleLabeledPoint(point)
+            println ("Test Point scaled: " + scaledPoint)
+            val prediction = sprm.getModel().predict(scaledPoint.features)
+            println("Prediction: " + prediction)
+            var original = sprm.scaledBack(prediction);
+            println("Input: " + prediction + " rescaled: " + original)
+            (point.label, original)
           }
           
           val MSE = valuesAndPreds.map{case(v, p) => math.pow((v - p), 2)}.mean()

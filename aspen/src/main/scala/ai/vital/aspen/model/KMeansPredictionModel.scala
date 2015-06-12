@@ -16,6 +16,7 @@ object KMeansPredictionModel {
   
 }
 
+@SerialVersionUID(1L)
 class KMeansPredictionModel extends PredictionModel {
 
 

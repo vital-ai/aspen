@@ -344,7 +344,10 @@ object ModelTestingJob extends AbstractJob {
           
         	val features = slrm.getFeatureExtraction.extractFeatures(vitalBlock)
           point = slrm.vectorizeLabels(vitalBlock, features)
-          prediction = slrm.model.predict(point.features)
+          //also scale it 
+          prediction = slrm.model.predict(slrm.scaleVector(point.features))
+          
+          prediction = slrm.scaledBack(prediction)
           
         } else {
           

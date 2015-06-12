@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>vital-ai</groupId>
   <artifactId>aspen-groovy</artifactId>
-  <version>0.2.251</version>
+  <version>0.2.252</version>
   <name>Aspen Groovy Modules</name>
   
   
@@ -281,7 +281,7 @@
   <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vital-domain</artifactId>
-      <version>0.2.251</version>
+      <version>0.2.252</version>
       <scope>compile</scope>
     </dependency>
   
@@ -289,7 +289,7 @@
   <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vitalsigns</artifactId>
-      <version>0.2.251</version>
+      <version>0.2.252</version>
       <scope>compile</scope>
     </dependency>
   	
@@ -299,7 +299,7 @@
     <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vitalservice</artifactId>
-      <version>0.2.251</version>
+      <version>0.2.252</version>
       <scope>compile</scope>
     </dependency>
      
@@ -308,7 +308,7 @@
     <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vital-lucene</artifactId>
-      <version>0.2.251</version>
+      <version>0.2.252</version>
       <scope>compile</scope>
     </dependency>
   
@@ -316,7 +316,7 @@
     <dependency>
 	  <groupId>vital-ai</groupId>
       <artifactId>vital-triplestore</artifactId>
-      <version>0.2.251</version>
+      <version>0.2.252</version>
       <scope>compile</scope>
     </dependency>
     

@@ -6,7 +6,7 @@
   <name>Install Vital AI Jars into Local Repo</name>
   
   <properties>
-  	<vital.version>0.2.251</vital.version>
+  	<vital.version>0.2.252</vital.version>
   </properties>
   
   <repositories>

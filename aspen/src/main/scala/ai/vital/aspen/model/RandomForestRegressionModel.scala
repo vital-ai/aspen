@@ -19,6 +19,7 @@ object RandomForestRegressionModel {
   val spark_randomforest_regression = "spark-randomforest-regression";
 }
 
+@SerialVersionUID(1L)
 class RandomForestRegressionModel extends PredictionModel {
 
   var model : RandomForestModel = null
