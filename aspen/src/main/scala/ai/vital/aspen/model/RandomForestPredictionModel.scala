@@ -21,6 +21,14 @@ class RandomForestPredictionModel extends PredictionModel {
   
   var model : RandomForestModel = null;
   
+  
+  //algorithm settings
+  var numTrees = 20 // Use more in practice.
+  var featureSubsetStrategy = "auto" // Let the algorithm choose.
+  var impurity = "gini"
+  var maxDepth = 20
+  var maxBins = 32
+  
   def setModel(_model: RandomForestModel) : Unit = {
     model = _model
   }
@@ -68,6 +76,48 @@ class RandomForestPredictionModel extends PredictionModel {
   @Override
   def isCategorical() : Boolean = {
       return true;
+  }
+
+  def onAlgorithmConfigParam(key: String, value: java.io.Serializable): Boolean = {
+
+    if("featureSubsetStrategy".equals(key)) {
+      
+    	featureSubsetStrategy = value.asInstanceOf[String]
+      
+    } else if("impurity".equals(key)) {
+      
+      impurity = value.asInstanceOf[String]
+      
+    } else if("maxDepth".equals(key)) {
+      
+      if(!value.isInstanceOf[Number]) ex(key + " must be an int/long number")
+      
+      maxDepth = value.asInstanceOf[Number].intValue()
+      
+      if(maxDepth < 1) ex(key + " must be >= 1")
+      
+    } else if("maxBins".equals(key)) {
+      
+      if(!value.isInstanceOf[Number]) ex(key + " must be an int/long number")
+      
+      maxBins = value.asInstanceOf[Number].intValue()
+      
+      if(maxBins < 1) ex(key + " must be >= 1")
+      
+    } else if("numTrees".equals(key)) {
+
+    	if(!value.isInstanceOf[Number]) ex(key + " must be an int/long number")
+      
+      numTrees = value.asInstanceOf[Number].intValue()
+      
+    	if(numTrees < 1) ex(key + " must be >= 1")
+      
+    } else {
+      return false
+    }
+    
+    return true
+    
   }
   
 }

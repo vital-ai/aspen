@@ -2,7 +2,9 @@ package ai.vital.aspen.groovy.nlp.models;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -11,6 +13,7 @@ import java.util.Set;
 import opennlp.tools.chunker.ChunkerModel;
 import opennlp.tools.util.model.BaseModel;
 import ai.vital.aspen.groovy.modelmanager.AspenModel;
+import ai.vital.predictmodel.Feature;
 import ai.vital.predictmodel.Prediction;
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock;
 
@@ -112,5 +115,14 @@ public class OpenNLPModel extends AspenModel {
 		return false;
 	}
 
+	@Override
+	public boolean onAlgorithmConfigParam(String key, Serializable value) {
+		return false;
+	}
+
+	@Override
+	public Collection<Class<? extends Feature>> getSupportedFeatures() {
+		return null;
+	}
 
 }

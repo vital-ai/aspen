@@ -2,11 +2,14 @@ package ai.vital.aspen.groovy.ref;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 
 import ai.vital.aspen.groovy.modelmanager.AspenModel;
 import ai.vital.aspen.groovy.modelmanager.AspenPrediction;
+import ai.vital.predictmodel.Feature;
 import ai.vital.predictmodel.Prediction;
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock;
 
@@ -68,6 +71,18 @@ public class ReferenceModel extends AspenModel {
 	@Override
 	public boolean isTestedWithTrainData() {
 		return false;
+	}
+
+	@Override
+	public boolean onAlgorithmConfigParam(String key, Serializable value) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public Collection<Class<? extends Feature>> getSupportedFeatures() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

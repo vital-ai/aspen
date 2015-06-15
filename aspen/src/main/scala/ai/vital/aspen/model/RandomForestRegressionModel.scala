@@ -17,12 +17,21 @@ import org.apache.spark.mllib.tree.model.RandomForestModel
 object RandomForestRegressionModel {
   
   val spark_randomforest_regression = "spark-randomforest-regression";
+
 }
 
 @SerialVersionUID(1L)
 class RandomForestRegressionModel extends PredictionModel {
 
   var model : RandomForestModel = null
+  
+  
+  //algorithm settings
+  var numTrees = 3 // Use more in practice.
+  var featureSubsetStrategy = "auto" // Let the algorithm choose.
+  var impurity = "variance"
+  var maxDepth = 4
+  var maxBins = 32
   
   def setModel(_model: RandomForestModel) : Unit = {
     model = _model
@@ -82,6 +91,48 @@ class RandomForestRegressionModel extends PredictionModel {
     if(error != null) {
       FileUtils.writeStringToFile(new File(tempDir, error_txt), error, StandardCharsets.UTF_8.name())
     }
+    
+  }
+  
+  def onAlgorithmConfigParam(key: String, value: java.io.Serializable): Boolean = {
+
+    if("featureSubsetStrategy".equals(key)) {
+      
+      featureSubsetStrategy = value.asInstanceOf[String]
+      
+    } else if("impurity".equals(key)) {
+      
+      impurity = value.asInstanceOf[String]
+      
+    } else if("maxDepth".equals(key)) {
+      
+      if(!value.isInstanceOf[Number]) ex(key + " must be an int/long number")
+      
+      maxDepth = value.asInstanceOf[Number].intValue()
+      
+      if(maxDepth < 1) ex(key + " must be >= 1")
+      
+    } else if("maxBins".equals(key)) {
+      
+      if(!value.isInstanceOf[Number]) ex(key + " must be an int/long number")
+      
+      maxBins = value.asInstanceOf[Number].intValue()
+      
+      if(maxBins < 1) ex(key + " must be >= 1")
+      
+    } else if("numTrees".equals(key)) {
+
+      if(!value.isInstanceOf[Number]) ex(key + " must be an int/long number")
+      
+      numTrees = value.asInstanceOf[Number].intValue()
+      
+      if(numTrees < 1) ex(key + " must be >= 1")
+      
+    } else {
+      return false
+    }
+    
+    return true
     
   }
   

@@ -5,13 +5,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamClass;
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.io.IOUtils;
 
 import ai.vital.aspen.groovy.featureextraction.PredictionModelAnalyzer;
+import ai.vital.predictmodel.AlgorithmConfig;
+import ai.vital.predictmodel.Feature;
 import ai.vital.predictmodel.PredictionModel;
 import ai.vital.predictmodel.builder.ModelBuilder;
 import ai.vital.predictmodel.builder.ModelString;
@@ -65,6 +70,29 @@ public class ModelCreator {
 		m.setModelElement(modelEl);
 		
 		m.setBuilderContent(builderCode);
+		
+		AlgorithmConfig algorithmConfig = modelEl.getAlgorithmConfig();
+		if(algorithmConfig != null) {
+			
+			for( Entry<String, Serializable> entry : algorithmConfig.entrySet() ) {
+				
+				if( ! m.onAlgorithmConfigParam(entry.getKey(), entry.getValue()) ) {
+					throw new Exception("Algorithm config param not supported: " + entry.getKey());
+				}
+				
+			}
+			
+		}
+		
+		Collection<Class<? extends Feature>> supportedFeatures = m.getSupportedFeatures();
+		if(supportedFeatures == null || supportedFeatures.size() < 1) throw new Exception("Model " + m.getClass().getCanonicalName() + " must support at least 1 feature type");
+		
+		for(Feature f : modelEl.getFeatures()) {
+			if(!supportedFeatures.contains(f.getClass())) throw new Exception("Model " + m.getClass().getCanonicalName() + " does not support features of type: " + f.getClass().getSimpleName());
+		}
+		
+		if( ! supportedFeatures.contains( modelEl.getTrainFeature().getType() ) ) throw new Exception("Model " + m.getClass().getCanonicalName() + " does not support train feature of type: " + modelEl.getTrainFeature().getType());
+		
 		
 		PredictionModelAnalyzer.fixFunctionsAggregatesOrder(modelEl);
 		

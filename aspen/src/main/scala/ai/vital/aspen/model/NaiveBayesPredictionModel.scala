@@ -9,6 +9,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.nio.charset.StandardCharsets
 import org.apache.commons.io.FileUtils
+import java.io.Serializable
 
 object NaiveBayesPredictionModel {
   
@@ -20,6 +21,10 @@ object NaiveBayesPredictionModel {
 class NaiveBayesPredictionModel extends PredictionModel {
 
   var model : NaiveBayesModel = null;
+  
+  
+  //algorithm
+  var lambda = 1.0d
   
   def supportedType(): String = {
     return NaiveBayesPredictionModel.spark_naive_bayes_prediction
@@ -68,6 +73,24 @@ class NaiveBayesPredictionModel extends PredictionModel {
   @Override
   def isCategorical() : Boolean = {
       return true;
+  }
+
+  def onAlgorithmConfigParam(key: String, value: Serializable): Boolean = {
+    
+    if("lamda".equals(key)) {
+      
+      if(!value.isInstanceOf[Number]) ex(key + " must be a number")
+      
+      lambda = value.asInstanceOf[Number].doubleValue()
+      
+      if(lambda <= 0d) ex(key + " must be  > 0.0")
+      
+    } else {
+      return false
+    }
+
+    return true
+    
   }
   
 }

@@ -26,6 +26,7 @@ import ai.vital.predictmodel.Feature
 import ai.vital.predictmodel.Prediction
 import java.util.HashMap
 import ai.vital.aspen.groovy.featureextraction.FeatureData
+import java.util.Collection
 import java.util.Collections
 import java.util.Comparator
 import java.util.Map.Entry
@@ -38,6 +39,11 @@ import org.apache.spark.mllib.regression.LabeledPoint
 import ai.vital.aspen.groovy.featureextraction.WordFeatureData
 import ai.vital.vitalsigns.model.VITAL_Category
 import ai.vital.predictmodel.Taxonomy
+import ai.vital.predictmodel.CategoricalFeature
+import ai.vital.predictmodel.BinaryFeature
+import ai.vital.predictmodel.NumericalFeature
+import ai.vital.predictmodel.WordFeature
+import ai.vital.predictmodel.TextFeature
 
 @SerialVersionUID(1L)
 abstract class PredictionModel extends AspenModel {
@@ -47,6 +53,8 @@ abstract class PredictionModel extends AspenModel {
   val error_txt = "error.txt";
 
   var error : String = null;
+  
+  def ex(msg:String) : Unit = { throw new RuntimeException(msg) }
   
 //  val spark_randomforest_prediction = "spark-randomforest-prediction";
   
@@ -279,14 +287,17 @@ abstract class PredictionModel extends AspenModel {
     f.rehydrate(fe, fe, fe)
     val category = f.call(block, featuresMap)
     
-    if(!category.isInstanceOf[VITAL_Category]) throw new RuntimeException("Expected a VITAL_Category node, got: " + category)
-    
-    val cn = category.asInstanceOf[VITAL_Category]
-    
     var categoryID : java.lang.Double = null;
+    
     if(isCategorical()) {
       
+    	if(!category.isInstanceOf[VITAL_Category]) throw new RuntimeException("Expected a VITAL_Category node, got: " + category)
+      
+    	val cn = category.asInstanceOf[VITAL_Category]
+      
     	categoryID = trainedCategories.getCategories.indexOf(cn.getURI)
+      
+    	if(categoryID < 0) throw new RuntimeException("No categoryID found for URI: " + cn.getURI)
       
     } else {
       
@@ -294,7 +305,6 @@ abstract class PredictionModel extends AspenModel {
       
     }
     
-    if(categoryID < 0) throw new RuntimeException("No categoryID found for URI: " + cn.getURI)
     
     new LabeledPoint( categoryID, vectorizeNoLabels(block, featuresMap));
     
@@ -462,6 +472,18 @@ abstract class PredictionModel extends AspenModel {
     
     return pred
     
-  }  
+  } 
   
+  
+  
+  @Override
+  override def getSupportedFeatures() : Collection[Class[_ <: Feature]] = {
+	  return Arrays.asList(
+//        classOf[BinaryFeature],
+        classOf[CategoricalFeature],
+        classOf[NumericalFeature],
+        classOf[TextFeature],
+        classOf[WordFeature]
+    )
+  }
 }

@@ -31,6 +31,9 @@ class SparkLinearRegressionModel extends PredictionModel {
 
   var model : LinearRegressionModel = null
   
+  //algorithm config
+  var numIterations = 10
+  
   var labelsScaler : StandardScalerModel = null
   //labels scaling function factors y = ax + b
   var a = -1d
@@ -225,5 +228,22 @@ class SparkLinearRegressionModel extends PredictionModel {
 		if(scaler == null) throw new RuntimeException("Scaler not initialized")
 
     return ( prediction - b ) / a
+  }
+
+  def onAlgorithmConfigParam(key: String, value: java.io.Serializable): Boolean = {
+
+    if("numIterations".equals(key)) {
+      
+      if(!value.isInstanceOf[Number]) ex(key + " must be an int/long number")
+      
+      numIterations = value.asInstanceOf[Number].intValue()
+      
+      if(numIterations < 1) ex(key + " must be >= 1")
+      
+    } else {
+      return false
+    }
+    
+    return true
   }
 }

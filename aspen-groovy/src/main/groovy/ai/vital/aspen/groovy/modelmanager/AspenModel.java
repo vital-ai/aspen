@@ -13,6 +13,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -704,4 +705,15 @@ public abstract class AspenModel implements Serializable {
 		return _featureExtraction;
 	}
 
+	/**
+	 * overrides default algorithm config parameters
+	 * it should return false when a param is not supported  
+	 */
+	public abstract boolean onAlgorithmConfigParam(String key, Serializable value);
+
+	/**
+	 * determines the types of features a model supports
+	 * @return
+	 */
+	public abstract Collection<Class<? extends Feature>> getSupportedFeatures();
 }

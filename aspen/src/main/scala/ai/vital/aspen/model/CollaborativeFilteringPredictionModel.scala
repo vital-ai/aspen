@@ -20,6 +20,7 @@ import ai.vital.vitalsigns.model.property.IProperty
 import java.util.ArrayList
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
+import java.io.Serializable
 
 object CollaborativeFilteringPredictionModel {
 
@@ -55,6 +56,12 @@ class CollaborativeFilteringPredictionModel extends PredictionModel {
   var userURI2ID : Dictionary = null
   
   var productURI2ID : Dictionary = null
+  
+  
+  //algorithm settings
+  var rank = 10
+  var lambda = 0.01d
+  var iterations = 20
   
   
   def setModel(_model: MatrixFactorizationModel) : Unit = {
@@ -251,6 +258,42 @@ class CollaborativeFilteringPredictionModel extends PredictionModel {
   @Override
   def isCategorical() : Boolean = {
       return false;
+  }
+
+  def onAlgorithmConfigParam(key: String, value: Serializable): Boolean = {
+
+    
+ // Build the recommendation model using ALS
+    if("rank".equals(key)) {
+      
+      if(!value.isInstanceOf[Number]) ex(key + " must be a number")
+      
+      rank = value.asInstanceOf[Number].intValue()
+      
+      if(rank < 1) ex(key + " value must be >= 1")
+      
+    } else if("lambda".equals(key)) {
+      
+    	if(!value.isInstanceOf[Number]) ex(key + " must be a number")
+      
+      lambda = value.asInstanceOf[Number].doubleValue()
+      
+      if(lambda <= 0d) ex(key + " must be  > 0.0")
+      
+    } else if("iterations".equals(key)) {
+      
+    	if(!value.isInstanceOf[Number]) ex(key + " must be a number")
+      
+      iterations = value.asInstanceOf[Number].intValue()
+      
+      if(iterations < 1) ex(key + " must be >= 1")
+      
+    } else {
+      return false
+    }
+
+    return true
+    
   }
   
 }

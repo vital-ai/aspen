@@ -109,6 +109,13 @@ import ai.vital.vitalsigns.model.VITAL_Category
 import ai.vital.vitalsigns.model.VITAL_Container
 import ai.vital.vitalsigns.model.Edge_hasChildCategory
 import ai.vital.aspen.groovy.modelmanager.ModelTaxonomySetter
+import ai.vital.aspen.analysis.collaborativefiltering.CollaborativeFilteringTraining
+import ai.vital.aspen.analysis.decisiontree.DecisionTreeTraining
+import ai.vital.aspen.analysis.kmeans.KMeansClustering
+import ai.vital.aspen.analysis.naivebayes.NaiveBayesTraining
+import ai.vital.aspen.analysis.randomforest.RandomForestTraining
+import ai.vital.aspen.analysis.randomforest.RandomForestRegressionTraining
+import ai.vital.aspen.analysis.regression.SparkLinearRegressionTraining
 
 class ModelTrainingJob {}
 
@@ -254,6 +261,9 @@ object ModelTrainingJob extends AbstractJob {
     if( !creatorMap.containsKey( aspenModel.getType ) ) {
       throw new RuntimeException("only the following model types are supported: " + creatorMap.keySet().toString())
     }
+    
+    
+    //create training class instance, it will validate the algorithm params
 
     
     if(serviceProfile != null) {
@@ -1040,204 +1050,33 @@ object ModelTrainingJob extends AbstractJob {
  
 		  val trainRDD = getDataset(tmt.datasetName)
       
+      var trainingImpl : AbstractTraining[_] = null
+      
       val aspenModel = tmt.getModel
       
-      var outputModel : Serializable = null;
+      if(aspenModel.isInstanceOf[CollaborativeFilteringPredictionModel]) {
+        trainingImpl = new CollaborativeFilteringTraining(aspenModel.asInstanceOf[CollaborativeFilteringPredictionModel])
+      } else if(aspenModel.isInstanceOf[DecisionTreePredictionModel]){
+        trainingImpl = new DecisionTreeTraining(aspenModel.asInstanceOf[DecisionTreePredictionModel])         
+      } else if(aspenModel.isInstanceOf[KMeansPredictionModel]) {
+        trainingImpl = new KMeansClustering(aspenModel.asInstanceOf[KMeansPredictionModel])
+      } else if(aspenModel.isInstanceOf[NaiveBayesPredictionModel]) {
+        trainingImpl = new NaiveBayesTraining(aspenModel.asInstanceOf[NaiveBayesPredictionModel])
+      } else if(aspenModel.isInstanceOf[RandomForestPredictionModel]) {
+        trainingImpl = new RandomForestTraining(aspenModel.asInstanceOf[RandomForestPredictionModel])
+      } else if(aspenModel.isInstanceOf[RandomForestRegressionModel]) {
+        trainingImpl = new RandomForestRegressionTraining(aspenModel.asInstanceOf[RandomForestRegressionModel])
+      } else if(aspenModel.isInstanceOf[SparkLinearRegressionModel]) {
+        trainingImpl = new SparkLinearRegressionTraining(aspenModel.asInstanceOf[SparkLinearRegressionModel]) 
+      } else {
+        throw new RuntimeException("Unhandled aspen model type: " + aspenModel.getType)
+      }
+  
       
-      if( CollaborativeFilteringPredictionModel.spark_collaborative_filtering_prediction.equals(aspenModel.getType)) {
-      
-        //first pass to collect user and products ids -> uris
-        
-        val cfpm = aspenModel.asInstanceOf[CollaborativeFilteringPredictionModel]
-        
-        val values = collaborativeFilteringCollectData(trainRDD, cfpm)
-        
-        val ac = aspenModel.getModelConfig.getAlgorithmConfig
-        // Build the recommendation model using ALS
-        var rank = 10
-        val rankVal = ac.get("rank")
-        if( rankVal != null && rankVal.isInstanceOf[Number]) {
-          rank = rankVal.asInstanceOf[Number].intValue() 
-        }
-        
-        var lambda = 0.01d
-        val lambdaVal = ac.get("lambda")
-        if(lambdaVal != null && lambdaVal.isInstanceOf[Number]) {
-          lambda = lambdaVal.asInstanceOf[Number].doubleValue()
-        }
-        
-        var iterations = 20
-        val iterationsVal = ac.get("iterations")
-        if(iterationsVal != null && iterationsVal.isInstanceOf[Number]) {
-          iterations = iterationsVal.asInstanceOf[Number].intValue()
-        }
-        
-        val ratings = values.map(quad => {
-          new Rating(cfpm.getUserURI2ID().get(quad._1), cfpm.getProductURI2ID().get(quad._2), quad._3)
-        })
-        
-        ratings.cache()
-        
-        globalContext.put("collaborative-filtering-ratings", ratings)
-        
-        val model = ALS.train(ratings, rank, iterations, lambda)
-        
-        cfpm.setModel(model)
-        
-        outputModel = model
-        
-        val usersProducts = values.map( triple => {
-          (cfpm.getUserURI2ID().get(triple._1).toInt, cfpm.getProductURI2ID().get(triple._2).toInt )
-        }) 
-          
-        val predictions = cfpm.getModel().predict(usersProducts).map { case Rating(user, product, rate) => 
-          ((user, product), rate)
-        }
-          
-        val ratesAndPreds = ratings.map { case Rating(user, product, rate) => 
-            ((user, product), rate)
-        }.join(predictions)
-        val MSE = ratesAndPreds.map { case ((user, product), (r1, r2)) => 
-        val err = (r1 - r2)
-          err * err
-        }.mean()
-          
-        val msg = "Mean Squared Error = " + MSE
-          
-        println(msg)
-        cfpm.setError(msg)
-        
-//        val vectorized = vectorizeCollaborativeFiltering(trainRDD, aspenModel.asInstanceOf[CollaborativeFilteringPredictionModel])    
-        
-      } else if( DecisionTreePredictionModel.spark_decision_tree_prediction.equals(aspenModel.getType)) {
-    
-          val vectorized = vectorize(trainRDD, aspenModel);
-          
-          val numClasses = aspenModel.getTrainedCategories.getCategories.size()
-          val categoricalFeaturesInfo = aspenModel.asInstanceOf[PredictionModel].getCategoricalFeaturesMap()
-          val impurity = "gini"
-          val maxDepth = 5
-          val maxBins = 100
-          
-          val model = DecisionTree.trainClassifier(vectorized, numClasses, categoricalFeaturesInfo.toMap, impurity,
-            maxDepth, maxBins)
-        
-          aspenModel.asInstanceOf[DecisionTreePredictionModel].setModel(model)
-          
-          outputModel = model
-          
-        } else if( KMeansPredictionModel.spark_kmeans_prediction.equals(aspenModel.getType)) {
-          
-          val parsedData = vectorizeNoLabels(trainRDD, aspenModel)
-          
-          var clustersCount = 10
-          var clustersCountSetting = aspenModel.getModelConfig.getAlgorithmConfig.get("clustersCount");
-          if(clustersCountSetting != null && clustersCountSetting.isInstanceOf[Number]) {
-            clustersCount = clustersCountSetting.asInstanceOf[Number].intValue()
-          }
-          
-          
-          // Cluster the data into two classes using KMeans
-          var numIterations = 20
-          var numIterationsSetting = aspenModel.getModelConfig.getAlgorithmConfig.get("numIterations")
-          if(numIterationsSetting != null && numIterationsSetting.isInstanceOf[Number]) {
-            numIterations = numIterationsSetting.asInstanceOf[Number].intValue()
-          }
-          val clusters = KMeans.train(parsedData, clustersCount, numIterations)
-          
-          
-          aspenModel.asInstanceOf[KMeansPredictionModel].setModel(clusters)
-          
-          // Evaluate clustering by computing Within Set Sum of Squared Errors
-          val WSSSE = clusters.computeCost(parsedData)
-          val msg = "Within Set Sum of Squared Errors = " + WSSSE
-    
-          println(msg)
-          aspenModel.asInstanceOf[KMeansPredictionModel].setError(msg)
-          
-          outputModel = clusters
-          
-        } else if( NaiveBayesPredictionModel.spark_naive_bayes_prediction.equals(aspenModel.getType)) {
-          
-          val vectorized = vectorize(trainRDD, aspenModel);
-          
-          val model = NaiveBayes.train(vectorized, lambda = 1.0)
-          
-          aspenModel.asInstanceOf[NaiveBayesPredictionModel].setModel(model)
-          
-          outputModel = model
-          
-        } else if( RandomForestPredictionModel.spark_randomforest_prediction.equals(aspenModel.getType ) ) {
-          
-          val vectorized = vectorize(trainRDD, aspenModel);
-          
-          val numClasses = aspenModel.getTrainedCategories.getCategories.size()
-          val categoricalFeaturesInfo = aspenModel.asInstanceOf[PredictionModel].getCategoricalFeaturesMap()
-          val numTrees = 20 // Use more in practice.
-          val featureSubsetStrategy = "auto" // Let the algorithm choose.
-          val impurity = "gini"
-          val maxDepth = 20
-          val maxBins = 32
-          
-          val model = RandomForest.trainClassifier(vectorized, numClasses, categoricalFeaturesInfo.toMap,
-              numTrees, featureSubsetStrategy, impurity, maxDepth, maxBins)
-              
-          aspenModel.asInstanceOf[RandomForestPredictionModel].setModel(model)
-          
-          outputModel = model
-          
-        } else if(RandomForestRegressionModel.spark_randomforest_regression.equals(aspenModel.getType)) {
-          
-          val vectorized = vectorize(trainRDD, aspenModel);
-          
-          val categoricalFeaturesInfo = aspenModel.asInstanceOf[PredictionModel].getCategoricalFeaturesMap()
-          val numTrees = 3 // Use more in practice.
-          val featureSubsetStrategy = "auto" // Let the algorithm choose.
-          val impurity = "variance"
-          val maxDepth = 4
-          val maxBins = 32
+      var outputModel = trainingImpl.train(globalContext, trainRDD);
 
-          val model = RandomForest.trainRegressor(vectorized, categoricalFeaturesInfo.toMap,
-              numTrees, featureSubsetStrategy, impurity, maxDepth, maxBins)
-              
-          aspenModel.asInstanceOf[RandomForestRegressionModel].setModel(model)
-          
-          outputModel = model
-          
-        } else if(SparkLinearRegressionModel.spark_linear_regression.equals(aspenModel.getType)) {
-          
-          val vectorized = vectorizeWithScaling(trainRDD, aspenModel.asInstanceOf[SparkLinearRegressionModel]);
-          
-//          val scaler = new StandardScaler(true, true).fit(vectorized.)
-          
-          var numIterations = 10
-          var numIterationsSetting = aspenModel.getModelConfig.getAlgorithmConfig.get("numIterations")
-          if(numIterationsSetting != null && numIterationsSetting.isInstanceOf[Number]) {
-            numIterations = numIterationsSetting.asInstanceOf[Number].intValue()
-          }
-          
-          
-          var c = 0
-          val x = vectorized.collect()
-          while ( c < 10 ) {
-            println ("Point: " + x(c))
-            c = c+1
-          }
-          
-          //normalize
-
-          val model = LinearRegressionWithSGD.train(vectorized, numIterations)
-          
-          aspenModel.asInstanceOf[SparkLinearRegressionModel].setModel(model)
-          
-          outputModel = model
-          
-        } else {
-          throw new RuntimeException("Unhandled aspen model type: " + aspenModel.getType)
-        } 
-      
       globalContext.put(TrainModelTask.MODEL_BINARY, outputModel)
-    
+      
   }
   
   def checkDependencies_splitDataset(sc: SparkContext, sdt : SplitDatasetTask) : Unit = {
@@ -1344,6 +1183,10 @@ object ModelTrainingJob extends AbstractJob {
           
           aspenModel.asInstanceOf[NaiveBayesPredictionModel].setError(msg);
           
+        } else if(KMeansPredictionModel.spark_kmeans_prediction.equals(aspenModel.getType)) {
+          
+          println("KMEANS does not provide testing implementation")
+          
         } else if( RandomForestPredictionModel.spark_randomforest_prediction.equals(aspenModel.getType ) ) {
           
           println("Testing ...")
@@ -1430,66 +1273,6 @@ object ModelTrainingJob extends AbstractJob {
     }
     
     globalContext.put(cnfdt.feature.getName + CollectNumericalFeatureDataTask.NUMERICAL_FEATURE_DATA_SUFFIX, cnfdt.getModel.getFeaturesData.get(cnfdt.feature.getName))
-    
-  }
-  
-  def collaborativeFilteringCollectData(trainRDD : RDD[(String, Array[Byte])], model : CollaborativeFilteringPredictionModel) : RDD[(String, String, Double)] = {
-    
-    val values = trainRDD.map( pair => {
- 
-      val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
-      
-      val fe = model.getFeatureExtraction 
-      
-      val features = fe.extractFeatures(new VitalBlock(inputObjects))
-      
-      val userURI = features.get(CollaborativeFilteringPredictionModel.feature_user_uri)
-      if(userURI == null) throw new RuntimeException("No " + CollaborativeFilteringPredictionModel.feature_user_uri)
-      if(!userURI.isInstanceOf[String]) throw new RuntimeException("Feature " + CollaborativeFilteringPredictionModel.feature_user_uri + " must be a string")
-      
-      val productURI = features.get(CollaborativeFilteringPredictionModel.feature_product_uri)
-      if(productURI == null) throw new RuntimeException("No " + CollaborativeFilteringPredictionModel.feature_product_uri)
-      if(!productURI.isInstanceOf[String]) throw new RuntimeException("Feature " + CollaborativeFilteringPredictionModel.feature_product_uri + " must be a string")      
-      
-      val rating = features.get(CollaborativeFilteringPredictionModel.feature_rating)
-      if(rating == null) throw new RuntimeException("No " + CollaborativeFilteringPredictionModel.feature_rating)
-      if(!rating.isInstanceOf[Number]) throw new RuntimeException("Feature " + CollaborativeFilteringPredictionModel.feature_rating + " must be a number (double)")
-      
-      (userURI.asInstanceOf[String], productURI.asInstanceOf[String], rating.asInstanceOf[Number].doubleValue())
-      
-    })
-    
-    values.cache()
-    
-    val usersList = values.map( triple => {
-      (triple._1)
-    }).distinct().collect()
-    
-    val userURI2IDdic = new HashMap[String, Integer]
-
-    var c = 0
-    for(u <- usersList) {
-      userURI2IDdic.put(u, c)
-      c = c+1
-    }
-    
-    val productsList = values.map ( triple => {
-      (triple._2)
-    }).distinct().collect()
-    
-    c = 0
-    val productURI2IDdic = new HashMap[String, Integer]
-    for(p <- productsList) {
-      productURI2IDdic.put(p, c)
-      c = c+1
-    }
-    
-    model.setUserURI2ID(new Dictionary(userURI2IDdic))
-    model.setProductURI2ID(new Dictionary(productURI2IDdic))
-    
-    globalContext.put("collaborative-filtering-rdd", values)
-    values
-    
     
   }
   
