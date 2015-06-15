@@ -83,10 +83,10 @@ import ai.vital.predictmodel.Taxonomy
 import ai.vital.aspen.groovy.predict.ModelTrainingProcedure
 import ai.vital.aspen.groovy.predict.ModelTrainingTask
 import ai.vital.aspen.groovy.predict.tasks.CalculateAggregationValueTask
-import ai.vital.aspen.groovy.predict.tasks.CollectCategoricalFeaturesDataTask
 import ai.vital.aspen.groovy.predict.tasks.CollectNumericalFeatureDataTask
-import ai.vital.aspen.groovy.predict.tasks.CollectTargetCategoriesTask
 import ai.vital.aspen.groovy.predict.tasks.CollectTextFeatureDataTask
+import ai.vital.aspen.groovy.predict.tasks.CollectCategoricalFeatureTaxonomyDataTask
+import ai.vital.aspen.groovy.predict.tasks.CollectTrainTaxonomyDataTask
 import ai.vital.aspen.groovy.predict.tasks.CountDatasetTask
 import ai.vital.aspen.groovy.predict.tasks.LoadDataSetTask
 import ai.vital.aspen.groovy.predict.tasks.SaveModelTask
@@ -105,6 +105,10 @@ import ai.vital.aspen.model.SparkLinearRegressionModel
 import org.apache.spark.mllib.regression.LinearRegressionWithSGD
 import ai.vital.vitalsigns.model.URIReference
 import org.apache.spark.mllib.feature.StandardScaler
+import ai.vital.vitalsigns.model.VITAL_Category
+import ai.vital.vitalsigns.model.VITAL_Container
+import ai.vital.vitalsigns.model.Edge_hasChildCategory
+import ai.vital.aspen.groovy.modelmanager.ModelTaxonomySetter
 
 class ModelTrainingJob {}
 
@@ -257,6 +261,8 @@ object ModelTrainingJob extends AbstractJob {
     }
     
     VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
+    
+    ModelTaxonomySetter.loadTaxonomies(aspenModel.getModelConfig, null)
 
     val modelFS = FileSystem.get(outputModelPath.toUri(), hadoopConfig)
 
@@ -330,14 +336,13 @@ object ModelTrainingJob extends AbstractJob {
         calculateAggregationValue(sc, cavt)
         
 //      } else if(task.isInstanceOf[Collect])
+      } else if(task.isInstanceOf[CollectCategoricalFeatureTaxonomyDataTask]) {
         
-      } else if(task.isInstanceOf[CollectCategoricalFeaturesDataTask]) {
+        val ccftdt = task.asInstanceOf[CollectCategoricalFeatureTaxonomyDataTask]
         
-        val ccfdt = task.asInstanceOf[CollectCategoricalFeaturesDataTask]
+        checkDependencies_collectCategoricalFeatureTaxonomyDataTask(sc, ccftdt)
         
-        checkDependencies_collectCategoricalFeatureDataTask(sc, ccfdt)
-        
-        collectCategoricalFeatureDataTask(sc, ccfdt)
+        collectCategoricalFeatureTaxonomyDataTask(sc, ccftdt)
         
       } else if(task.isInstanceOf[CollectNumericalFeatureDataTask]) {
         
@@ -347,14 +352,6 @@ object ModelTrainingJob extends AbstractJob {
         
         collectNumericalFeatureDataTask(sc, cnfdt)
         
-      } else if(task.isInstanceOf[CollectTargetCategoriesTask]) {
-        
-    	  val ctct = task.asInstanceOf[CollectTargetCategoriesTask]
-
-        checkDependencies_collectTargetCategories(sc, ctct)
-          
-        collectTargetCategories(sc, ctct)
-          
       } else if(task.isInstanceOf[CollectTextFeatureDataTask]) {
         
         val ctfdt = task.asInstanceOf[CollectTextFeatureDataTask]
@@ -362,6 +359,14 @@ object ModelTrainingJob extends AbstractJob {
         checkDependencies_collectTextFeatureData(sc, ctfdt)
         
         collectTextFeatureData(sc, ctfdt)
+        
+      } else if(task.isInstanceOf[CollectTrainTaxonomyDataTask]) {
+        
+        val ctdt = task.asInstanceOf[CollectTrainTaxonomyDataTask]
+        
+        checkDependencies_collectTrainTaxonomyDataTask(sc, ctdt)
+        
+        collectTrainTaxonomyDataTask(sc, ctdt)
         
       } else if(task.isInstanceOf[CountDatasetTask]) {
         
@@ -474,7 +479,7 @@ object ModelTrainingJob extends AbstractJob {
             
       val vitalBlock = new VitalBlock(inputObjects)
       
-      val ex = new FeatureExtraction(model.getModelConfig, model.getAggregationResults)
+      val ex = model.getFeatureExtraction
       
       val featuresMap = ex.extractFeatures(vitalBlock)
 
@@ -495,7 +500,7 @@ object ModelTrainingJob extends AbstractJob {
             
       val vitalBlock = new VitalBlock(inputObjects)
       
-      val ex = new FeatureExtraction(model.getModelConfig, model.getAggregationResults)
+      val ex = model.getFeatureExtraction
       
       val featuresMap = ex.extractFeatures(vitalBlock)
 
@@ -516,7 +521,7 @@ object ModelTrainingJob extends AbstractJob {
   		  
   		  val vitalBlock = new VitalBlock(inputObjects)
   		  
-  		  val ex = new FeatureExtraction(model.getModelConfig, model.getAggregationResults)
+  		  val ex = model.getFeatureExtraction
   		  
   		  val featuresMap = ex.extractFeatures(vitalBlock)
   		  
@@ -534,7 +539,7 @@ object ModelTrainingJob extends AbstractJob {
         
         val vitalBlock = new VitalBlock(inputObjects)
         
-        val ex = new FeatureExtraction(model.getModelConfig, model.getAggregationResults)
+        val ex = model.getFeatureExtraction
         
         val featuresMap = ex.extractFeatures(vitalBlock)
         
@@ -628,7 +633,7 @@ object ModelTrainingJob extends AbstractJob {
               
           val aggFunctions = PredictionModelAnalyzer.getAggregationFunctions(aspenModel.getModelConfig, a)
           
-          val ex = new FeatureExtraction(aspenModel.getModelConfig, aspenModel.getAggregationResults);
+          val ex = aspenModel.getFeatureExtraction
               
           val features = ex.extractFeatures(vitalBlock, aggFunctions)
               
@@ -685,11 +690,11 @@ object ModelTrainingJob extends AbstractJob {
         
   }
   
-  def checkDependencies_collectTargetCategories(sc: SparkContext, ctct : CollectTargetCategoriesTask) : Unit = {
+  def checkDependencies_collectTrainTaxonomyDataTask(sc: SparkContext, ctct : CollectTrainTaxonomyDataTask): Unit = {
     val trainRDD = getDataset(ctct.datasetName)       
   }
   
-  def collectTargetCategories(sc: SparkContext, ctct : CollectTargetCategoriesTask) : Unit = {
+  def collectTrainTaxonomyDataTask(sc: SparkContext, ctct : CollectTrainTaxonomyDataTask): Unit = {
  
     val aspenModel = ctct.getModel
     
@@ -701,35 +706,134 @@ object ModelTrainingJob extends AbstractJob {
     
         val trainRDD = getDataset(ctct.datasetName)       
       
-          //gather target categories
-          val categoriesRDD = trainRDD.map { pair =>
+        //gather target categories
+        val categoriesRDD = trainRDD.map { pair =>
             val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
             
             val vitalBlock = new VitalBlock(inputObjects)
             
-            val ex = new FeatureExtraction(aspenModel.getModelConfig, aspenModel.getAggregationResults);
+            val ex = aspenModel.getFeatureExtraction
             
             val featuresMap = ex.extractFeatures(vitalBlock)
                 
-            val category = aspenModel.getModelConfig.getTrain.call(vitalBlock, featuresMap)
+            val f = aspenModel.getModelConfig.getTrainFeature.getFunction
+            f.rehydrate(ex, ex, ex)
+            val category = f.call(vitalBlock, featuresMap)
                 
             if(category == null) throw new RuntimeException("No category returned: " + pair._1)
             
-            category.asInstanceOf[String]
+            val c = category.asInstanceOf[VITAL_Category]
+            
+            (c.getURI, c)
                 
-          }
-          
-          val categories: Array[String] = categoriesRDD.distinct().toArray().sortWith((s1, s2) => s1.compareTo(s2) < 0)
+        }
+        
+        val categories = categoriesRDD.reduceByKey( (c1: VITAL_Category , c2: VITAL_Category) => c1 ).map(p => p._2).collect()
+        
+        println("categories count: " + categories.size)
+            
+        val taxonomy = new Taxonomy()
+        
+        val rootCategory = new VITAL_Category()
+        rootCategory.setURI("urn:taxonomy-root")
+        rootCategory.setProperty("name", "Taxonomy Root")
+        
+        var container = new VITAL_Container()
+        container.putGraphObject(rootCategory)
+        
+        taxonomy.setRootCategory(rootCategory)
+        taxonomy.setRoot(rootCategory.getURI)
+        taxonomy.setContainer(container)
+        
+        var c = 0
+        for(x <- categories) {
+          c = c+1
+          container.putGraphObject(x)
+          val edge = new Edge_hasChildCategory()
+          edge.addSource(rootCategory).addDestination(x).setURI("urn:Edge_hasChildCategory_" + rootCategory.getURI + "_" + c)
+          container.putGraphObject(edge)
+        }
+        
+        val trainedCategories = CategoricalFeatureData.fromTaxonomy(taxonomy)
+        aspenModel.setTrainedCategories(trainedCategories)
               
-          println("categories count: " + categories.size)
-          
-          val trainedCategories = new CategoricalFeatureData()
-          trainedCategories.setCategories(categories.toList)
-          aspenModel.setTrainedCategories(trainedCategories)
-              
-          globalContext.put(CollectTargetCategoriesTask.TARGET_CATEGORIES_DATA, categories)
+        globalContext.put(CollectTrainTaxonomyDataTask.TRAIN_TAXONOMY_DATA, trainedCategories)
     }
     
+  }
+  
+  def checkDependencies_collectCategoricalFeatureTaxonomyDataTask(sc: SparkContext, ctct : CollectCategoricalFeatureTaxonomyDataTask): Unit = {
+      val trainRDD = getDataset(ctct.datasetName)       
+  }
+  
+  
+  def collectCategoricalFeatureTaxonomyDataTask(sc: SparkContext, ctct : CollectCategoricalFeatureTaxonomyDataTask): Unit = {
+		  
+		  val aspenModel = ctct.getModel
+      
+      val categoricalFeature = ctct.categoricalFeature
+				  
+				  if(aspenModel.getType.equals(KMeansPredictionModel.spark_kmeans_prediction)) {
+					  
+					  return
+							  
+				  } else {
+					  
+					  val trainRDD = getDataset(ctct.datasetName)       
+							  
+							  //gather target categories
+            
+						val categoriesRDD = trainRDD.map { pair =>
+						 val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
+							  
+						 val vitalBlock = new VitalBlock(inputObjects)
+							  
+						 val ex = aspenModel.getFeatureExtraction
+							  
+						 val featuresMap = ex.extractFeatures(vitalBlock)
+
+              val category = featuresMap.get(categoricalFeature.getName)
+                
+              if(category == null) throw new RuntimeException("No category returned: " + pair._1)
+            
+              val c = category.asInstanceOf[VITAL_Category]
+            
+              (c.getURI, c)
+            }
+                
+            val categories = categoriesRDD.reduceByKey( (c1: VITAL_Category , c2: VITAL_Category) => c1 ).map(p => p._2).collect()
+            
+            println("categories count: " + categories.size)
+                
+            val taxonomy = new Taxonomy()
+            
+            val rootCategory = new VITAL_Category()
+            rootCategory.setURI("urn:taxonomy-root")
+            rootCategory.setProperty("name", "Taxonomy Root")
+            
+            var container = new VITAL_Container()
+            container.putGraphObject(rootCategory)
+            
+            taxonomy.setRootCategory(rootCategory)
+            taxonomy.setRoot(rootCategory.getURI)
+            taxonomy.setContainer(container)
+            
+            var c = 0
+            for(x <- categories) {
+              c = c+1
+              container.putGraphObject(x)
+              val edge = new Edge_hasChildCategory()
+              edge.addSource(rootCategory).addDestination(x).setURI("urn:Edge_hasChildCategory_" + rootCategory.getURI + "_" + c)
+              container.putGraphObject(edge)
+            }
+            
+            val trainedCategories = CategoricalFeatureData.fromTaxonomy(taxonomy)
+
+            aspenModel.getFeaturesData.put(categoricalFeature.getName, trainedCategories)
+            
+            globalContext.put(categoricalFeature.getName + CollectCategoricalFeatureTaxonomyDataTask.CATEGORICAL_FEATURE_DATA_SUFFIX, trainedCategories)
+        }
+		  
   }
   
   def checkDependencies_collectTextFeatureData(sc : SparkContext, ctfdt : CollectTextFeatureDataTask) : Unit = {
@@ -760,7 +864,7 @@ object ModelTrainingJob extends AbstractJob {
             
           var l = new HashSet[String]()
   
-          val ex = new FeatureExtraction(aspenModel.getModelConfig, aspenModel.getAggregationResults);
+          val ex = aspenModel.getFeatureExtraction
           
           val featuresMap = ex.extractFeatures(vitalBlock)
           
@@ -1313,23 +1417,6 @@ object ModelTrainingJob extends AbstractJob {
         } 
   }
  
-  def checkDependencies_collectCategoricalFeatureDataTask(sc : SparkContext, ccfdt: CollectCategoricalFeaturesDataTask) : Unit = {
-    
-  }
-  def collectCategoricalFeatureDataTask(sc : SparkContext, ccfdt: CollectCategoricalFeaturesDataTask) : Unit = {
-    
-    val aspenModel = ccfdt.getModel
-    
-    if(!aspenModel.getFeaturesData.containsKey(ccfdt.feature.getName)) {
-    	//TODO
-      val cfd = new CategoricalFeatureData()
-    	ccfdt.getModel.getFeaturesData.put(ccfdt.feature.getName, cfd);
-    }
-    
-    globalContext.put(ccfdt.feature.getName + CollectCategoricalFeaturesDataTask.CATEGORICAL_FEATURE_DATA_SUFFIX, aspenModel.getFeaturesData.get(ccfdt.feature.getName))
-    
-  }
-  
   def checkDependencies_collectNumericalFeatureDataTask(sc : SparkContext, cnfdt: CollectNumericalFeatureDataTask) : Unit = {
     
   }
@@ -1352,7 +1439,7 @@ object ModelTrainingJob extends AbstractJob {
  
       val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
       
-      val fe = new FeatureExtraction(model.getModelConfig, model.getAggregationResults) 
+      val fe = model.getFeatureExtraction 
       
       val features = fe.extractFeatures(new VitalBlock(inputObjects))
       

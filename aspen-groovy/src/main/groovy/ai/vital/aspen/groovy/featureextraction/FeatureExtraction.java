@@ -14,18 +14,27 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ai.vital.predictmodel.BinaryFeature;
 import ai.vital.predictmodel.CategoricalFeature;
+import ai.vital.predictmodel.DateFeature;
+import ai.vital.predictmodel.DateTimeFeature;
 import ai.vital.predictmodel.Feature;
-import ai.vital.predictmodel.Feature.RestrictionLevel;
+import ai.vital.predictmodel.FeatureBase;
+import ai.vital.predictmodel.FeatureBase.RestrictionLevel;
 import ai.vital.predictmodel.FeatureQuery;
 import ai.vital.predictmodel.Function;
+import ai.vital.predictmodel.GeoLocationFeature;
 import ai.vital.predictmodel.NumericalFeature;
+import ai.vital.predictmodel.OrdinalFeature;
 import ai.vital.predictmodel.PredictionModel;
 import ai.vital.predictmodel.QueryElement;
 import ai.vital.predictmodel.Restriction;
+import ai.vital.predictmodel.StringFeature;
 import ai.vital.predictmodel.Taxonomy;
 import ai.vital.predictmodel.TextFeature;
+import ai.vital.predictmodel.TrainFeature;
 import ai.vital.predictmodel.TrainQuery;
+import ai.vital.predictmodel.URIFeature;
 import ai.vital.predictmodel.WordFeature;
 import ai.vital.vitalservice.VitalService;
 import ai.vital.vitalservice.VitalStatus;
@@ -42,6 +51,7 @@ import ai.vital.vitalsigns.model.GraphMatch;
 import ai.vital.vitalsigns.model.GraphObject;
 import ai.vital.vitalsigns.model.URIReference;
 import ai.vital.vitalsigns.model.VITAL_Category;
+import ai.vital.vitalsigns.model.property.GeoLocationProperty;
 import ai.vital.vitalsigns.model.property.IProperty;
 import ai.vital.vitalsigns.model.property.URIProperty;
 
@@ -53,19 +63,25 @@ public class FeatureExtraction {
 	
 	Map<String, Double> AGGREGATE;
 	
-	Map<String, TaxonomyWrapper> TAXONOMY;
+	Map<String, Taxonomy> TAXONOMY;
 
 	public FeatureExtraction(PredictionModel model, Map<String, Double> aggregationValues) {
 		this.model = model;
 		this.AGGREGATE = aggregationValues;
-		this.TAXONOMY = new HashMap<String, TaxonomyWrapper>();
+		this.TAXONOMY = new HashMap<String, Taxonomy>();
 		
 		for(Taxonomy t : model.getTaxonomies()) {
-			TAXONOMY.put(t.getProvides(), new TaxonomyWrapper(t));
+			TAXONOMY.put(t.getProvides(), t);
 		}
 		
 	}
 	
+	
+	public Map<String, Taxonomy> getTAXONOMY() {
+		return TAXONOMY;
+	}
+
+
 	/**
 	 * Extracts features for given block, model functions must be sorted, aggregates must be calculated 
 	 * @param model
@@ -258,13 +274,13 @@ public class FeatureExtraction {
 			
 			Feature feature = null;
 			for(Feature f : model.getFeatures()) {
-				if(function.getProvides().equals(f.getName())) {
+				if(function.getProvides().equals(f.getName()) || function.getProvides().equals(f.getURI())) {
 					feature = f;
 					break;
 				}
 			}
 			
-			if(feature == null) throw new RuntimeException("Feature with name not found");
+			if(feature == null) throw new RuntimeException("Feature with name or URI: " + function.getProvides() + " not found");
 			
 			@SuppressWarnings("rawtypes")
 			Closure closure = function.getFunction();
@@ -272,10 +288,13 @@ public class FeatureExtraction {
 			closure.setDelegate(this);
 			Object x = closure.call(block, extractedFeatures);
 			
+			String fn = feature.getName();
+			
 			if(x == null) {
-				if(!feature.getAllowedMissing()) throw new RuntimeException("Feature " + feature.getName() + " missing values are not allowed!");
+				if(!feature.getAllowedMissing()) throw new RuntimeException("Feature " + fn + " missing values are not allowed!");
 				
-				extractedFeatures.put(feature.getName(), null);
+				extractedFeatures.put(fn, null);
+				extractedFeatures.put(feature.getURI(), null);
 				
 				continue;
 				
@@ -284,7 +303,7 @@ public class FeatureExtraction {
 			List<Object> vals = new ArrayList<Object>();
 			
 			if(x instanceof Collection) {
-				if(!feature.getMultivalue()) throw new RuntimeException("Feature " + feature.getName() + " is not a multivalue one, it does not accept a collection of objects");
+				if(!feature.getMultivalue()) throw new RuntimeException("Feature " + fn + " is not a multivalue one, it does not accept a collection of objects");
 				vals.addAll((Collection<? extends Object>) x);
 			} else {
 				vals.add(x);
@@ -292,128 +311,12 @@ public class FeatureExtraction {
 			
 			for(Object v : vals) {
 				
-				RestrictionLevel restrictionLevel = feature.getRestrictionLevel();
-				if(restrictionLevel == null) restrictionLevel = RestrictionLevel.unchecked;
-				
-				if(feature instanceof TextFeature) {
-					
-					if(v instanceof String || v instanceof GString) {
-						
-					} else {
-						throw new RuntimeException("Text Feature " + feature.getName() + " only accepts strings");
-					}
-					
-				} else if(feature instanceof NumericalFeature) {
-					
-					if(v instanceof Number || v instanceof Date) {
-						
-					} else {
-						throw new RuntimeException("Numerical Feature " + feature.getName() + " only accepts numbers");
-					}
-					
-				} else if(feature instanceof WordFeature) {
-					
-//					throw new
-//					if(v instanceof Integer || v instanceof Long || v instanceof String || v instanceof GString) {
-//					}
-					
-				} else if(feature instanceof CategoricalFeature) {
-					
-					CategoricalFeature cf = (CategoricalFeature) feature;
-					
-					if(v instanceof String || v instanceof GString) {
-						
-						TaxonomyWrapper taxonomyWrapper = TAXONOMY.get( cf.getTaxonomy() );
-						if(taxonomyWrapper == null) throw new RuntimeException("Categorical feature taxonomy not found");
-						
-						Taxonomy taxonomy = taxonomyWrapper.taxonomy;
-						
-						String catURI = v.toString();
-						if( taxonomy.getRootCategory().getURI().equals(catURI) ) throw new RuntimeException("Category URI must not be equal to root URI");
-						
-						GraphObject graphObject = taxonomy.getContainer().get(catURI);
-						if(graphObject == null) throw new RuntimeException("Category with URI " + catURI + " not found in taxonomy: " + cf.getTaxonomy());
-						
-						if(!(graphObject instanceof VITAL_Category)) throw new RuntimeException("Category with URI " + catURI + " is not a category in container, but: " + graphObject.getClass().getCanonicalName());
-						
-						
-						//ok
-						
-						
-						
-					} else {
-						
-						throw new RuntimeException("Categorical feature " + feature.getName() + " only accepts strings");
-						
-					}
-					
-				}
-				
-				if(restrictionLevel != null && restrictionLevel != RestrictionLevel.unchecked) {
-					
-					if( feature.getRestrictions() != null && feature.getRestrictions().size() > 0) {
-						
-						if(!(feature instanceof NumericalFeature)) throw new RuntimeException("Only numerical features restrictions supported, current type: " + feature.getClass().getCanonicalName());
-						
-						boolean passed = true;
-						
-						String msg = "";
-						
-						for(Restriction restriction : feature.getRestrictions()) {
-							
-							Object maxValueExclusive = restriction.getMaxValueExclusive();
-							
-							if(maxValueExclusive != null) {
-								
-								String m = validate(v, maxValueExclusive, true, false);
-								
-								if(m != null) msg += m + "\n"; 
-								
-							}
-							
-							Object maxValueInclusive = restriction.getMaxValueInclusive();
-							
-							if(maxValueInclusive != null) {
-								String m = validate(v, maxValueInclusive, true, true);
-								if(m != null) msg += m + "\n"; 
-							}
-							
-							Object minValueExclusive = restriction.getMinValueExclusive();
-							if(minValueExclusive != null) {
-								String m = validate(v, minValueExclusive, false, false);
-								if(m != null) msg += m + "\n"; 
-							}
-							
-							Object minValueInclusive = restriction.getMinValueExclusive();
-							if(minValueInclusive != null) {
-								String m = validate(v, minValueInclusive, false, true);
-								if(m != null) msg += m + "\n"; 
-							}
-							
-							
-						}
-						
-						if(msg.length() > 0) {
-							
-							if(restrictionLevel == RestrictionLevel.warning) {
-								
-								log.warn("Feature " + feature.getName() + " restriction not passed: " + msg.trim());
-								
-								
-							} else {
-								
-								throw new RuntimeException(msg);
-								
-							}
-						}
-						
-					}
-					
-				}
+				validateFeatureValue(feature, v);
 				
 			}
 			
-			extractedFeatures.put(feature.getName(), x);
+			extractedFeatures.put(fn, x);
+			extractedFeatures.put(feature.getURI(), x);
 			
 		}
 		
@@ -421,6 +324,221 @@ public class FeatureExtraction {
 		
 	}
 
+
+	public void validateFeatureValue(FeatureBase featureBase, Object v) {
+		
+		if(featureBase instanceof Feature) {
+			Feature feature = (Feature) featureBase;
+		
+			RestrictionLevel restrictionLevel = feature.getRestrictionLevel();
+			if(restrictionLevel == null) restrictionLevel = RestrictionLevel.unchecked;
+			
+			if(feature instanceof BinaryFeature) {
+	
+				if(v instanceof Boolean) {
+					
+				} else {
+					throw new RuntimeException("Binary feature " + feature.getName() + " only accepts booleans");
+				}
+				
+			} else if(feature instanceof CategoricalFeature) {
+				
+				CategoricalFeature cf = (CategoricalFeature) feature;
+				
+				
+				if(v instanceof VITAL_Category) {
+					
+					VITAL_Category c = (VITAL_Category) v;
+					
+					Taxonomy taxonomy = TAXONOMY.get(cf.getTaxonomy());
+					if(taxonomy == null) throw new RuntimeException("Taxonomy not found: " + cf.getTaxonomy());
+					
+					//root category is set by the training phase
+					if( !taxonomy.isIntrospect() || taxonomy.getRootCategory() != null ) {
+						
+						String catURI = c.getURI();
+						if( taxonomy.getRootCategory().getURI().equals(catURI) ) throw new RuntimeException("Category URI must not be equal to root URI");
+						
+						GraphObject graphObject = taxonomy.getContainer().get(catURI);
+						if(graphObject == null) throw new RuntimeException("Category with URI " + catURI + " not found in taxonomy: " + cf.getTaxonomy());
+						
+						if(!(graphObject instanceof VITAL_Category)) throw new RuntimeException("Category with URI " + catURI + " is not a category in container, but: " + graphObject.getClass().getCanonicalName());
+						
+					}
+					
+				} else {
+					
+					throw new RuntimeException("Categorical feature must return a category node");
+					
+				}
+				
+			} else if(feature instanceof DateFeature) {
+				
+				if(v instanceof Date) {
+					
+				} else {
+					throw new RuntimeException("Date feature " + feature.getName() + " only accepts dates");
+				}
+				
+			} else if(feature instanceof DateTimeFeature) {
+	
+				if(v instanceof Date) {
+					
+				} else {
+					throw new RuntimeException("Datetime feature " + feature.getName() + " only accepts dates");
+				}
+				
+			} else if( feature instanceof GeoLocationFeature ) {
+			
+				if(v instanceof GeoLocationProperty) {
+					
+				} else {
+					throw new RuntimeException("GeoLocation feature " + feature.getName() + " only accepts GeoLocationProperty instances");
+				}
+			} else if(feature instanceof NumericalFeature) {
+				
+				if(v instanceof Number) {
+					
+				} else {
+					throw new RuntimeException("Numerical Feature " + feature.getName() + " only accepts numbers");
+				}
+				
+				
+			} else if(feature instanceof OrdinalFeature) {
+				
+				if(v instanceof Integer || v instanceof Long) {
+					
+				} else {
+					throw new RuntimeException("Ordinal feature " + feature.getName() + " only accepts integers/longs");
+				}
+				
+			} else if(feature instanceof StringFeature) {
+	
+				if(v instanceof String || v instanceof GString) {
+					
+				} else {
+					throw new RuntimeException("String Feature " + feature.getName() + " only accepts strings");
+				}
+				
+			} else if(feature instanceof TextFeature) {
+				
+				if(v instanceof String || v instanceof GString) {
+					
+				} else {
+					throw new RuntimeException("Text Feature " + feature.getName() + " only accepts strings");
+				}
+				
+			} else if(feature instanceof URIFeature) {
+				
+				if(v instanceof String || v instanceof GString || v instanceof URIProperty) {
+					
+				} else {
+					throw new RuntimeException("URI Feature " + feature.getName() + " only accepts strings or URIProperty");
+				}
+				
+			} else if(feature instanceof WordFeature) {
+				
+				if(v instanceof String || v instanceof GString) {
+					
+				} else {
+					throw new RuntimeException("Word Feature " + feature.getName() + " only accepts strings");
+				}
+				
+			} else {
+				
+				throw new RuntimeException("unknown feature type: " + feature.getClass());
+				
+			}
+			
+			if(restrictionLevel != null && restrictionLevel != RestrictionLevel.unchecked) {
+				
+				if( feature.getRestrictions() != null && feature.getRestrictions().size() > 0) {
+					
+					if(!(feature instanceof NumericalFeature)) throw new RuntimeException("Only numerical features restrictions supported, current type: " + feature.getClass().getCanonicalName());
+					
+					boolean passed = true;
+					
+					String msg = "";
+					
+					for(Restriction restriction : feature.getRestrictions()) {
+						
+						Object maxValueExclusive = restriction.getMaxValueExclusive();
+						
+						if(maxValueExclusive != null) {
+							
+							String m = validate(v, maxValueExclusive, true, false);
+							
+							if(m != null) msg += m + "\n"; 
+							
+						}
+						
+						Object maxValueInclusive = restriction.getMaxValueInclusive();
+						
+						if(maxValueInclusive != null) {
+							String m = validate(v, maxValueInclusive, true, true);
+							if(m != null) msg += m + "\n"; 
+						}
+						
+						Object minValueExclusive = restriction.getMinValueExclusive();
+						if(minValueExclusive != null) {
+							String m = validate(v, minValueExclusive, false, false);
+							if(m != null) msg += m + "\n"; 
+						}
+						
+						Object minValueInclusive = restriction.getMinValueExclusive();
+						if(minValueInclusive != null) {
+							String m = validate(v, minValueInclusive, false, true);
+							if(m != null) msg += m + "\n"; 
+						}
+						
+						
+					}
+					
+					if(msg.length() > 0) {
+						
+						if(restrictionLevel == RestrictionLevel.warning) {
+							
+							log.warn("Feature " + feature.getName() + " restriction not passed: " + msg.trim());
+							
+							
+						} else {
+							
+							throw new RuntimeException(msg);
+							
+						}
+					}
+					
+				}
+				
+			}
+		} else if(featureBase instanceof TrainFeature) {
+			
+			TrainFeature tf = (TrainFeature) featureBase;
+			
+			Feature f = null;
+			
+			try {
+				f = tf.getType().newInstance();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+			
+			f.setName("TRAIN");
+			f.setRestrictionLevel(tf.getRestrictionLevel());
+			f.setRestrictions(tf.getRestrictions());
+			f.setURI("TRAIN");
+			
+			if(f instanceof CategoricalFeature) {
+				CategoricalFeature cf = (CategoricalFeature) f;
+				cf.setTaxonomy(tf.getTaxonomy());
+			}
+			
+			validateFeatureValue(f, v);
+			
+		} else {
+			throw new RuntimeException("unhanlded feature type: " + featureBase.getClass());
+		}
+	}
 
 	private String validate(Object v, Object res, boolean max,
 			boolean inclusive) {

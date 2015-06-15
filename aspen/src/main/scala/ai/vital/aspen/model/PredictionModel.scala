@@ -36,6 +36,8 @@ import ai.vital.aspen.groovy.featureextraction.TextFeatureData
 import java.util.Date
 import org.apache.spark.mllib.regression.LabeledPoint
 import ai.vital.aspen.groovy.featureextraction.WordFeatureData
+import ai.vital.vitalsigns.model.VITAL_Category
+import ai.vital.predictmodel.Taxonomy
 
 @SerialVersionUID(1L)
 abstract class PredictionModel extends AspenModel {
@@ -272,18 +274,27 @@ abstract class PredictionModel extends AspenModel {
     
     initVectorData();
     
-    val category = getModelConfig.getTrain.call(block, featuresMap)
+    val fe = getFeatureExtraction
+    val f = getModelConfig.getTrainFeature.getFunction
+    f.rehydrate(fe, fe, fe)
+    val category = f.call(block, featuresMap)
+    
+    if(!category.isInstanceOf[VITAL_Category]) throw new RuntimeException("Expected a VITAL_Category node, got: " + category)
+    
+    val cn = category.asInstanceOf[VITAL_Category]
     
     var categoryID : java.lang.Double = null;
     if(isCategorical()) {
       
-    	categoryID = trainedCategories.getCategories.indexOf(category.asInstanceOf[String])
+    	categoryID = trainedCategories.getCategories.indexOf(cn.getURI)
       
     } else {
       
       categoryID = category.asInstanceOf[Double]
       
     }
+    
+    if(categoryID < 0) throw new RuntimeException("No categoryID found for URI: " + cn.getURI)
     
     new LabeledPoint( categoryID, vectorizeNoLabels(block, featuresMap));
     
@@ -315,9 +326,15 @@ abstract class PredictionModel extends AspenModel {
         
         if(v != null) {
           
+          if(!v.isInstanceOf[VITAL_Category]) throw new RuntimeException("Categorical feature function must return VITAL_Category instances!")
+          
+          val c = v.asInstanceOf[VITAL_Category]
+          
         	val cfd = fd.asInstanceOf[CategoricalFeatureData]
         	
-          val d = cfd.getCategories.indexOf(v).doubleValue();
+          val d = cfd.getCategories.indexOf(c.getURI).doubleValue();
+          
+          if(d < 0 ) throw new RuntimeException("Category index not found: " + c.getURI())
           
      			elements.add((start, d))
           
@@ -422,11 +439,26 @@ abstract class PredictionModel extends AspenModel {
     
     val categoryID = doPredict(vectorizeNoLabels(vitalBlock, featuresMap))
     
-    val category = trainedCategories.getCategories.get(categoryID.intValue())
+    val categoryURI = trainedCategories.getCategories.get(categoryID.intValue())
+    
+    val taxonomyName = modelConfig.getTrainFeature.getTaxonomy
+    
     
     val pred = new CategoryPrediction
-    pred.category = category
+    pred.categoryURI = categoryURI
     pred.categoryID = categoryID
+    
+    if(taxonomyName != null) {
+    
+      var x : Taxonomy = null
+      
+      for(t <- modelConfig.getTaxonomies) {
+        if(t.getProvides.equals(taxonomyName)) {
+          pred.category = t.getContainer.get(categoryURI).asInstanceOf[VITAL_Category]
+        }
+      }
+      
+    }
     
     return pred
     

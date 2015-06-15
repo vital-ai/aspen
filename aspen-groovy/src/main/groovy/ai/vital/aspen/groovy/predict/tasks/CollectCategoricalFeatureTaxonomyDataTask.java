@@ -7,18 +7,22 @@ import java.util.Map;
 import ai.vital.aspen.groovy.modelmanager.AspenModel;
 import ai.vital.aspen.groovy.predict.ModelTrainingTask;
 import ai.vital.predictmodel.CategoricalFeature;
+import ai.vital.predictmodel.Taxonomy;
 
-public class CollectCategoricalFeaturesDataTask extends ModelTrainingTask {
+public class CollectCategoricalFeatureTaxonomyDataTask extends ModelTrainingTask {
 
 	public final static String CATEGORICAL_FEATURE_DATA_SUFFIX = "-categorical-feature-data";
 	
-	public CategoricalFeature feature;
+	public CategoricalFeature categoricalFeature;
 	
 	public String datasetName;
 
-	public CollectCategoricalFeaturesDataTask(AspenModel model, Map<String, Object> paramsMap, CategoricalFeature f, String datasetName) {
+	public Taxonomy taxonomy;
+
+	public CollectCategoricalFeatureTaxonomyDataTask(AspenModel model, Taxonomy taxonomy, Map<String, Object> paramsMap, CategoricalFeature categoricalFeature, String datasetName) {
 		super(model, paramsMap);
-		this.feature = f;
+		this.taxonomy = taxonomy;
+		this.categoricalFeature = categoricalFeature;
 		this.datasetName = datasetName;
 	}
 
@@ -29,7 +33,7 @@ public class CollectCategoricalFeaturesDataTask extends ModelTrainingTask {
 
 	@Override
 	public List<String> getOutputParams() {
-		return Arrays.asList(feature.getName() + CATEGORICAL_FEATURE_DATA_SUFFIX);
+		return Arrays.asList(categoricalFeature.getName() + CATEGORICAL_FEATURE_DATA_SUFFIX);
 	}
 	
 

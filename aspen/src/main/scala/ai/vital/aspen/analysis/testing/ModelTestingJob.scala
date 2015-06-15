@@ -50,6 +50,7 @@ import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
 import ai.vital.aspen.model.SparkLinearRegressionModel
 import ai.vital.vitalsigns.model.URIReference
 import org.apache.spark.mllib.regression.LabeledPoint
+import ai.vital.vitalsigns.model.VITAL_Category
 
 class ModelTestingJob {}
 
@@ -449,10 +450,10 @@ object ModelTestingJob extends AbstractJob {
       
         val featuresMap = ex.extractFeatures(vitalBlock)
         
-        var category : java.lang.Object = null
+        var category : VITAL_Category = null
         try {
-        	val categoryx = aspenModel.getModelConfig.getTrain.call(vitalBlock, featuresMap)
-          if(categoryx != null) category = categoryx.asInstanceOf[Object]
+        	val categoryx = aspenModel.getModelConfig.getTrainFeature.getFunction.call(vitalBlock, featuresMap)
+          if(categoryx != null) category = categoryx.asInstanceOf[VITAL_Category]
         } catch { case ex : Exception =>{
           ex.printStackTrace()
         }
@@ -472,7 +473,7 @@ object ModelTestingJob extends AbstractJob {
                 	  if(pv != null) {              
                 		  val prediction = pv.asInstanceOf[IProperty].toString()
                 				  
-                				  if(category.equals(prediction)) {
+                				  if(category.getURI.equals(prediction)) {
                 					  matched = 1
                 				  }
                 		  

@@ -5,13 +5,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ai.vital.aspen.groovy.featureextraction.BinaryFeatureData;
 import ai.vital.aspen.groovy.featureextraction.CategoricalFeatureData;
+import ai.vital.aspen.groovy.featureextraction.DateFeatureData;
+import ai.vital.aspen.groovy.featureextraction.DateTimeFeatureData;
 import ai.vital.aspen.groovy.featureextraction.FeatureData;
+import ai.vital.aspen.groovy.featureextraction.GeoLocationFeatureData;
 import ai.vital.aspen.groovy.featureextraction.NumericalFeatureData;
+import ai.vital.aspen.groovy.featureextraction.OrdinalFeatureData;
+import ai.vital.aspen.groovy.featureextraction.StringFeatureData;
+import ai.vital.aspen.groovy.featureextraction.URIFeatureData;
 import ai.vital.aspen.groovy.featureextraction.WordFeatureData;
 import ai.vital.aspen.groovy.modelmanager.AspenModel;
+import ai.vital.aspen.groovy.modelmanager.ModelTaxonomySetter;
 import ai.vital.aspen.groovy.predict.tasks.CalculateAggregationValueTask;
-import ai.vital.aspen.groovy.predict.tasks.CollectTargetCategoriesTask;
+import ai.vital.aspen.groovy.predict.tasks.CollectCategoricalFeatureTaxonomyDataTask;
+import ai.vital.aspen.groovy.predict.tasks.CollectTrainTaxonomyDataTask;
 import ai.vital.aspen.groovy.predict.tasks.CollectTextFeatureDataTask;
 import ai.vital.aspen.groovy.predict.tasks.CountDatasetTask;
 import ai.vital.aspen.groovy.predict.tasks.LoadDataSetTask;
@@ -20,12 +29,20 @@ import ai.vital.aspen.groovy.predict.tasks.SplitDatasetTask;
 import ai.vital.aspen.groovy.predict.tasks.TestModelTask;
 import ai.vital.aspen.groovy.predict.tasks.TrainModelTask;
 import ai.vital.predictmodel.Aggregate;
+import ai.vital.predictmodel.BinaryFeature;
 import ai.vital.predictmodel.CategoricalFeature;
+import ai.vital.predictmodel.DateFeature;
+import ai.vital.predictmodel.DateTimeFeature;
 import ai.vital.predictmodel.Feature;
+import ai.vital.predictmodel.GeoLocationFeature;
 import ai.vital.predictmodel.NumericalFeature;
+import ai.vital.predictmodel.OrdinalFeature;
 import ai.vital.predictmodel.PredictionModel;
+import ai.vital.predictmodel.StringFeature;
 import ai.vital.predictmodel.Taxonomy;
 import ai.vital.predictmodel.TextFeature;
+import ai.vital.predictmodel.TrainFeature;
+import ai.vital.predictmodel.URIFeature;
 import ai.vital.predictmodel.WordFeature;
 
 /**
@@ -67,6 +84,8 @@ public class ModelTrainingProcedure {
 		
 		this.model.validateConfig();
 		
+//		if(model.isCategorical() && model.get)
+		
 		if(this.model.getAggregationResults() == null) {
 			this.model.setAggregationResults(new HashMap<String, Double>());
 		}
@@ -103,11 +122,6 @@ public class ModelTrainingProcedure {
 		
 		trainingRequiredParams.add(trainDatasetName);
 		
-		if(model.isCategorical()) {
-			tasks.add(new CollectTargetCategoriesTask(model, paramsMap, trainDatasetName));
-			trainingRequiredParams.add(CollectTargetCategoriesTask.TARGET_CATEGORIES_DATA);
-		}
-		
 		
 		//check if text features exist, then demand 
 		
@@ -124,13 +138,24 @@ public class ModelTrainingProcedure {
 				tasks.add(new CalculateAggregationValueTask(model, paramsMap, a, trainDatasetName));
 			}
 		}
+		
+		
+		for(Taxonomy t : cfg.getTaxonomies()) {
+			
+			if( t.getIntrospect() ) {
+				
+			}
+			
+		}
 
 		
 		for(Feature f : cfg.getFeatures()) {
-			if(f instanceof TextFeature) {
-				CollectTextFeatureDataTask ctfdt = new CollectTextFeatureDataTask(model, paramsMap, (TextFeature) f, trainDatasetName);
-				tasks.add(ctfdt);
-				trainingRequiredParams.addAll(ctfdt.getOutputParams());
+			
+			if(f instanceof BinaryFeature) {
+
+				BinaryFeatureData bfd = new BinaryFeatureData();
+				model.getFeaturesData().put(f.getName(), bfd);
+				
 			} else if(f instanceof CategoricalFeature) {
 
 				CategoricalFeature cf = (CategoricalFeature) f;
@@ -147,12 +172,29 @@ public class ModelTrainingProcedure {
 				
 				if(thisTaxonomy == null) throw new RuntimeException("Taxonomy not found: " + cf.getTaxonomy());
 				        
-				CategoricalFeatureData cfd = CategoricalFeatureData.fromTaxonomy(thisTaxonomy);
-				model.getFeaturesData().put(f.getName(), cfd);
+				if(thisTaxonomy.isIntrospect()) {
+					CollectCategoricalFeatureTaxonomyDataTask ccftdt = new CollectCategoricalFeatureTaxonomyDataTask(model, thisTaxonomy, paramsMap, cf, trainDatasetName);
+					tasks.add(ccftdt);
+					trainingRequiredParams.addAll(ccftdt.getOutputParams());
+				} else {
+					CategoricalFeatureData cfd = CategoricalFeatureData.fromTaxonomy(thisTaxonomy);
+					model.getFeaturesData().put(f.getName(), cfd);
+				}
 				
-//				CollectCategoricalFeaturesDataTask ccfdt = new CollectCategoricalFeaturesDataTask(model, paramsMap, cf, trainDatasetName);
-//				tasks.add(ccfdt);
-//				trainingRequiredParams.addAll(ccfdt.getOutputParams());
+			} else if(f instanceof DateFeature) {
+
+				DateFeatureData dfd = new DateFeatureData();
+				model.getFeaturesData().put(f.getName(), dfd);
+				
+			} else if(f instanceof DateTimeFeature) {
+				
+				DateTimeFeatureData dtfd = new DateTimeFeatureData();
+				model.getFeaturesData().put(f.getName(), dtfd);
+
+			} else if(f instanceof GeoLocationFeature) {
+				
+				GeoLocationFeatureData glfd = new GeoLocationFeatureData();
+				model.getFeaturesData().put(f.getName(), glfd);
 				
 			} else if(f instanceof NumericalFeature) {
 				
@@ -163,6 +205,26 @@ public class ModelTrainingProcedure {
 //				tasks.add(cnfdt);
 //				trainingRequiredParams.addAll(cnfdt.getOutputParams());
 				
+			} else if(f instanceof OrdinalFeature) {
+				
+				OrdinalFeatureData ofd = new OrdinalFeatureData();
+				model.getFeaturesData().put(f.getName(), ofd);
+				
+			} else if(f instanceof StringFeature) {
+			
+				StringFeatureData sfd = new StringFeatureData();
+				model.getFeaturesData().put(f.getName(), sfd);
+				
+			} else if(f instanceof TextFeature) {
+				CollectTextFeatureDataTask ctfdt = new CollectTextFeatureDataTask(model, paramsMap, (TextFeature) f, trainDatasetName);
+				tasks.add(ctfdt);
+				trainingRequiredParams.addAll(ctfdt.getOutputParams());
+				
+			} else if(f instanceof URIFeature) {
+				
+				URIFeatureData ufd = new URIFeatureData();
+				model.getFeaturesData().put(f.getName(), ufd);
+				
 			} else if(f instanceof WordFeature) {
 				
 				WordFeature wf = (WordFeature) f;
@@ -170,6 +232,42 @@ public class ModelTrainingProcedure {
 				
 			}
 		}
+		
+		
+		
+		if(model.isCategorical()) {
+			
+			TrainFeature tf = model.getModelConfig().getTrainFeature();
+			
+			if(tf.getType().equals(CategoricalFeature.class)) {
+			} else {
+				throw new RuntimeException("Categorical models train feature is expected to be of either categorical type");
+			}
+
+			Taxonomy taxonomy = null;
+			
+			for(Taxonomy t : model.getModelConfig().getTaxonomies()) {
+				
+				if(t.getProvides().equals(tf.getTaxonomy())) {
+					taxonomy = t;
+				}
+				
+			}
+			
+			if(taxonomy == null) throw new RuntimeException("Taxonomy not found: " + tf.getTaxonomy());
+			
+			if(taxonomy.isIntrospect()) {
+				CollectTrainTaxonomyDataTask cttdt = new CollectTrainTaxonomyDataTask(model, taxonomy, paramsMap, tf, trainDatasetName);
+				tasks.add(cttdt);
+				trainingRequiredParams.addAll(cttdt.getOutputParams());
+			} else {
+				model.setTrainedCategories(CategoricalFeatureData.fromTaxonomy(taxonomy));
+			}
+			
+			
+		}
+		
+		
 		
 		tasks.add(new TrainModelTask(model, paramsMap, trainDatasetName, model.getModelConfig().getType(),trainingRequiredParams));
 		
@@ -179,6 +277,7 @@ public class ModelTrainingProcedure {
 		tasks.add(new SaveModelTask(model, paramsMap));
 		
 		return tasks;
+		
 	}
 	
 	

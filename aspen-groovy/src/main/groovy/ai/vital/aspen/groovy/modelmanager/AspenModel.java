@@ -46,7 +46,9 @@ import ai.vital.predictmodel.Function;
 import ai.vital.predictmodel.NumericalFeature;
 import ai.vital.predictmodel.Prediction;
 import ai.vital.predictmodel.PredictionModel;
+import ai.vital.predictmodel.Target;
 import ai.vital.predictmodel.TextFeature;
+import ai.vital.predictmodel.TrainFeature;
 import ai.vital.predictmodel.WordFeature;
 import ai.vital.predictmodel.builder.ModelString;
 import ai.vital.predictmodel.builder.ToModelImpl;
@@ -165,7 +167,7 @@ public abstract class AspenModel implements Serializable {
 		
 		Prediction prediction = _predict(input, features);
 		
-		Object output = this.modelConfig.getTarget().call(input, features, prediction);
+		Object output = this.modelConfig.getTarget().getFunction().call(input, features, prediction);
 		if(!( output instanceof List)) throw new RuntimeException("Model target output should be a list of graph objects");
 	
 		return (List<GraphObject>) output;
@@ -395,7 +397,7 @@ public abstract class AspenModel implements Serializable {
 		
 		this.modelConfig.setFunctions(modelEl.getFunctions());
 		this.modelConfig.setTarget(modelEl.getTarget());
-		this.modelConfig.setTrain(modelEl.getTrain());
+		this.modelConfig.setTrainFeature(modelEl.getTrainFeature());
 		
 		PredictionModelAnalyzer.fixFunctionsAggregatesOrder(this.modelConfig);
 		
@@ -555,6 +557,20 @@ public abstract class AspenModel implements Serializable {
 				
 			}
 			
+			if(trainedCategories != null) {
+				
+				String n = URLEncoder.encode("train-categories", StandardCharsets.UTF_8.name());
+				
+				File trainedFile = new File(tempDir, n + ".json");
+				
+				Map<String, Object> json = trainedCategories.toJSON();
+				
+				Config parsedMap = ConfigFactory.parseMap(json);
+				
+				FileUtils.writeStringToFile(trainedFile, parsedMap.root().render(), StandardCharsets.UTF_8.name());
+				
+			}
+			
 			
 			persistFiles(tempDir);
 			
@@ -636,9 +652,9 @@ public abstract class AspenModel implements Serializable {
 				f.setFunction(null);
 			}
 			
-			if(modelConfig.getTrain() != null) {
+			if(modelConfig.getTrainFeature()!= null) {
 //				modelConfig.setTrain(modelConfig.getTrain().dehydrate());
-				modelConfig.setTrain(null);
+				modelConfig.setTrainFeature(null);
 			}
 			
 			if(modelConfig.getTarget() != null) {
@@ -670,8 +686,15 @@ public abstract class AspenModel implements Serializable {
 			_featureExtraction = new FeatureExtraction(modelConfig, aggregationResults);
 			
 			//rehydrate
-			this.modelConfig.setTarget(this.modelConfig.getTarget().rehydrate(_featureExtraction, _featureExtraction, _featureExtraction));
-			this.modelConfig.setTrain(this.modelConfig.getTrain().rehydrate(_featureExtraction, _featureExtraction, _featureExtraction));
+			Target target = this.modelConfig.getTarget();
+			if(target != null) {
+				target.setFunction(target.getFunction().rehydrate(_featureExtraction, _featureExtraction, _featureExtraction));
+			}
+			
+			TrainFeature trainFeature = this.modelConfig.getTrainFeature();
+			if(trainFeature != null) {
+				trainFeature.setFunction(trainFeature.getFunction().rehydrate(_featureExtraction, _featureExtraction, _featureExtraction));
+			}
 			
 			for(Function f : this.modelConfig.getFunctions()) {
 				f.setFunction(f.getFunction().rehydrate(_featureExtraction, _featureExtraction, _featureExtraction));
