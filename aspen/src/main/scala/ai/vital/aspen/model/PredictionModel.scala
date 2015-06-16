@@ -60,7 +60,7 @@ abstract class PredictionModel extends AspenModel {
   
   def supportedType() : String;
   
-  def doPredict(v: Vector) : Int;
+  def doPredict(v: Vector) : Double;
   
   def deserializeModel(stream: InputStream) : Unit;
   
@@ -289,15 +289,27 @@ abstract class PredictionModel extends AspenModel {
     
     var categoryID : java.lang.Double = null;
     
-    if(isCategorical()) {
-      
-    	if(!category.isInstanceOf[VITAL_Category]) throw new RuntimeException("Expected a VITAL_Category node, got: " + category)
-      
-    	val cn = category.asInstanceOf[VITAL_Category]
-      
-    	categoryID = trainedCategories.getCategories.indexOf(cn.getURI)
-      
-    	if(categoryID < 0) throw new RuntimeException("No categoryID found for URI: " + cn.getURI)
+    if(getModelConfig.getTrainFeature.getType.eq(classOf[BinaryFeature])) {
+        
+      if(!category.isInstanceOf[java.lang.Boolean]) throw new RuntimeException("Expected a Boolean categorical value, got: " + category)
+        
+      val b = category.asInstanceOf[java.lang.Boolean]
+        
+      if(b) {
+        categoryID = 1
+      } else {
+      	categoryID = 0
+      }
+        
+    } else if(getModelConfig.getTrainFeature.getType.eq(classOf[CategoricalFeature])) {
+        
+  	  if(!category.isInstanceOf[VITAL_Category]) throw new RuntimeException("Expected a VITAL_Category node, got: " + category)
+    	  
+  	  val cn = category.asInstanceOf[VITAL_Category]
+    			  
+      categoryID = trainedCategories.getCategories.indexOf(cn.getURI)
+    			  
+      if(categoryID < 0) throw new RuntimeException("No categoryID found for URI: " + cn.getURI)
       
     } else {
       
@@ -448,6 +460,24 @@ abstract class PredictionModel extends AspenModel {
     val objects : java.util.List[GraphObject] = null
     
     val categoryID = doPredict(vectorizeNoLabels(vitalBlock, featuresMap))
+    
+    if(modelConfig.getTrainFeature.getType.equals(classOf[BinaryFeature])) {
+      
+      val p = new BinaryPrediction()
+      
+      p.binaryValue = categoryID > 0
+      
+      return p
+      
+    } else if(modelConfig.getTrainFeature.getType.equals(classOf[NumericalFeature])) {
+      
+      //regression
+      val p = new RegressionPrediction()
+      p.value = categoryID
+      
+      return p
+      
+    }
     
     val categoryURI = trainedCategories.getCategories.get(categoryID.intValue())
     

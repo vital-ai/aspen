@@ -106,11 +106,6 @@ public class OpenNLPModel extends AspenModel {
 //	}
 
 	@Override
-	public boolean isCategorical() {
-		return true;
-	}
-
-	@Override
 	public boolean isTestedWithTrainData() {
 		return false;
 	}
@@ -122,6 +117,12 @@ public class OpenNLPModel extends AspenModel {
 
 	@Override
 	public Collection<Class<? extends Feature>> getSupportedFeatures() {
+		return null;
+	}
+
+	@Override
+	public Class<? extends Feature> getTrainFeatureType() {
+		// TODO Auto-generated method stub
 		return null;
 	}
 

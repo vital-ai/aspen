@@ -235,7 +235,7 @@ public class ModelTrainingProcedure {
 		
 		
 		
-		if(model.isCategorical()) {
+		if(model.getTrainFeatureType().equals(CategoricalFeature.class)) {
 			
 			TrainFeature tf = model.getModelConfig().getTrainFeature();
 			

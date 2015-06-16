@@ -51,6 +51,16 @@ import ai.vital.aspen.model.SparkLinearRegressionModel
 import ai.vital.vitalsigns.model.URIReference
 import org.apache.spark.mllib.regression.LabeledPoint
 import ai.vital.vitalsigns.model.VITAL_Category
+import ai.vital.aspen.model.SVMWithSGDPredictionModel
+import ai.vital.predictmodel.CategoricalFeature
+import ai.vital.aspen.model.LogisticRegressionPredictionModel
+import ai.vital.aspen.model.DecisionTreeRegressionModel
+import ai.vital.aspen.model.GradientBoostedTreesPredictionModel
+import ai.vital.aspen.model.GradientBoostedTreesRegressionModel
+import ai.vital.aspen.model.SparkIsotonicRegressionModel
+import ai.vital.aspen.model.GaussianMixturePredictionModel
+import ai.vital.aspen.model.PredictionModel
+import ai.vital.aspen.analysis.training.ModelTrainingJob
 
 class ModelTestingJob {}
 
@@ -112,14 +122,7 @@ object ModelTestingJob extends AbstractJob {
     
 //    val modelManager = new ModelManager()
     val mt2c = AspenGroovyConfig.get.modelType2Class
-
-    mt2c.put(CollaborativeFilteringPredictionModel.spark_collaborative_filtering_prediction, classOf[CollaborativeFilteringPredictionModel].getCanonicalName)
-    mt2c.put(DecisionTreePredictionModel.spark_decision_tree_prediction, classOf[DecisionTreePredictionModel].getCanonicalName)
-    mt2c.put(KMeansPredictionModel.spark_kmeans_prediction, classOf[KMeansPredictionModel].getCanonicalName)
-    mt2c.put(NaiveBayesPredictionModel.spark_naive_bayes_prediction, classOf[NaiveBayesPredictionModel].getCanonicalName)
-    mt2c.put(RandomForestPredictionModel.spark_randomforest_prediction, classOf[RandomForestPredictionModel].getCanonicalName)
-    mt2c.put(RandomForestRegressionModel.spark_randomforest_regression, classOf[RandomForestRegressionModel].getCanonicalName)
-    mt2c.put(SparkLinearRegressionModel.spark_linear_regression, classOf[SparkLinearRegressionModel].getCanonicalName)
+    mt2c.putAll(getModelManagerMap())
     
     val modelManager = new ModelManager()
     println("Loading model ...")
@@ -312,16 +315,37 @@ object ModelTestingJob extends AbstractJob {
     }
     
     if(aspenModel.isInstanceOf[SparkLinearRegressionModel]
-    || aspenModel.isInstanceOf[RandomForestRegressionModel]) {
+    || aspenModel.isInstanceOf[RandomForestRegressionModel]
+    || aspenModel.isInstanceOf[DecisionTreeRegressionModel]
+    || aspenModel.isInstanceOf[GradientBoostedTreesRegressionModel]
+    || aspenModel.isInstanceOf[SparkIsotonicRegressionModel]) {
       
       var slrm : SparkLinearRegressionModel = null 
       
       var rfrm : RandomForestRegressionModel = null
       
+      var dtrm : DecisionTreeRegressionModel = null
+      
+      var gbtrm : GradientBoostedTreesRegressionModel = null
+      
+      var sirm : SparkIsotonicRegressionModel = null
+      
       if( aspenModel.isInstanceOf[SparkLinearRegressionModel] ) {
         
     	  slrm = aspenModel.asInstanceOf[SparkLinearRegressionModel]
         
+      } else if(aspenModel.isInstanceOf[DecisionTreeRegressionModel]) {
+        
+        dtrm = aspenModel.asInstanceOf[DecisionTreeRegressionModel]
+        
+      } else if(aspenModel.isInstanceOf[GradientBoostedTreesRegressionModel]) {
+        
+        gbtrm = aspenModel.asInstanceOf[GradientBoostedTreesRegressionModel]
+        
+      } else if(aspenModel.isInstanceOf[SparkIsotonicRegressionModel]) {
+      
+        sirm = aspenModel.asInstanceOf[SparkIsotonicRegressionModel]
+      
       } else {
         
         rfrm = aspenModel.asInstanceOf[RandomForestRegressionModel]
@@ -350,6 +374,28 @@ object ModelTestingJob extends AbstractJob {
           
           prediction = slrm.scaledBack(prediction)
           
+        } else if(dtrm != null) {
+
+          val features = dtrm.getFeatureExtraction.extractFeatures(vitalBlock)
+          point = dtrm.vectorizeLabels(vitalBlock, features)
+          
+          prediction = dtrm.model.predict(point.features)
+          
+        } else if(gbtrm != null) {
+          
+          val features = gbtrm.getFeatureExtraction.extractFeatures(vitalBlock)
+          point = gbtrm.vectorizeLabels(vitalBlock, features)
+          
+          prediction = gbtrm.model.predict(point.features) 
+          
+        } else if(sirm != null) {
+        
+          val features = sirm.getFeatureExtraction.extractFeatures(vitalBlock)
+          
+          point = sirm.vectorizeLabels(vitalBlock, features)
+          
+          prediction = sirm.model.predict(point.features(0))
+        
         } else {
           
         	val features = rfrm.getFeatureExtraction.extractFeatures(vitalBlock)
@@ -378,15 +424,47 @@ object ModelTestingJob extends AbstractJob {
     //clustering stats
     var clustersStats : java.util.List[Accumulator[Int]] = null
     
+    var clustersCount : java.lang.Integer = null 
+    
     if(aspenModel.isInstanceOf[KMeansPredictionModel]) {
-    	clustersStats = new ArrayList[Accumulator[Int]]()
-      val cc = aspenModel.asInstanceOf[KMeansPredictionModel].getClustersCount()
+      clustersCount = aspenModel.asInstanceOf[KMeansPredictionModel].getClustersCount()
+    } else if(aspenModel.isInstanceOf[GaussianMixturePredictionModel]) {
+      val gmpm = aspenModel.asInstanceOf[GaussianMixturePredictionModel]
+      gmpm.sc = sc
+      clustersCount = gmpm.k
+      
+    }
+    
+    if(clustersCount != null) {
+      clustersStats = new ArrayList[Accumulator[Int]]()
       var x = 0
-      while( x < cc) {
+      while( x < clustersCount) {
         clustersStats.add(sc.accumulator(0))
         x = x+1
       }
+      
     }
+    
+    
+    var reduced : (Int, Int, Int, Int) = null 
+    
+    if(aspenModel.isInstanceOf[GaussianMixturePredictionModel]) {
+      val gmpm = aspenModel.asInstanceOf[GaussianMixturePredictionModel]
+      
+      val vectorized = ModelTrainingJob.vectorizeNoLabels(inputBlockRDD, gmpm)
+      
+      //XXX temporarily use the only option available
+      val clusters = gmpm.model.predict(vectorized)
+
+      var total = clusters.map { x => 
+
+        clustersStats.get( x ).add(1)
+        
+      }.count().toInt
+      
+      reduced = (total, 0, 0, 0)
+      
+    } else { 
     
     
     //matched, morethan1 input target, no targets
@@ -423,7 +501,7 @@ object ModelTestingJob extends AbstractJob {
 //      }
       
       
-      if(aspenModel.getType.equals(KMeansPredictionModel.spark_kmeans_prediction)) {
+      if(aspenModel.asInstanceOf[PredictionModel].isClustering()) {
         
     	  val predictions = aspenModel.predict(vitalBlock)
         
@@ -451,15 +529,24 @@ object ModelTestingJob extends AbstractJob {
         val featuresMap = ex.extractFeatures(vitalBlock)
         
         var category : VITAL_Category = null
+        
+        var booleanCategory : java.lang.Boolean = null
+        
         try {
         	val categoryx = aspenModel.getModelConfig.getTrainFeature.getFunction.call(vitalBlock, featuresMap)
-          if(categoryx != null) category = categoryx.asInstanceOf[VITAL_Category]
+          if(categoryx != null) {
+            if(categoryx.isInstanceOf[VITAL_Category]) {
+            	category = categoryx.asInstanceOf[VITAL_Category]
+            } else if(categoryx.isInstanceOf[java.lang.Boolean]) {
+              booleanCategory = categoryx.asInstanceOf[java.lang.Boolean]
+            }            
+          }
         } catch { case ex : Exception =>{
           ex.printStackTrace()
         }
         } 
 
-        if(category != null) {
+        if(category != null || booleanCategory != null) {
           
            val predictions = aspenModel.predict(vitalBlock)
               
@@ -467,7 +554,7 @@ object ModelTestingJob extends AbstractJob {
                 
                 if(p.isInstanceOf[TargetNode]) {
                   
-                  if(aspenModel.isCategorical()) {
+                  if(aspenModel.getTrainFeatureType.equals(classOf[CategoricalFeature])) {
                     
                 	  val pv = p.getProperty("targetStringValue");
                 	  if(pv != null) {              
@@ -487,6 +574,9 @@ object ModelTestingJob extends AbstractJob {
                       
                     	val prediction = pv.asInstanceOf[IProperty].rawValue().asInstanceOf[Double]
                       
+                      if(booleanCategory.booleanValue() == (prediction.doubleValue() == 1) ) {
+                        matched = 1
+                      }
                       
                     }
                     
@@ -538,8 +628,9 @@ object ModelTestingJob extends AbstractJob {
       
     }
     
-    val reduced = results.reduce { ( a, b ) =>
+    reduced = results.reduce { ( a, b ) =>
       (a._1 + b._1, a._2 + b._2, a._3 + b._3, a._4 + b._4)
+    }
     }
     
     val samples = reduced._1 - reduced._4

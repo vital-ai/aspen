@@ -10,6 +10,7 @@ import java.io.FileOutputStream
 import java.nio.charset.StandardCharsets
 import org.apache.commons.io.FileUtils
 import java.io.Serializable
+import ai.vital.predictmodel.CategoricalFeature
 
 object NaiveBayesPredictionModel {
   
@@ -49,8 +50,8 @@ class NaiveBayesPredictionModel extends PredictionModel {
       
   }
 
-  def doPredict(v: Vector): Int = {
-    return model.predict(v).intValue()
+  def doPredict(v: Vector): Double = {
+    return model.predict(v)
   }
   
   @Override
@@ -70,11 +71,6 @@ class NaiveBayesPredictionModel extends PredictionModel {
     return false;
   }
   
-  @Override
-  def isCategorical() : Boolean = {
-      return true;
-  }
-
   def onAlgorithmConfigParam(key: String, value: Serializable): Boolean = {
     
     if("lamda".equals(key)) {
@@ -91,6 +87,10 @@ class NaiveBayesPredictionModel extends PredictionModel {
 
     return true
     
+  }
+
+  def getTrainFeatureType(): Class[_ <: ai.vital.predictmodel.Feature] = {
+    classOf[CategoricalFeature]
   }
   
 }

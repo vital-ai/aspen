@@ -91,8 +91,8 @@ public class ModelCreator {
 			if(!supportedFeatures.contains(f.getClass())) throw new Exception("Model " + m.getClass().getCanonicalName() + " does not support features of type: " + f.getClass().getSimpleName());
 		}
 		
-		if( ! supportedFeatures.contains( modelEl.getTrainFeature().getType() ) ) throw new Exception("Model " + m.getClass().getCanonicalName() + " does not support train feature of type: " + modelEl.getTrainFeature().getType());
 		
+		if(!modelEl.getTrainFeature().getType().equals(m.getTrainFeatureType())) throw new Exception("Model " + m.getClass().getCanonicalName() + " expects " + m.getTrainFeatureType().getCanonicalName() + ", builder: " + modelEl.getTrainFeature().getType());
 		
 		PredictionModelAnalyzer.fixFunctionsAggregatesOrder(modelEl);
 		

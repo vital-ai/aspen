@@ -13,36 +13,48 @@ import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 import ai.vital.predictmodel.Prediction
 import java.io.Serializable
 import ai.vital.predictmodel.NumericalFeature
+import org.apache.spark.mllib.clustering.GaussianMixtureModel
+import org.apache.spark.SparkContext
+import scala.collection.immutable.Seq
+import breeze.stats.distributions.MultivariateGaussian
+import breeze.linalg.{DenseVector => BreezeVector}
+import org.apache.spark.mllib.util.MLUtils
 
-object KMeansPredictionModel {
+object GaussianMixturePredictionModel {
   
-	val spark_kmeans_prediction = "spark-kmeans-prediction";
+	val spark_gaussian_mixture_prediction = "spark-gaussian-mixture-prediction";
 
+  /*
+  lazy val EPSILON = {
+    var eps = 1.0
+    while ((1.0 + (eps / 2.0)) != 1.0) {
+      eps /= 2.0
+    }
+    eps
+  }
+  */
 }
 
 @SerialVersionUID(1L)
-class KMeansPredictionModel extends PredictionModel {
+class GaussianMixturePredictionModel extends PredictionModel {
 
-  var clustersCount = 10
+  var k = 10
   
-  var numIterations = 20
-
-  var model : KMeansModel = null;
-
-  def setModel(_model: KMeansModel) : Unit = {
-    model = _model
-  }
+  @transient
+  var sc : SparkContext = null  
   
+  var model : GaussianMixtureModel = null;
+
   def supportedType(): String = {
-    return KMeansPredictionModel.spark_kmeans_prediction
+    return GaussianMixturePredictionModel.spark_gaussian_mixture_prediction
   }
 
   def deserializeModel(stream: InputStream): Unit = {
     
-      val deserializedModel : KMeansModel = SerializationUtils.deserialize(IOUtils.toByteArray(stream))
+      val deserializedModel : GaussianMixtureModel = SerializationUtils.deserialize(IOUtils.toByteArray(stream))
     
       model = deserializedModel match {
-        case x: KMeansModel => x
+        case x: GaussianMixtureModel => x
         case _ => throw new ClassCastException
       }
       
@@ -55,8 +67,15 @@ class KMeansPredictionModel extends PredictionModel {
   
   @Override
   override def _predict(vitalBlock : VitalBlock, featuresMap : java.util.Map[String, Object]) : Prediction = {
+
+//    val softPredict = computeSoftAssignments(x.toBreeze.toDenseVector, model.gaussians, model.weights, k)
     
-    val clusterID = model.predict(vectorizeNoLabels(vitalBlock, featuresMap)).intValue()
+    //XXX replace it with a non-spark context variant if available
+    val x = vectorizeNoLabels(vitalBlock, featuresMap)
+    
+    val input = sc.parallelize(Seq(x))
+    
+    val clusterID = model.predict(input).collect()(0).intValue()
     
     var cp = new ClusterPrediction()
     cp.clusterID = clusterID
@@ -93,21 +112,13 @@ class KMeansPredictionModel extends PredictionModel {
   @Override
   def onAlgorithmConfigParam(param: String, value: Serializable): Boolean = {
     
-     if("clustersCount".equals(param)) {
+     if("k".equals(param)) {
       
       if(!value.isInstanceOf[Number]) ex(param + " must be an int/long number")
       
-      clustersCount = value.asInstanceOf[Number].intValue()
+      k = value.asInstanceOf[Number].intValue()
       
-      if(clustersCount < 2) ex(param + " must be >= 2")
-      
-    } else if("numIterations".equals(param)){
-      
-      if(!value.isInstanceOf[Number]) ex(param + " must be an int/long number")
-      
-      numIterations = value.asInstanceOf[Number].intValue()
-      
-      if(numIterations < 1) ex(param + " must be >= 1") 
+      if(k < 2) ex(param + " must be >= 2")
       
     } else {
       
@@ -121,6 +132,25 @@ class KMeansPredictionModel extends PredictionModel {
   def getTrainFeatureType(): Class[_ <: ai.vital.predictmodel.Feature] = {
     classOf[NumericalFeature]
   }
-  
+ 
+  /*
+  /**
+   * Compute the partial assignments for each vector
+   */
+  private def computeSoftAssignments(
+      pt: BreezeVector[Double],
+      dists: Array[MultivariateGaussian],
+      weights: Array[Double],
+      k: Int): Array[Double] = {
+    val p = weights.zip(dists).map {
+      case (weight, dist) => GaussianMixturePredictionModel.EPSILON + weight * dist.pdf(pt)
+    }
+    val pSum = p.sum 
+    for (i <- 0 until k) {
+      p(i) /= pSum
+    }
+    p
+  }  
+  */
   
 }

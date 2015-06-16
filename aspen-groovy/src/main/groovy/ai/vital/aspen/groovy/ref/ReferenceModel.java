@@ -63,10 +63,6 @@ public class ReferenceModel extends AspenModel {
 //		return true;
 //	}
 
-	@Override
-	public boolean isCategorical() {
-		return true;
-	}
 
 	@Override
 	public boolean isTestedWithTrainData() {
@@ -81,6 +77,12 @@ public class ReferenceModel extends AspenModel {
 
 	@Override
 	public Collection<Class<? extends Feature>> getSupportedFeatures() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Class<? extends Feature> getTrainFeatureType() {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -83,9 +83,11 @@ class CollaborativeFilteringTraining(model: CollaborativeFilteringPredictionMode
 
      //first pass to collect user and products ids -> uris
     val values = CollaborativeFilteringTraining.collaborativeFilteringCollectData(globalContext, trainRDD, model)
-        
+    
+    val thisModel = model
+    
     val ratings = values.map(quad => {
-      new Rating(model.getUserURI2ID().get(quad._1), model.getProductURI2ID().get(quad._2), quad._3)
+      new Rating(thisModel.getUserURI2ID().get(quad._1), thisModel.getProductURI2ID().get(quad._2), quad._3)
     })
         
     ratings.cache()
@@ -102,7 +104,7 @@ class CollaborativeFilteringTraining(model: CollaborativeFilteringPredictionMode
     
     
     val usersProducts = values.map( triple => {
-      (model.getUserURI2ID().get(triple._1).toInt, model.getProductURI2ID().get(triple._2).toInt )
+      (thisModel.getUserURI2ID().get(triple._1).toInt, thisModel.getProductURI2ID().get(triple._2).toInt )
     }) 
           
     val predictions = model.getModel().predict(usersProducts).map { case Rating(user, product, rate) => 

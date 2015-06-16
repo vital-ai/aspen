@@ -92,12 +92,6 @@ public abstract class AspenModel implements Serializable {
 	
 	protected CategoricalFeatureData trainedCategories;
 	
-	//returns true if a model returns predictions as categories
-	public abstract boolean isCategorical();
-	
-	//returns true if input data should be split into train + test
-//	public abstract boolean isSupervised();
-	
 	//non-supervised
 	public abstract boolean isTestedWithTrainData();
 	
@@ -716,4 +710,9 @@ public abstract class AspenModel implements Serializable {
 	 * @return
 	 */
 	public abstract Collection<Class<? extends Feature>> getSupportedFeatures();
+	
+	/**
+	 * must match the value in the builder
+	 */
+	public abstract Class<? extends Feature> getTrainFeatureType();
 }

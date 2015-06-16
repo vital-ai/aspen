@@ -21,6 +21,7 @@ import java.util.ArrayList
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 import java.io.Serializable
+import ai.vital.predictmodel.NumericalFeature
 
 object CollaborativeFilteringPredictionModel {
 
@@ -112,7 +113,7 @@ class CollaborativeFilteringPredictionModel extends PredictionModel {
   /**
    * In collaborative filtering this method is not used
    */
-  def doPredict(v: Vector): Int = {
+  def doPredict(v: Vector): Double = {
     throw new RuntimeException("Collaborative filtering does not use this method!")
   }
   
@@ -255,11 +256,6 @@ class CollaborativeFilteringPredictionModel extends PredictionModel {
     return true;
   }
   
-  @Override
-  def isCategorical() : Boolean = {
-      return false;
-  }
-
   def onAlgorithmConfigParam(key: String, value: Serializable): Boolean = {
 
     
@@ -294,6 +290,10 @@ class CollaborativeFilteringPredictionModel extends PredictionModel {
 
     return true
     
+  }
+
+  def getTrainFeatureType(): Class[_ <: ai.vital.predictmodel.Feature] = {
+    classOf[NumericalFeature]
   }
   
 }

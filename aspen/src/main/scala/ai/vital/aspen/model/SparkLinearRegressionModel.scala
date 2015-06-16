@@ -1,35 +1,43 @@
 package ai.vital.aspen.model
 
-import org.apache.spark.mllib.linalg.Vector
-import java.io.InputStream
-import org.apache.commons.lang3.SerializationUtils
-import org.apache.commons.io.IOUtils
-import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
-import ai.vital.predictmodel.Prediction
-import ai.vital.vitalsigns.model.GraphObject
 import java.io.File
 import java.io.FileOutputStream
-import org.apache.commons.io.FileUtils
+import java.io.InputStream
 import java.nio.charset.StandardCharsets
-import org.apache.spark.mllib.regression.LinearRegressionModel
-import org.apache.spark.SparkContext
-import org.apache.spark.mllib.regression.LabeledPoint
-import org.apache.spark.rdd.RDD
+
+import org.apache.commons.io.FileUtils
+import org.apache.commons.io.IOUtils
+import org.apache.commons.lang3.SerializationUtils
 import org.apache.spark.mllib.feature.StandardScaler
-import scala.collection.mutable.MutableList
-import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.feature.StandardScalerModel
 import org.apache.spark.mllib.linalg.SparseVector
+import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.mllib.regression.GeneralizedLinearModel
+import org.apache.spark.mllib.regression.LabeledPoint
+import org.apache.spark.mllib.regression.LinearRegressionModel
+import org.apache.spark.rdd.RDD
+
+import ai.vital.predictmodel.NumericalFeature
+import ai.vital.predictmodel.Prediction
+import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
+import ai.vital.vitalsigns.model.GraphObject
 
 object SparkLinearRegressionModel {
   
   val spark_linear_regression = "spark-linear-regression";
+  
+  val algorithm_linear_regression_with_sgd = "linear-regression-with-sgd";
+  
+  val algorithm_ridge_regression_with_sgd = "ridge-regression-with-sgd";
+  
+  val algorithm_lasso_with_sgd = "lasso-with-sgd";
 }
 
 @SerialVersionUID(1L)
 class SparkLinearRegressionModel extends PredictionModel {
 
-  var model : LinearRegressionModel = null
+  var model : GeneralizedLinearModel = null
   
   //algorithm config
   var numIterations = 10
@@ -42,11 +50,11 @@ class SparkLinearRegressionModel extends PredictionModel {
   var scaler : StandardScalerModel = null
   
   
-  def setModel(_model: LinearRegressionModel) : Unit = {
+  def setModel(_model: GeneralizedLinearModel) : Unit = {
     model = _model
   }
   
-  def getModel() : LinearRegressionModel = {
+  def getModel() : GeneralizedLinearModel = {
     model
   }
   
@@ -60,7 +68,7 @@ class SparkLinearRegressionModel extends PredictionModel {
       }
   }
 
-  def doPredict(v: Vector): Int = {
+  def doPredict(v: Vector): Double = {
      throw new RuntimeException("shouldn't be called")
   }
   
@@ -87,10 +95,6 @@ class SparkLinearRegressionModel extends PredictionModel {
   
   def vectorizeLabelsNoScaling(vitalBlock: VitalBlock, featuresMap : java.util.Map[String, Object]) : LabeledPoint = {
    super.vectorizeLabels(vitalBlock, featuresMap)
-  }
-
-  def isCategorical(): Boolean = {
-    false
   }
 
   @Override
@@ -245,5 +249,29 @@ class SparkLinearRegressionModel extends PredictionModel {
     }
     
     return true
+  }
+
+  def getTrainFeatureType(): Class[_ <: ai.vital.predictmodel.Feature] = {
+    classOf[NumericalFeature]
+  }
+  
+  override def validateConfig() : Unit = {
+    
+    super.validateConfig()
+    
+    val alg = modelConfig.getAlgorithm
+    
+    if( SparkLinearRegressionModel.algorithm_lasso_with_sgd.equals( alg )) {
+      
+    } else if( SparkLinearRegressionModel.algorithm_linear_regression_with_sgd.equals( alg )) {
+      
+    } else if( SparkLinearRegressionModel.algorithm_ridge_regression_with_sgd.equals( alg )) {
+      
+    } else {
+      
+      throw new RuntimeException("Unknown linear regression algorithm type: " + alg)
+      
+    }
+    
   }
 }

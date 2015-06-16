@@ -32,6 +32,14 @@ import ai.vital.aspen.model.NaiveBayesPredictionModel
 import ai.vital.aspen.model.RandomForestPredictionModel
 import ai.vital.aspen.model.SparkLinearRegressionModel
 import ai.vital.aspen.model.RandomForestRegressionModel
+import ai.vital.aspen.model.SVMWithSGDPredictionModel
+import ai.vital.aspen.model.LogisticRegressionPredictionModel
+import ai.vital.aspen.model.DecisionTreeRegressionModel
+import ai.vital.aspen.model.GradientBoostedTreesPredictionModel
+import ai.vital.aspen.model.GradientBoostedTreesRegressionModel
+import scala.collection.JavaConversions._
+import ai.vital.aspen.model.SparkIsotonicRegressionModel
+import ai.vital.aspen.model.GaussianMixturePredictionModel
 
 
 /* this is placeholder code */
@@ -338,13 +346,35 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       
       val creatorMap = new HashMap[String, Class[_ <: AspenModel]];
       creatorMap.put(CollaborativeFilteringPredictionModel.spark_collaborative_filtering_prediction, classOf[CollaborativeFilteringPredictionModel])
-      creatorMap.put(DecisionTreePredictionModel.spark_decision_tree_prediction, classOf[DecisionTreePredictionModel]);
-      creatorMap.put(KMeansPredictionModel.spark_kmeans_prediction, classOf[KMeansPredictionModel]);
-      creatorMap.put(NaiveBayesPredictionModel.spark_naive_bayes_prediction, classOf[NaiveBayesPredictionModel]);
+      creatorMap.put(DecisionTreePredictionModel.spark_decision_tree_prediction, classOf[DecisionTreePredictionModel])
+      creatorMap.put(DecisionTreeRegressionModel.spark_decision_tree_regression, classOf[DecisionTreeRegressionModel])
+      creatorMap.put(GaussianMixturePredictionModel.spark_gaussian_mixture_prediction, classOf[GaussianMixturePredictionModel])
+      creatorMap.put(GradientBoostedTreesPredictionModel.spark_gradient_boosted_trees_prediction, classOf[GradientBoostedTreesPredictionModel])
+      creatorMap.put(GradientBoostedTreesRegressionModel.spark_gradient_boosted_trees_regression, classOf[GradientBoostedTreesRegressionModel])
+      creatorMap.put(KMeansPredictionModel.spark_kmeans_prediction, classOf[KMeansPredictionModel])
+      creatorMap.put(LogisticRegressionPredictionModel.spark_logistic_regression_prediction, classOf[LogisticRegressionPredictionModel])
+      creatorMap.put(NaiveBayesPredictionModel.spark_naive_bayes_prediction, classOf[NaiveBayesPredictionModel])
       creatorMap.put(RandomForestPredictionModel.spark_randomforest_prediction, classOf[RandomForestPredictionModel])
       creatorMap.put(RandomForestRegressionModel.spark_randomforest_regression, classOf[RandomForestRegressionModel])
-      creatorMap.put(SparkLinearRegressionModel.spark_linear_regression, classOf[SparkLinearRegressionModel]);
+      creatorMap.put(SparkIsotonicRegressionModel.spark_isotonic_regression, classOf[SparkIsotonicRegressionModel])
+      creatorMap.put(SparkLinearRegressionModel.spark_linear_regression, classOf[SparkLinearRegressionModel])
+      creatorMap.put(SVMWithSGDPredictionModel.spark_svm_w_sgd_prediction, classOf[SVMWithSGDPredictionModel])
       
       return creatorMap
+    }
+    
+    def getModelManagerMap() : HashMap[String, String] = {
+      
+      val m = new HashMap[String, String]()
+      
+      for(x <- getCreatorMap().entrySet()) {
+       
+        m.put(x.getKey, x.getValue.getCanonicalName)
+        
+      }
+      
+      m
+      
+      
     }
 }
