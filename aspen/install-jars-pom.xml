@@ -81,6 +81,22 @@
                     </configuration>
                     
                 </execution>
+                
+				<execution>
+                    <id>whiskies-groovy-1.0.0.jar</id>
+                    <phase>validate</phase>
+                    <goals>
+                        <goal>install-file</goal>
+                    </goals>
+                    <configuration>
+				      <groupId>vital-ai</groupId>
+				      <artifactId>whiskies</artifactId>
+				      <version>1.0.0</version>
+				      <packaging>jar</packaging>
+					  <file>${VITAL_HOME}/domain-groovy-jar/whiskies-groovy-1.0.0.jar</file>
+                    </configuration>
+                    
+                </execution>
 
             </executions>
         </plugin>            

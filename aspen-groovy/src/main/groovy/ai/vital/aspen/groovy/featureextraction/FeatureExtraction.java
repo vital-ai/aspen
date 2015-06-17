@@ -51,8 +51,14 @@ import ai.vital.vitalsigns.model.GraphMatch;
 import ai.vital.vitalsigns.model.GraphObject;
 import ai.vital.vitalsigns.model.URIReference;
 import ai.vital.vitalsigns.model.VITAL_Category;
+import ai.vital.vitalsigns.model.property.BooleanProperty;
+import ai.vital.vitalsigns.model.property.DateProperty;
 import ai.vital.vitalsigns.model.property.GeoLocationProperty;
 import ai.vital.vitalsigns.model.property.IProperty;
+import ai.vital.vitalsigns.model.property.LongProperty;
+import ai.vital.vitalsigns.model.property.IntegerProperty;
+import ai.vital.vitalsigns.model.property.NumberProperty;
+import ai.vital.vitalsigns.model.property.StringProperty;
 import ai.vital.vitalsigns.model.property.URIProperty;
 
 public class FeatureExtraction {
@@ -327,6 +333,8 @@ public class FeatureExtraction {
 
 	public void validateFeatureValue(FeatureBase featureBase, Object v) {
 		
+		if(v instanceof IProperty) v = ((IProperty)v).unwrapped();
+		
 		if(featureBase instanceof Feature) {
 			Feature feature = (Feature) featureBase;
 		
@@ -336,6 +344,10 @@ public class FeatureExtraction {
 			if(feature instanceof BinaryFeature) {
 	
 				if(v instanceof Boolean) {
+					
+				} else if(v instanceof BooleanProperty) {
+					
+//					v = ((BooleanProperty)v).booleanValue();
 					
 				} else {
 					throw new RuntimeException("Binary feature " + feature.getName() + " only accepts booleans");
@@ -375,6 +387,9 @@ public class FeatureExtraction {
 			} else if(feature instanceof DateFeature) {
 				
 				if(v instanceof Date) {
+				} else if(v instanceof DateProperty) {
+					
+//					v = ((DateProperty)v).getDate();
 					
 				} else {
 					throw new RuntimeException("Date feature " + feature.getName() + " only accepts dates");
@@ -383,6 +398,10 @@ public class FeatureExtraction {
 			} else if(feature instanceof DateTimeFeature) {
 	
 				if(v instanceof Date) {
+					
+				} else if(v instanceof DateProperty) {
+					
+//					v = ((DateProperty)v).getDate();
 					
 				} else {
 					throw new RuntimeException("Datetime feature " + feature.getName() + " only accepts dates");
@@ -399,6 +418,10 @@ public class FeatureExtraction {
 				
 				if(v instanceof Number) {
 					
+				} else if(v instanceof NumberProperty) {
+					
+//					v = ((NumberProperty)v).doubleValue();
+					
 				} else {
 					throw new RuntimeException("Numerical Feature " + feature.getName() + " only accepts numbers");
 				}
@@ -407,6 +430,8 @@ public class FeatureExtraction {
 			} else if(feature instanceof OrdinalFeature) {
 				
 				if(v instanceof Integer || v instanceof Long) {
+				
+				} else if(v instanceof IntegerProperty || v instanceof LongProperty) {
 					
 				} else {
 					throw new RuntimeException("Ordinal feature " + feature.getName() + " only accepts integers/longs");
@@ -415,6 +440,8 @@ public class FeatureExtraction {
 			} else if(feature instanceof StringFeature) {
 	
 				if(v instanceof String || v instanceof GString) {
+				
+				} else if(v instanceof StringProperty) {
 					
 				} else {
 					throw new RuntimeException("String Feature " + feature.getName() + " only accepts strings");
@@ -423,6 +450,10 @@ public class FeatureExtraction {
 			} else if(feature instanceof TextFeature) {
 				
 				if(v instanceof String || v instanceof GString) {
+				
+				} else if(v instanceof StringProperty) {
+					
+//					v = ((StringProperty)v).toString();
 					
 				} else {
 					throw new RuntimeException("Text Feature " + feature.getName() + " only accepts strings");
@@ -439,6 +470,8 @@ public class FeatureExtraction {
 			} else if(feature instanceof WordFeature) {
 				
 				if(v instanceof String || v instanceof GString) {
+					
+				} else if(v instanceof StringProperty) {
 					
 				} else {
 					throw new RuntimeException("Word Feature " + feature.getName() + " only accepts strings");

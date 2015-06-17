@@ -255,6 +255,7 @@
                   <exclude>vital-ai:twentynews</exclude>
                   <exclude>vital-ai:movielens</exclude>
                   <exclude>vital-ai:autompg</exclude>
+                  <exclude>vital-ai:whiskies</exclude>
                   <exclude>junit:*</exclude>
                   <exclude>commons-cli:*</exclude>
                   <exclude>commons-codec:*</exclude>
@@ -346,6 +347,12 @@
   <dependency>
 	<groupId>vital-ai</groupId>
 	<artifactId>autompg</artifactId>
+	<version>1.0.0</version>
+  </dependency>
+  
+  <dependency>
+	<groupId>vital-ai</groupId>
+	<artifactId>whiskies</artifactId>
 	<version>1.0.0</version>
   </dependency>
   

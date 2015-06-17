@@ -44,6 +44,9 @@ import ai.vital.predictmodel.BinaryFeature
 import ai.vital.predictmodel.NumericalFeature
 import ai.vital.predictmodel.WordFeature
 import ai.vital.predictmodel.TextFeature
+import ai.vital.vitalsigns.model.property.NumberProperty
+import ai.vital.vitalsigns.model.property.DateProperty
+import ai.vital.vitalsigns.model.property.StringProperty
 
 @SerialVersionUID(1L)
 abstract class PredictionModel extends AspenModel {
@@ -285,7 +288,9 @@ abstract class PredictionModel extends AspenModel {
     val fe = getFeatureExtraction
     val f = getModelConfig.getTrainFeature.getFunction
     f.rehydrate(fe, fe, fe)
-    val category = f.call(block, featuresMap)
+    var category = f.call(block, featuresMap)
+    
+    if(category.isInstanceOf[IProperty]) category = category.asInstanceOf[IProperty].rawValue()
     
     var categoryID : java.lang.Double = null;
     
@@ -313,7 +318,7 @@ abstract class PredictionModel extends AspenModel {
       
     } else {
       
-      categoryID = category.asInstanceOf[Double]
+      categoryID = category.asInstanceOf[Number].doubleValue()
       
     }
     
@@ -338,7 +343,9 @@ abstract class PredictionModel extends AspenModel {
       
       val k = x.getKey
       
-      val v = extractedFeatures.get(k)
+      var v = extractedFeatures.get(k)
+      
+      if(v.isInstanceOf[IProperty]) v = v.asInstanceOf[IProperty].unwrapped()
       
       val fd = x.getValue
       
@@ -366,15 +373,27 @@ abstract class PredictionModel extends AspenModel {
 
         val wfd = fd.asInstanceOf[WordFeatureData]
         
-        if(v.isInstanceOf[Int] || v.isInstanceOf[java.lang.Integer] || v.isInstanceOf[Long] || v.isInstanceOf[java.lang.Long]) {
+        var nv : Double = 0
+        
+        if( v != null ) {
           
-          elements.add((start, v.asInstanceOf[Number].doubleValue()))
+        	if(v.isInstanceOf[Int] || v.isInstanceOf[java.lang.Integer] || v.isInstanceOf[Long] || v.isInstanceOf[java.lang.Long]) {
+        		
+        		nv = v.asInstanceOf[Number].doubleValue()
+        				
+        	} else if(v.isInstanceOf[NumberProperty]) {
+        		
+        		nv = v.asInstanceOf[NumberProperty].doubleValue()
+        				
+        	} else {
+        		
+        		throw new RuntimeException("word feature is expected to return an integer")
+        		
+        	}
+        	
+        	elements.add((start, nv))
           
-        } else {
-          
-          throw new RuntimeException("word feature is expected to return an integer")
-          
-        }
+        } 
         
         
       } else if(fd.isInstanceOf[NumericalFeatureData]) {
@@ -387,8 +406,12 @@ abstract class PredictionModel extends AspenModel {
         			
           if(v.isInstanceOf[Number]) {
         	  nv = v.asInstanceOf[Number].doubleValue()
+          } else if(v.isInstanceOf[NumberProperty]) {
+            nv = v.asInstanceOf[NumberProperty].doubleValue()
           } else if(v.isInstanceOf[Date]){
         	  nv = v.asInstanceOf[Date].getTime.doubleValue()
+          } else if(v.isInstanceOf[DateProperty]){
+        	  nv = v.asInstanceOf[DateProperty].getTime.doubleValue()
         	} else throw new RuntimeException("Unexpected numerical feature value: " + v)
         
           elements.add((start, nv))
@@ -403,7 +426,16 @@ abstract class PredictionModel extends AspenModel {
 
         if (v != null) {
 
-          val text = v.asInstanceOf[String]
+          var text : String = null
+          
+          if(v.isInstanceOf[String]) {
+            text = v.asInstanceOf[String]
+          } else if(v.isInstanceOf[GString]) {
+            text = v.asInstanceOf[GString].toString()
+          } else if(v.isInstanceOf[StringProperty]) {
+            text = v.asInstanceOf[StringProperty].toString()
+          }
+          
 
           val words = text.toLowerCase().split("\\s+")
 
