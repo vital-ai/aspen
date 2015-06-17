@@ -13,7 +13,7 @@ import ai.vital.aspen.model.NaiveBayesPredictionModel
 import ai.vital.aspen.model.KMeansPredictionModel
 import ai.vital.aspen.model.RandomForestPredictionModel
 import ai.vital.aspen.model.RandomForestRegressionModel
-import ai.vital.aspen.model.SparkLinearRegressionModel
+import ai.vital.aspen.model.LinearRegressionModel
 import ai.vital.aspen.model.SVMWithSGDPredictionModel
 import org.apache.spark.mllib.evaluation.MulticlassMetrics
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
@@ -21,8 +21,9 @@ import ai.vital.aspen.model.LogisticRegressionPredictionModel
 import ai.vital.aspen.model.DecisionTreeRegressionModel
 import ai.vital.aspen.model.GradientBoostedTreesPredictionModel
 import ai.vital.aspen.model.GradientBoostedTreesRegressionModel
-import ai.vital.aspen.model.SparkIsotonicRegressionModel
+import ai.vital.aspen.model.IsotonicRegressionModel
 import ai.vital.aspen.model.GaussianMixturePredictionModel
+import ai.vital.aspen.model.PageRankPredictionModel
 
 class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractModelTrainingTaskImpl[TestModelTask](sc, task) {
   
@@ -149,26 +150,22 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
       
       gbtrm.setError(msg)
       
-    } else if( NaiveBayesPredictionModel.spark_naive_bayes_prediction.equals(aspenModel.getType)) {
+          } else if(IsotonicRegressionModel.spark_isotonic_regression.equals(aspenModel.getType)) {
 
-      println("Testing ...")
-          
-      println("Test documents count: " + testRDD.count())
-          
-      val vectorizedTest = mtj.vectorize(testRDD, aspenModel)
-          
-      val predictionAndLabel = vectorizedTest.map(p => (aspenModel.asInstanceOf[NaiveBayesPredictionModel].getModel.predict(p.features), p.label))
-      val accuracy = 1.0 * predictionAndLabel.filter(x => x._1 == x._2).count() / vectorizedTest.count()
-          
-      val msg = "Accuracy: " + accuracy;
-          
+      var sirm = aspenModel.asInstanceOf[IsotonicRegressionModel]
+      
+      val predictionAndLabel = mtj.vectorize(testRDD, sirm).map { point =>
+        val predictedLabel = sirm.model.predict(point.features(0))
+        (predictedLabel, point.label)
+      }
+
+      //   Calculate mean squared error between predicted and real labels.
+      val meanSquaredError = predictionAndLabel.map{case(p, l) => math.pow((p - l), 2)}.mean()
+      val msg = ("Mean Squared Error = " + meanSquaredError)
+      
       println(msg)
-          
-      aspenModel.asInstanceOf[NaiveBayesPredictionModel].setError(msg);
-          
-    } else if(KMeansPredictionModel.spark_kmeans_prediction.equals(aspenModel.getType)) {
-          
-      println("KMEANS does not provide testing implementation")
+      
+      sirm.setError(msg)
       
     } else if(LogisticRegressionPredictionModel.spark_logistic_regression_prediction.equals(aspenModel.getType)) {
       
@@ -190,6 +187,51 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
       println(msg)
       
       lrpm.setError(msg)
+      
+    } else if( NaiveBayesPredictionModel.spark_naive_bayes_prediction.equals(aspenModel.getType)) {
+
+      println("Testing ...")
+          
+      println("Test documents count: " + testRDD.count())
+          
+      val vectorizedTest = mtj.vectorize(testRDD, aspenModel)
+          
+      val predictionAndLabel = vectorizedTest.map(p => (aspenModel.asInstanceOf[NaiveBayesPredictionModel].getModel.predict(p.features), p.label))
+      val accuracy = 1.0 * predictionAndLabel.filter(x => x._1 == x._2).count() / vectorizedTest.count()
+          
+      val msg = "Accuracy: " + accuracy;
+          
+      println(msg)
+          
+      aspenModel.asInstanceOf[NaiveBayesPredictionModel].setError(msg);
+          
+    } else if(KMeansPredictionModel.spark_kmeans_prediction.equals(aspenModel.getType)) {
+          
+      println("KMEANS does not provide testing implementation")
+      
+    } else if( LinearRegressionModel.spark_linear_regression.equals(aspenModel.getType)) {
+          
+      val sprm = aspenModel.asInstanceOf[LinearRegressionModel];
+          
+      // Evaluate model on training examples and compute training error
+      val valuesAndPreds = mtj.vectorize(testRDD, aspenModel).map { point =>
+//        println ("Test Point: " + point)
+        val scaledPoint = sprm.scaleLabeledPoint(point)
+//        println ("Test Point scaled: " + scaledPoint)
+        val prediction = sprm.getModel().predict(scaledPoint.features)
+//        println("Prediction: " + prediction)
+        var original = sprm.scaledBack(prediction);
+        println("Input: " + prediction + " rescaled: " + original)
+        (point.label, original)
+      
+      }
+          
+      val MSE = valuesAndPreds.map{case(v, p) => math.pow((v - p), 2)}.mean()
+      val msg = "training Mean Squared Error = " + MSE
+          
+      println(msg)
+          
+      sprm.setError(msg)
       
     } else if( RandomForestPredictionModel.spark_randomforest_prediction.equals(aspenModel.getType ) ) {
           
@@ -218,7 +260,11 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
       println(msg)
           
       aspenModel.asInstanceOf[RandomForestPredictionModel].setError(msg)
-          
+      
+    } else if( PageRankPredictionModel.spark_page_rank_prediction.equals(aspenModel.getType)) {
+      
+      println("PAGE RANK does not provide testing implementation")
+      
     } else if( RandomForestRegressionModel.spark_randomforest_regression.equals(aspenModel.getType)) {
           
       val rfrm = aspenModel.asInstanceOf[RandomForestRegressionModel];
@@ -236,46 +282,6 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
           
       rfrm.setError(msg)
       
-    } else if(SparkIsotonicRegressionModel.spark_isotonic_regression.equals(aspenModel.getType)) {
-
-      var sirm = aspenModel.asInstanceOf[SparkIsotonicRegressionModel]
-      
-      val predictionAndLabel = mtj.vectorize(testRDD, sirm).map { point =>
-        val predictedLabel = sirm.model.predict(point.features(0))
-        (predictedLabel, point.label)
-      }
-
-      //   Calculate mean squared error between predicted and real labels.
-      val meanSquaredError = predictionAndLabel.map{case(p, l) => math.pow((p - l), 2)}.mean()
-      val msg = ("Mean Squared Error = " + meanSquaredError)
-      
-      println(msg)
-      
-      sirm.setError(msg)
-      
-    } else if( SparkLinearRegressionModel.spark_linear_regression.equals(aspenModel.getType)) {
-          
-      val sprm = aspenModel.asInstanceOf[SparkLinearRegressionModel];
-          
-      // Evaluate model on training examples and compute training error
-      val valuesAndPreds = mtj.vectorize(testRDD, aspenModel).map { point =>
-//        println ("Test Point: " + point)
-        val scaledPoint = sprm.scaleLabeledPoint(point)
-//        println ("Test Point scaled: " + scaledPoint)
-        val prediction = sprm.getModel().predict(scaledPoint.features)
-//        println("Prediction: " + prediction)
-        var original = sprm.scaledBack(prediction);
-        println("Input: " + prediction + " rescaled: " + original)
-        (point.label, original)
-      
-      }
-          
-      val MSE = valuesAndPreds.map{case(v, p) => math.pow((v - p), 2)}.mean()
-      val msg = "training Mean Squared Error = " + MSE
-          
-      println(msg)
-          
-      sprm.setError(msg)
     } else if( SVMWithSGDPredictionModel.spark_svm_w_sgd_prediction.equals(aspenModel.getType)) {
       
       val swspm = aspenModel.asInstanceOf[SVMWithSGDPredictionModel]

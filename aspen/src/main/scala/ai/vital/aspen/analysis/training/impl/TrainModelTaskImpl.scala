@@ -18,8 +18,8 @@ import ai.vital.aspen.analysis.naivebayes.NaiveBayesTraining
 import ai.vital.aspen.analysis.randomforest.RandomForestTraining
 import ai.vital.aspen.analysis.randomforest.RandomForestRegressionTraining
 import ai.vital.aspen.model.RandomForestRegressionModel
-import ai.vital.aspen.analysis.regression.SparkLinearRegressionTraining
-import ai.vital.aspen.model.SparkLinearRegressionModel
+import ai.vital.aspen.analysis.regression.LinearRegressionTraining
+import ai.vital.aspen.model.LinearRegressionModel
 import ai.vital.aspen.model.SVMWithSGDPredictionModel
 import ai.vital.aspen.analysis.svm.SVMWithSGDTraining
 import ai.vital.aspen.model.LogisticRegressionPredictionModel
@@ -29,10 +29,12 @@ import ai.vital.aspen.model.GradientBoostedTreesPredictionModel
 import ai.vital.aspen.analysis.gradientboostedtrees.GradientBoostedTreesPredictionTraining
 import ai.vital.aspen.analysis.gradientboostedtrees.GradientBoostedTreesRegressionTraining
 import ai.vital.aspen.model.GradientBoostedTreesRegressionModel
-import ai.vital.aspen.model.SparkIsotonicRegressionModel
-import ai.vital.aspen.analysis.regression.SparkIsotonicRegressionTraining
+import ai.vital.aspen.model.IsotonicRegressionModel
+import ai.vital.aspen.analysis.regression.IsotonicRegressionTraining
 import ai.vital.aspen.model.GaussianMixturePredictionModel
 import ai.vital.aspen.analysis.gaussianmixture.GaussianMixtureTraining
+import ai.vital.aspen.model.PageRankPredictionModel
+import ai.vital.aspen.analysis.pagerank.PageRankTraining
 
 class TrainModelTaskImpl(sc: SparkContext, task: TrainModelTask) extends AbstractModelTrainingTaskImpl[TrainModelTask](sc, task) {
   
@@ -62,20 +64,22 @@ class TrainModelTaskImpl(sc: SparkContext, task: TrainModelTask) extends Abstrac
         trainingImpl = new GradientBoostedTreesPredictionTraining(aspenModel.asInstanceOf[GradientBoostedTreesPredictionModel])
       } else if(aspenModel.isInstanceOf[GradientBoostedTreesRegressionModel]) {
         trainingImpl = new GradientBoostedTreesRegressionTraining(aspenModel.asInstanceOf[GradientBoostedTreesRegressionModel])
+      } else if(aspenModel.isInstanceOf[IsotonicRegressionModel]) {
+    	  trainingImpl = new IsotonicRegressionTraining(aspenModel.asInstanceOf[IsotonicRegressionModel])        
       } else if(aspenModel.isInstanceOf[KMeansPredictionModel]) {
-        trainingImpl = new KMeansClustering(aspenModel.asInstanceOf[KMeansPredictionModel])
+    	  trainingImpl = new KMeansClustering(aspenModel.asInstanceOf[KMeansPredictionModel])
+      } else if(aspenModel.isInstanceOf[LinearRegressionModel]) {
+    	  trainingImpl = new LinearRegressionTraining(aspenModel.asInstanceOf[LinearRegressionModel])
       } else if(aspenModel.isInstanceOf[LogisticRegressionPredictionModel]) {
         trainingImpl = new LogisticRegressionPredictionTraining(aspenModel.asInstanceOf[LogisticRegressionPredictionModel])
       } else if(aspenModel.isInstanceOf[NaiveBayesPredictionModel]) {
         trainingImpl = new NaiveBayesTraining(aspenModel.asInstanceOf[NaiveBayesPredictionModel])
+      } else if(aspenModel.isInstanceOf[PageRankPredictionModel]) {
+        trainingImpl = new PageRankTraining(aspenModel.asInstanceOf[PageRankPredictionModel])
       } else if(aspenModel.isInstanceOf[RandomForestPredictionModel]) {
         trainingImpl = new RandomForestTraining(aspenModel.asInstanceOf[RandomForestPredictionModel])
       } else if(aspenModel.isInstanceOf[RandomForestRegressionModel]) {
         trainingImpl = new RandomForestRegressionTraining(aspenModel.asInstanceOf[RandomForestRegressionModel])
-      } else if(aspenModel.isInstanceOf[SparkIsotonicRegressionModel]) {
-        trainingImpl = new SparkIsotonicRegressionTraining(aspenModel.asInstanceOf[SparkIsotonicRegressionModel])        
-      } else if(aspenModel.isInstanceOf[SparkLinearRegressionModel]) {
-        trainingImpl = new SparkLinearRegressionTraining(aspenModel.asInstanceOf[SparkLinearRegressionModel])
       } else if(aspenModel.isInstanceOf[SVMWithSGDPredictionModel]) {
         trainingImpl = new SVMWithSGDTraining(aspenModel.asInstanceOf[SVMWithSGDPredictionModel])
       } else {

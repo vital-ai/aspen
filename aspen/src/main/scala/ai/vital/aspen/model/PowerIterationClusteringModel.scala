@@ -56,11 +56,12 @@ class SparkPowerIterationClusteringModel extends PredictionModel {
   @Override
   override def _predict(vitalBlock : VitalBlock, featuresMap : java.util.Map[String, Object]) : Prediction = {
     
-    val clusterID = model.predict(vectorizeNoLabels(vitalBlock, featuresMap)).intValue()
-    
-    var cp = new ClusterPrediction()
-    cp.clusterID = clusterID
-    return cp
+    throw new RuntimeException("PowerIterationClustering not supported yet")
+//    val clusterID = model.predict(vectorizeNoLabels(vitalBlock, featuresMap)).intValue()
+//    
+//    var cp = new ClusterPrediction()
+//    cp.clusterID = clusterID
+//    return cp
     
     
   }  
@@ -91,7 +92,7 @@ class SparkPowerIterationClusteringModel extends PredictionModel {
   }
   
   @Override
-  def onAlgorithmConfigParam(param: String, value: Serializable): Boolean = {
+  def onAlgorithmConfigParam(param: String, value: java.io.Serializable): Boolean = {
     
      if("k".equals(param)) {
       

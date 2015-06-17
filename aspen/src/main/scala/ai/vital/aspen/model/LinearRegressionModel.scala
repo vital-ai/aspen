@@ -15,7 +15,7 @@ import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.regression.GeneralizedLinearModel
 import org.apache.spark.mllib.regression.LabeledPoint
-import org.apache.spark.mllib.regression.LinearRegressionModel
+import org.apache.spark.mllib.regression.{ LinearRegressionModel => LRM }
 import org.apache.spark.rdd.RDD
 
 import ai.vital.predictmodel.NumericalFeature
@@ -23,7 +23,7 @@ import ai.vital.predictmodel.Prediction
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 import ai.vital.vitalsigns.model.GraphObject
 
-object SparkLinearRegressionModel {
+object LinearRegressionModel {
   
   val spark_linear_regression = "spark-linear-regression";
   
@@ -35,7 +35,7 @@ object SparkLinearRegressionModel {
 }
 
 @SerialVersionUID(1L)
-class SparkLinearRegressionModel extends PredictionModel {
+class LinearRegressionModel extends PredictionModel {
 
   var model : GeneralizedLinearModel = null
   
@@ -60,10 +60,10 @@ class SparkLinearRegressionModel extends PredictionModel {
   
   def deserializeModel(stream: InputStream): Unit = {
 
-      val deserializedModel : LinearRegressionModel = SerializationUtils.deserialize(IOUtils.toByteArray(stream))
+      val deserializedModel : LRM = SerializationUtils.deserialize(IOUtils.toByteArray(stream))
     
       model = deserializedModel match {
-        case x: LinearRegressionModel => x
+        case x: LRM => x
         case _ => throw new ClassCastException
       }
   }
@@ -103,7 +103,7 @@ class SparkLinearRegressionModel extends PredictionModel {
   }
 
   def supportedType(): String = {
-    SparkLinearRegressionModel.spark_linear_regression
+    LinearRegressionModel.spark_linear_regression
   }
 
   def persistFiles(tempDir: File): Unit = {
@@ -261,11 +261,11 @@ class SparkLinearRegressionModel extends PredictionModel {
     
     val alg = modelConfig.getAlgorithm
     
-    if( SparkLinearRegressionModel.algorithm_lasso_with_sgd.equals( alg )) {
+    if( LinearRegressionModel.algorithm_lasso_with_sgd.equals( alg )) {
       
-    } else if( SparkLinearRegressionModel.algorithm_linear_regression_with_sgd.equals( alg )) {
+    } else if( LinearRegressionModel.algorithm_linear_regression_with_sgd.equals( alg )) {
       
-    } else if( SparkLinearRegressionModel.algorithm_ridge_regression_with_sgd.equals( alg )) {
+    } else if( LinearRegressionModel.algorithm_ridge_regression_with_sgd.equals( alg )) {
       
     } else {
       

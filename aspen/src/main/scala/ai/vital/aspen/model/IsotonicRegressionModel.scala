@@ -1,7 +1,7 @@
 package ai.vital.aspen.model
 
 import java.io.InputStream
-import org.apache.spark.mllib.regression.IsotonicRegressionModel
+import org.apache.spark.mllib.regression.{ IsotonicRegressionModel => IRM }
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.commons.lang3.SerializationUtils
 import org.apache.commons.io.IOUtils
@@ -14,24 +14,24 @@ import scala.collection.JavaConversions._
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 
-object SparkIsotonicRegressionModel {
+object IsotonicRegressionModel {
   
   val spark_isotonic_regression = "spark-isotonic-regression";
   
 }
 @SerialVersionUID(1L)
-class SparkIsotonicRegressionModel extends PredictionModel {
+class IsotonicRegressionModel extends PredictionModel {
   
   var isotonic : java.lang.Boolean = true
   
-  var model : IsotonicRegressionModel = null
+  var model : IRM = null
   
   def deserializeModel(stream: InputStream): Unit = {
     
-    val deserializedModel : IsotonicRegressionModel = SerializationUtils.deserialize(IOUtils.toByteArray(stream))
+    val deserializedModel : IRM = SerializationUtils.deserialize(IOUtils.toByteArray(stream))
     
     model = deserializedModel match {
-      case x: IsotonicRegressionModel => x
+      case x: IRM => x
       case _ => throw new ClassCastException
     }
   }
@@ -100,7 +100,7 @@ class SparkIsotonicRegressionModel extends PredictionModel {
   }
   
   def supportedType(): String = {
-    SparkIsotonicRegressionModel.spark_isotonic_regression
+    IsotonicRegressionModel.spark_isotonic_regression
   }
 
   def toTuple(vectorized: RDD[LabeledPoint]) : RDD[(Double, Double, Double)] = {

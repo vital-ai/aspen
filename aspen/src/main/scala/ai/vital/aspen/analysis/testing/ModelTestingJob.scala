@@ -47,7 +47,7 @@ import org.apache.spark.mllib.recommendation.Rating
 import org.apache.spark.mllib.recommendation.Rating
 import scala.collection.mutable.MutableList
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
-import ai.vital.aspen.model.SparkLinearRegressionModel
+import ai.vital.aspen.model.LinearRegressionModel
 import ai.vital.vitalsigns.model.URIReference
 import org.apache.spark.mllib.regression.LabeledPoint
 import ai.vital.vitalsigns.model.VITAL_Category
@@ -57,7 +57,7 @@ import ai.vital.aspen.model.LogisticRegressionPredictionModel
 import ai.vital.aspen.model.DecisionTreeRegressionModel
 import ai.vital.aspen.model.GradientBoostedTreesPredictionModel
 import ai.vital.aspen.model.GradientBoostedTreesRegressionModel
-import ai.vital.aspen.model.SparkIsotonicRegressionModel
+import ai.vital.aspen.model.IsotonicRegressionModel
 import ai.vital.aspen.model.GaussianMixturePredictionModel
 import ai.vital.aspen.model.PredictionModel
 import ai.vital.aspen.analysis.training.ModelTrainingJob
@@ -314,13 +314,13 @@ object ModelTestingJob extends AbstractJob {
       
     }
     
-    if(aspenModel.isInstanceOf[SparkLinearRegressionModel]
+    if(aspenModel.isInstanceOf[LinearRegressionModel]
     || aspenModel.isInstanceOf[RandomForestRegressionModel]
     || aspenModel.isInstanceOf[DecisionTreeRegressionModel]
     || aspenModel.isInstanceOf[GradientBoostedTreesRegressionModel]
-    || aspenModel.isInstanceOf[SparkIsotonicRegressionModel]) {
+    || aspenModel.isInstanceOf[IsotonicRegressionModel]) {
       
-      var slrm : SparkLinearRegressionModel = null 
+      var slrm : LinearRegressionModel = null 
       
       var rfrm : RandomForestRegressionModel = null
       
@@ -328,11 +328,11 @@ object ModelTestingJob extends AbstractJob {
       
       var gbtrm : GradientBoostedTreesRegressionModel = null
       
-      var sirm : SparkIsotonicRegressionModel = null
+      var sirm : IsotonicRegressionModel = null
       
-      if( aspenModel.isInstanceOf[SparkLinearRegressionModel] ) {
+      if( aspenModel.isInstanceOf[LinearRegressionModel] ) {
         
-    	  slrm = aspenModel.asInstanceOf[SparkLinearRegressionModel]
+    	  slrm = aspenModel.asInstanceOf[LinearRegressionModel]
         
       } else if(aspenModel.isInstanceOf[DecisionTreeRegressionModel]) {
         
@@ -342,9 +342,9 @@ object ModelTestingJob extends AbstractJob {
         
         gbtrm = aspenModel.asInstanceOf[GradientBoostedTreesRegressionModel]
         
-      } else if(aspenModel.isInstanceOf[SparkIsotonicRegressionModel]) {
+      } else if(aspenModel.isInstanceOf[IsotonicRegressionModel]) {
       
-        sirm = aspenModel.asInstanceOf[SparkIsotonicRegressionModel]
+        sirm = aspenModel.asInstanceOf[IsotonicRegressionModel]
       
       } else {
         

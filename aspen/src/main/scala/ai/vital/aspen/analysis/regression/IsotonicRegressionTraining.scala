@@ -1,13 +1,13 @@
 package ai.vital.aspen.analysis.regression
 
 import ai.vital.aspen.analysis.training.AbstractTraining
-import ai.vital.aspen.model.SparkIsotonicRegressionModel
+import ai.vital.aspen.model.IsotonicRegressionModel
 import ai.vital.aspen.util.SetOnceHashMap
 import org.apache.spark.rdd.RDD
 import org.apache.spark.mllib.regression.IsotonicRegression
 import ai.vital.aspen.analysis.training.ModelTrainingJob
 
-class SparkIsotonicRegressionTraining(model: SparkIsotonicRegressionModel) extends AbstractTraining[SparkIsotonicRegressionModel](model) {
+class IsotonicRegressionTraining(model: IsotonicRegressionModel) extends AbstractTraining[IsotonicRegressionModel](model) {
 
   def train(globalContext: SetOnceHashMap, trainRDD: RDD[(String, Array[Byte])]): java.io.Serializable = {
   
