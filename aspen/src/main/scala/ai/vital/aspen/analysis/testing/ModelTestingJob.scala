@@ -17,10 +17,10 @@ import spark.jobserver.SparkJobValid
 import ai.vital.aspen.groovy.modelmanager.ModelManager
 import ai.vital.aspen.config.AspenConfig
 import ai.vital.aspen.groovy.AspenGroovyConfig
-import ai.vital.aspen.model.DecisionTreePredictionModel
-import ai.vital.aspen.model.NaiveBayesPredictionModel
-import ai.vital.aspen.model.RandomForestPredictionModel
-import ai.vital.aspen.model.RandomForestRegressionModel
+import ai.vital.aspen.model.AspenDecisionTreePredictionModel
+import ai.vital.aspen.model.AspenNaiveBayesPredictionModel
+import ai.vital.aspen.model.AspenRandomForestPredictionModel
+import ai.vital.aspen.model.AspenRandomForestRegressionModel
 import ai.vital.aspen.groovy.modelmanager.AspenModel
 import ai.vital.vitalsigns.VitalSigns
 import scala.collection.JavaConversions._
@@ -37,28 +37,28 @@ import ai.vital.vitalservice.VitalStatus
 import ai.vital.vitalsigns.model.GraphMatch
 import ai.vital.vitalsigns.model.property.URIProperty
 import ai.vital.vitalsigns.block.CompactStringSerializer
-import ai.vital.aspen.model.KMeansPredictionModel
+import ai.vital.aspen.model.AspenKMeansPredictionModel
 import org.apache.spark.Accumulator
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 import ai.vital.vitalservice.model.App
-import ai.vital.aspen.model.CollaborativeFilteringPredictionModel
+import ai.vital.aspen.model.AspenCollaborativeFilteringPredictionModel
 import ai.vital.aspen.groovy.featureextraction.FeatureExtraction
 import org.apache.spark.mllib.recommendation.Rating
 import org.apache.spark.mllib.recommendation.Rating
 import scala.collection.mutable.MutableList
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
-import ai.vital.aspen.model.LinearRegressionModel
+import ai.vital.aspen.model.AspenLinearRegressionModel
 import ai.vital.vitalsigns.model.URIReference
 import org.apache.spark.mllib.regression.LabeledPoint
 import ai.vital.vitalsigns.model.VITAL_Category
-import ai.vital.aspen.model.SVMWithSGDPredictionModel
+import ai.vital.aspen.model.AspenSVMWithSGDPredictionModel
 import ai.vital.predictmodel.CategoricalFeature
-import ai.vital.aspen.model.LogisticRegressionPredictionModel
-import ai.vital.aspen.model.DecisionTreeRegressionModel
-import ai.vital.aspen.model.GradientBoostedTreesPredictionModel
-import ai.vital.aspen.model.GradientBoostedTreesRegressionModel
-import ai.vital.aspen.model.IsotonicRegressionModel
-import ai.vital.aspen.model.GaussianMixturePredictionModel
+import ai.vital.aspen.model.AspenLogisticRegressionPredictionModel
+import ai.vital.aspen.model.AspenDecisionTreeRegressionModel
+import ai.vital.aspen.model.AspenGradientBoostedTreesPredictionModel
+import ai.vital.aspen.model.AspenGradientBoostedTreesRegressionModel
+import ai.vital.aspen.model.AspenIsotonicRegressionModel
+import ai.vital.aspen.model.AspenGaussianMixturePredictionModel
 import ai.vital.aspen.model.PredictionModel
 import ai.vital.aspen.analysis.training.ModelTrainingJob
 
@@ -226,12 +226,12 @@ object ModelTestingJob extends AbstractJob {
       
     }
     
-    if(aspenModel.isInstanceOf[CollaborativeFilteringPredictionModel]) {
+    if(aspenModel.isInstanceOf[AspenCollaborativeFilteringPredictionModel]) {
       
       //collaborative filtering model requires active spark context, it means it cannot be used inside workers
       //only one active spark context may be 
       
-      val cfpm = aspenModel.asInstanceOf[CollaborativeFilteringPredictionModel]
+      val cfpm = aspenModel.asInstanceOf[AspenCollaborativeFilteringPredictionModel]
       
       cfpm.sc = sc
       
@@ -251,11 +251,11 @@ object ModelTestingJob extends AbstractJob {
         
         val featuresMap = fe.extractFeatures(vitalBlock)
         
-        val ratingVal = featuresMap.get(CollaborativeFilteringPredictionModel.feature_rating)
+        val ratingVal = featuresMap.get(AspenCollaborativeFilteringPredictionModel.feature_rating)
         
-        val userURI = featuresMap.get(CollaborativeFilteringPredictionModel.feature_user_uri)
+        val userURI = featuresMap.get(AspenCollaborativeFilteringPredictionModel.feature_user_uri)
         
-        val productURI = featuresMap.get(CollaborativeFilteringPredictionModel.feature_product_uri)
+        val productURI = featuresMap.get(AspenCollaborativeFilteringPredictionModel.feature_product_uri)
         
         var rating : Rating = null;
         
@@ -314,41 +314,41 @@ object ModelTestingJob extends AbstractJob {
       
     }
     
-    if(aspenModel.isInstanceOf[LinearRegressionModel]
-    || aspenModel.isInstanceOf[RandomForestRegressionModel]
-    || aspenModel.isInstanceOf[DecisionTreeRegressionModel]
-    || aspenModel.isInstanceOf[GradientBoostedTreesRegressionModel]
-    || aspenModel.isInstanceOf[IsotonicRegressionModel]) {
+    if(aspenModel.isInstanceOf[AspenLinearRegressionModel]
+    || aspenModel.isInstanceOf[AspenRandomForestRegressionModel]
+    || aspenModel.isInstanceOf[AspenDecisionTreeRegressionModel]
+    || aspenModel.isInstanceOf[AspenGradientBoostedTreesRegressionModel]
+    || aspenModel.isInstanceOf[AspenIsotonicRegressionModel]) {
       
-      var slrm : LinearRegressionModel = null 
+      var slrm : AspenLinearRegressionModel = null 
       
-      var rfrm : RandomForestRegressionModel = null
+      var rfrm : AspenRandomForestRegressionModel = null
       
-      var dtrm : DecisionTreeRegressionModel = null
+      var dtrm : AspenDecisionTreeRegressionModel = null
       
-      var gbtrm : GradientBoostedTreesRegressionModel = null
+      var gbtrm : AspenGradientBoostedTreesRegressionModel = null
       
-      var sirm : IsotonicRegressionModel = null
+      var sirm : AspenIsotonicRegressionModel = null
       
-      if( aspenModel.isInstanceOf[LinearRegressionModel] ) {
+      if( aspenModel.isInstanceOf[AspenLinearRegressionModel] ) {
         
-    	  slrm = aspenModel.asInstanceOf[LinearRegressionModel]
+    	  slrm = aspenModel.asInstanceOf[AspenLinearRegressionModel]
         
-      } else if(aspenModel.isInstanceOf[DecisionTreeRegressionModel]) {
+      } else if(aspenModel.isInstanceOf[AspenDecisionTreeRegressionModel]) {
         
-        dtrm = aspenModel.asInstanceOf[DecisionTreeRegressionModel]
+        dtrm = aspenModel.asInstanceOf[AspenDecisionTreeRegressionModel]
         
-      } else if(aspenModel.isInstanceOf[GradientBoostedTreesRegressionModel]) {
+      } else if(aspenModel.isInstanceOf[AspenGradientBoostedTreesRegressionModel]) {
         
-        gbtrm = aspenModel.asInstanceOf[GradientBoostedTreesRegressionModel]
+        gbtrm = aspenModel.asInstanceOf[AspenGradientBoostedTreesRegressionModel]
         
-      } else if(aspenModel.isInstanceOf[IsotonicRegressionModel]) {
+      } else if(aspenModel.isInstanceOf[AspenIsotonicRegressionModel]) {
       
-        sirm = aspenModel.asInstanceOf[IsotonicRegressionModel]
+        sirm = aspenModel.asInstanceOf[AspenIsotonicRegressionModel]
       
       } else {
         
-        rfrm = aspenModel.asInstanceOf[RandomForestRegressionModel]
+        rfrm = aspenModel.asInstanceOf[AspenRandomForestRegressionModel]
         
       }
       
@@ -426,10 +426,10 @@ object ModelTestingJob extends AbstractJob {
     
     var clustersCount : java.lang.Integer = null 
     
-    if(aspenModel.isInstanceOf[KMeansPredictionModel]) {
-      clustersCount = aspenModel.asInstanceOf[KMeansPredictionModel].getClustersCount()
-    } else if(aspenModel.isInstanceOf[GaussianMixturePredictionModel]) {
-      val gmpm = aspenModel.asInstanceOf[GaussianMixturePredictionModel]
+    if(aspenModel.isInstanceOf[AspenKMeansPredictionModel]) {
+      clustersCount = aspenModel.asInstanceOf[AspenKMeansPredictionModel].getClustersCount()
+    } else if(aspenModel.isInstanceOf[AspenGaussianMixturePredictionModel]) {
+      val gmpm = aspenModel.asInstanceOf[AspenGaussianMixturePredictionModel]
       gmpm.sc = sc
       clustersCount = gmpm.k
       
@@ -448,8 +448,10 @@ object ModelTestingJob extends AbstractJob {
     
     var reduced : (Int, Int, Int, Int) = null 
     
-    if(aspenModel.isInstanceOf[GaussianMixturePredictionModel]) {
-      val gmpm = aspenModel.asInstanceOf[GaussianMixturePredictionModel]
+    if(aspenModel.isInstanceOf[AspenGaussianMixturePredictionModel]) {
+      
+//      throw new RuntimeException("DISABLED!")
+      val gmpm = aspenModel.asInstanceOf[AspenGaussianMixturePredictionModel]
       
       val vectorized = ModelTrainingJob.vectorizeNoLabels(inputBlockRDD, gmpm)
       

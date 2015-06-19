@@ -4,26 +4,25 @@ import ai.vital.aspen.analysis.training.AbstractModelTrainingTaskImpl
 import ai.vital.aspen.groovy.predict.tasks.TestModelTask
 import org.apache.spark.SparkContext
 import ai.vital.aspen.analysis.training.ModelTrainingJob
-import ai.vital.aspen.model.CollaborativeFilteringPredictionModel
-import ai.vital.aspen.model.CollaborativeFilteringPredictionModel
+import ai.vital.aspen.model.AspenCollaborativeFilteringPredictionModel
 import org.apache.spark.rdd.RDD
 import org.apache.spark.mllib.recommendation.Rating
-import ai.vital.aspen.model.DecisionTreePredictionModel
-import ai.vital.aspen.model.NaiveBayesPredictionModel
-import ai.vital.aspen.model.KMeansPredictionModel
-import ai.vital.aspen.model.RandomForestPredictionModel
-import ai.vital.aspen.model.RandomForestRegressionModel
-import ai.vital.aspen.model.LinearRegressionModel
-import ai.vital.aspen.model.SVMWithSGDPredictionModel
+import ai.vital.aspen.model.AspenDecisionTreePredictionModel
+import ai.vital.aspen.model.AspenNaiveBayesPredictionModel
+import ai.vital.aspen.model.AspenKMeansPredictionModel
+import ai.vital.aspen.model.AspenRandomForestPredictionModel
+import ai.vital.aspen.model.AspenRandomForestRegressionModel
+import ai.vital.aspen.model.AspenLinearRegressionModel
+import ai.vital.aspen.model.AspenSVMWithSGDPredictionModel
 import org.apache.spark.mllib.evaluation.MulticlassMetrics
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
-import ai.vital.aspen.model.LogisticRegressionPredictionModel
-import ai.vital.aspen.model.DecisionTreeRegressionModel
-import ai.vital.aspen.model.GradientBoostedTreesPredictionModel
-import ai.vital.aspen.model.GradientBoostedTreesRegressionModel
-import ai.vital.aspen.model.IsotonicRegressionModel
-import ai.vital.aspen.model.GaussianMixturePredictionModel
-import ai.vital.aspen.model.PageRankPredictionModel
+import ai.vital.aspen.model.AspenLogisticRegressionPredictionModel
+import ai.vital.aspen.model.AspenDecisionTreeRegressionModel
+import ai.vital.aspen.model.AspenGradientBoostedTreesPredictionModel
+import ai.vital.aspen.model.AspenGradientBoostedTreesRegressionModel
+import ai.vital.aspen.model.AspenIsotonicRegressionModel
+import ai.vital.aspen.model.AspenGaussianMixturePredictionModel
+import ai.vital.aspen.model.AspenPageRankPredictionModel
 
 class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractModelTrainingTaskImpl[TestModelTask](sc, task) {
   
@@ -41,9 +40,9 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
     
     val testRDD = mtj.getDataset(task.datasetName)
     
-    if(CollaborativeFilteringPredictionModel.spark_collaborative_filtering_prediction.equals(aspenModel.getType)) {
+    if(AspenCollaborativeFilteringPredictionModel.spark_collaborative_filtering_prediction.equals(aspenModel.getType)) {
           
-      val cfpm = aspenModel.asInstanceOf[CollaborativeFilteringPredictionModel]
+      val cfpm = aspenModel.asInstanceOf[AspenCollaborativeFilteringPredictionModel]
           
       val values = mtj.globalContext.get("collaborative-filtering-rdd").asInstanceOf[RDD[(String, String, Double)]] 
           
@@ -69,7 +68,7 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
       println(msg)
       cfpm.setError(msg)
           
-    } else if( DecisionTreePredictionModel.spark_decision_tree_prediction.equals(aspenModel.getType)) {
+    } else if( AspenDecisionTreePredictionModel.spark_decision_tree_prediction.equals(aspenModel.getType)) {
     
       println("Testing ...")
           
@@ -78,7 +77,7 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
       val vectorizedTest = mtj.vectorize(testRDD, aspenModel)
           
       val labelAndPreds = vectorizedTest.map { point =>
-      val prediction = aspenModel.asInstanceOf[DecisionTreePredictionModel].getModel().predict(point.features)
+      val prediction = aspenModel.asInstanceOf[AspenDecisionTreePredictionModel].getModel().predict(point.features)
         (point.label, prediction)
       }
           
@@ -86,11 +85,11 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
           
       val msg = "Test Error = " + testErr
       println(msg)
-      aspenModel.asInstanceOf[DecisionTreePredictionModel].setError(msg)
+      aspenModel.asInstanceOf[AspenDecisionTreePredictionModel].setError(msg)
       
-    } else if( DecisionTreeRegressionModel.spark_decision_tree_regression.equals(aspenModel.getType)) {
+    } else if( AspenDecisionTreeRegressionModel.spark_decision_tree_regression.equals(aspenModel.getType)) {
       
-      val dtrm = aspenModel.asInstanceOf[DecisionTreeRegressionModel]
+      val dtrm = aspenModel.asInstanceOf[AspenDecisionTreeRegressionModel]
       
       val vectorizedTest = mtj.vectorize(testRDD, aspenModel)
       
@@ -107,13 +106,13 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
       
       dtrm.setError(msg)
       
-    } else if( GaussianMixturePredictionModel.spark_gaussian_mixture_prediction.equals(aspenModel.getType)) {
+    } else if( AspenGaussianMixturePredictionModel.spark_gaussian_mixture_prediction.equals(aspenModel.getType)) {
       
       println("GAUSSIAN MIXTURE does not provide testing implementation")
       
-    } else if( GradientBoostedTreesPredictionModel.spark_gradient_boosted_trees_prediction.equals(aspenModel.getType)) {
+    } else if( AspenGradientBoostedTreesPredictionModel.spark_gradient_boosted_trees_prediction.equals(aspenModel.getType)) {
       
-    	val gbtpm = aspenModel.asInstanceOf[GradientBoostedTreesPredictionModel]
+    	val gbtpm = aspenModel.asInstanceOf[AspenGradientBoostedTreesPredictionModel]
       
       val vectorizedTest = mtj.vectorize(testRDD, aspenModel)
       
@@ -131,9 +130,9 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
       
       gbtpm.setError(msg)
       
-    } else if( GradientBoostedTreesRegressionModel.spark_gradient_boosted_trees_regression.equals(aspenModel.getType)) {
+    } else if( AspenGradientBoostedTreesRegressionModel.spark_gradient_boosted_trees_regression.equals(aspenModel.getType)) {
       
-      val gbtrm = aspenModel.asInstanceOf[GradientBoostedTreesRegressionModel]
+      val gbtrm = aspenModel.asInstanceOf[AspenGradientBoostedTreesRegressionModel]
       
       val vectorizedTest = mtj.vectorize(testRDD, aspenModel)
       // Evaluate model on test instances and compute test error
@@ -150,9 +149,9 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
       
       gbtrm.setError(msg)
       
-          } else if(IsotonicRegressionModel.spark_isotonic_regression.equals(aspenModel.getType)) {
+          } else if(AspenIsotonicRegressionModel.spark_isotonic_regression.equals(aspenModel.getType)) {
 
-      var sirm = aspenModel.asInstanceOf[IsotonicRegressionModel]
+      var sirm = aspenModel.asInstanceOf[AspenIsotonicRegressionModel]
       
       val predictionAndLabel = mtj.vectorize(testRDD, sirm).map { point =>
         val predictedLabel = sirm.model.predict(point.features(0))
@@ -167,9 +166,9 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
       
       sirm.setError(msg)
       
-    } else if(LogisticRegressionPredictionModel.spark_logistic_regression_prediction.equals(aspenModel.getType)) {
+    } else if(AspenLogisticRegressionPredictionModel.spark_logistic_regression_prediction.equals(aspenModel.getType)) {
       
-      val lrpm = aspenModel.asInstanceOf[LogisticRegressionPredictionModel]
+      val lrpm = aspenModel.asInstanceOf[AspenLogisticRegressionPredictionModel]
       
       val vectorizedTest = mtj.vectorize(testRDD, aspenModel)
       
@@ -188,7 +187,7 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
       
       lrpm.setError(msg)
       
-    } else if( NaiveBayesPredictionModel.spark_naive_bayes_prediction.equals(aspenModel.getType)) {
+    } else if(AspenNaiveBayesPredictionModel.spark_naive_bayes_prediction.equals(aspenModel.getType)) {
 
       println("Testing ...")
           
@@ -196,22 +195,22 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
           
       val vectorizedTest = mtj.vectorize(testRDD, aspenModel)
           
-      val predictionAndLabel = vectorizedTest.map(p => (aspenModel.asInstanceOf[NaiveBayesPredictionModel].getModel.predict(p.features), p.label))
+      val predictionAndLabel = vectorizedTest.map(p => (aspenModel.asInstanceOf[AspenNaiveBayesPredictionModel].getModel.predict(p.features), p.label))
       val accuracy = 1.0 * predictionAndLabel.filter(x => x._1 == x._2).count() / vectorizedTest.count()
           
       val msg = "Accuracy: " + accuracy;
           
       println(msg)
           
-      aspenModel.asInstanceOf[NaiveBayesPredictionModel].setError(msg);
+      aspenModel.asInstanceOf[AspenNaiveBayesPredictionModel].setError(msg);
           
-    } else if(KMeansPredictionModel.spark_kmeans_prediction.equals(aspenModel.getType)) {
+    } else if(AspenKMeansPredictionModel.spark_kmeans_prediction.equals(aspenModel.getType)) {
           
       println("KMEANS does not provide testing implementation")
       
-    } else if( LinearRegressionModel.spark_linear_regression.equals(aspenModel.getType)) {
+    } else if(AspenLinearRegressionModel.spark_linear_regression.equals(aspenModel.getType)) {
           
-      val sprm = aspenModel.asInstanceOf[LinearRegressionModel];
+      val sprm = aspenModel.asInstanceOf[AspenLinearRegressionModel];
           
       // Evaluate model on training examples and compute training error
       val valuesAndPreds = mtj.vectorize(testRDD, aspenModel).map { point =>
@@ -233,7 +232,7 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
           
       sprm.setError(msg)
       
-    } else if( RandomForestPredictionModel.spark_randomforest_prediction.equals(aspenModel.getType ) ) {
+    } else if(AspenRandomForestPredictionModel.spark_randomforest_prediction.equals(aspenModel.getType ) ) {
           
       println("Testing ...")
           
@@ -249,7 +248,7 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
           
           // Evaluate model on test instances and compute test error
       val labelAndPreds = vectorizedTest.map { point =>
-      val prediction = aspenModel.asInstanceOf[RandomForestPredictionModel].getModel.predict(point.features)
+      val prediction = aspenModel.asInstanceOf[AspenRandomForestPredictionModel].getModel.predict(point.features)
         (point.label, prediction)
       }
           
@@ -259,15 +258,15 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
       val msg = "Test Error = " + testErr
       println(msg)
           
-      aspenModel.asInstanceOf[RandomForestPredictionModel].setError(msg)
+      aspenModel.asInstanceOf[AspenRandomForestPredictionModel].setError(msg)
       
-    } else if( PageRankPredictionModel.spark_page_rank_prediction.equals(aspenModel.getType)) {
+    } else if(AspenPageRankPredictionModel.spark_page_rank_prediction.equals(aspenModel.getType)) {
       
       println("PAGE RANK does not provide testing implementation")
       
-    } else if( RandomForestRegressionModel.spark_randomforest_regression.equals(aspenModel.getType)) {
+    } else if(AspenRandomForestRegressionModel.spark_randomforest_regression.equals(aspenModel.getType)) {
           
-      val rfrm = aspenModel.asInstanceOf[RandomForestRegressionModel];
+      val rfrm = aspenModel.asInstanceOf[AspenRandomForestRegressionModel];
           
       // Evaluate model on training examples and compute training error
       val valuesAndPreds = mtj.vectorize(testRDD, aspenModel).map { point =>
@@ -282,9 +281,9 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
           
       rfrm.setError(msg)
       
-    } else if( SVMWithSGDPredictionModel.spark_svm_w_sgd_prediction.equals(aspenModel.getType)) {
+    } else if(AspenSVMWithSGDPredictionModel.spark_svm_w_sgd_prediction.equals(aspenModel.getType)) {
       
-      val swspm = aspenModel.asInstanceOf[SVMWithSGDPredictionModel]
+      val swspm = aspenModel.asInstanceOf[AspenSVMWithSGDPredictionModel]
       
       val predictionAndLabels = mtj.vectorize(testRDD, swspm).map { lp =>
       

@@ -25,22 +25,22 @@ import ai.vital.aspen.jobserver.client.JobServerClient
 import org.codehaus.jackson.map.ObjectMapper
 import ai.vital.aspen.groovy.modelmanager.ModelCreator
 import ai.vital.aspen.groovy.modelmanager.AspenModel
-import ai.vital.aspen.model.CollaborativeFilteringPredictionModel
-import ai.vital.aspen.model.DecisionTreePredictionModel
-import ai.vital.aspen.model.KMeansPredictionModel
-import ai.vital.aspen.model.NaiveBayesPredictionModel
-import ai.vital.aspen.model.RandomForestPredictionModel
-import ai.vital.aspen.model.LinearRegressionModel
-import ai.vital.aspen.model.RandomForestRegressionModel
-import ai.vital.aspen.model.SVMWithSGDPredictionModel
-import ai.vital.aspen.model.LogisticRegressionPredictionModel
-import ai.vital.aspen.model.DecisionTreeRegressionModel
-import ai.vital.aspen.model.GradientBoostedTreesPredictionModel
-import ai.vital.aspen.model.GradientBoostedTreesRegressionModel
+import ai.vital.aspen.model.AspenCollaborativeFilteringPredictionModel
+import ai.vital.aspen.model.AspenDecisionTreePredictionModel
+import ai.vital.aspen.model.AspenKMeansPredictionModel
+import ai.vital.aspen.model.AspenNaiveBayesPredictionModel
+import ai.vital.aspen.model.AspenRandomForestPredictionModel
+import ai.vital.aspen.model.AspenLinearRegressionModel
+import ai.vital.aspen.model.AspenRandomForestRegressionModel
+import ai.vital.aspen.model.AspenSVMWithSGDPredictionModel
+import ai.vital.aspen.model.AspenLogisticRegressionPredictionModel
+import ai.vital.aspen.model.AspenDecisionTreeRegressionModel
+import ai.vital.aspen.model.AspenGradientBoostedTreesPredictionModel
+import ai.vital.aspen.model.AspenGradientBoostedTreesRegressionModel
 import scala.collection.JavaConversions._
-import ai.vital.aspen.model.IsotonicRegressionModel
-import ai.vital.aspen.model.GaussianMixturePredictionModel
-import ai.vital.aspen.model.PageRankPredictionModel
+import ai.vital.aspen.model.AspenIsotonicRegressionModel
+import ai.vital.aspen.model.AspenGaussianMixturePredictionModel
+import ai.vital.aspen.model.AspenPageRankPredictionModel
 
 
 /* this is placeholder code */
@@ -346,21 +346,21 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
     def getCreatorMap() : HashMap[String, Class[_ <: AspenModel]] = {
       
       val creatorMap = new HashMap[String, Class[_ <: AspenModel]];
-      creatorMap.put(CollaborativeFilteringPredictionModel.spark_collaborative_filtering_prediction, classOf[CollaborativeFilteringPredictionModel])
-      creatorMap.put(DecisionTreePredictionModel.spark_decision_tree_prediction, classOf[DecisionTreePredictionModel])
-      creatorMap.put(DecisionTreeRegressionModel.spark_decision_tree_regression, classOf[DecisionTreeRegressionModel])
-      creatorMap.put(GaussianMixturePredictionModel.spark_gaussian_mixture_prediction, classOf[GaussianMixturePredictionModel])
-      creatorMap.put(GradientBoostedTreesPredictionModel.spark_gradient_boosted_trees_prediction, classOf[GradientBoostedTreesPredictionModel])
-      creatorMap.put(GradientBoostedTreesRegressionModel.spark_gradient_boosted_trees_regression, classOf[GradientBoostedTreesRegressionModel])
-      creatorMap.put(IsotonicRegressionModel.spark_isotonic_regression, classOf[IsotonicRegressionModel])
-      creatorMap.put(KMeansPredictionModel.spark_kmeans_prediction, classOf[KMeansPredictionModel])
-      creatorMap.put(LinearRegressionModel.spark_linear_regression, classOf[LinearRegressionModel])
-      creatorMap.put(LogisticRegressionPredictionModel.spark_logistic_regression_prediction, classOf[LogisticRegressionPredictionModel])
-      creatorMap.put(NaiveBayesPredictionModel.spark_naive_bayes_prediction, classOf[NaiveBayesPredictionModel])
-      creatorMap.put(PageRankPredictionModel.spark_page_rank_prediction, classOf[PageRankPredictionModel])
-      creatorMap.put(RandomForestPredictionModel.spark_randomforest_prediction, classOf[RandomForestPredictionModel])
-      creatorMap.put(RandomForestRegressionModel.spark_randomforest_regression, classOf[RandomForestRegressionModel])
-      creatorMap.put(SVMWithSGDPredictionModel.spark_svm_w_sgd_prediction, classOf[SVMWithSGDPredictionModel])
+      creatorMap.put(AspenCollaborativeFilteringPredictionModel.spark_collaborative_filtering_prediction, classOf[AspenCollaborativeFilteringPredictionModel])
+      creatorMap.put(AspenDecisionTreePredictionModel.spark_decision_tree_prediction, classOf[AspenDecisionTreePredictionModel])
+      creatorMap.put(AspenDecisionTreeRegressionModel.spark_decision_tree_regression, classOf[AspenDecisionTreeRegressionModel])
+      creatorMap.put(AspenGaussianMixturePredictionModel.spark_gaussian_mixture_prediction, classOf[AspenGaussianMixturePredictionModel])
+      creatorMap.put(AspenGradientBoostedTreesPredictionModel.spark_gradient_boosted_trees_prediction, classOf[AspenGradientBoostedTreesPredictionModel])
+      creatorMap.put(AspenGradientBoostedTreesRegressionModel.spark_gradient_boosted_trees_regression, classOf[AspenGradientBoostedTreesRegressionModel])
+      creatorMap.put(AspenIsotonicRegressionModel.spark_isotonic_regression, classOf[AspenIsotonicRegressionModel])
+      creatorMap.put(AspenKMeansPredictionModel.spark_kmeans_prediction, classOf[AspenKMeansPredictionModel])
+      creatorMap.put(AspenLinearRegressionModel.spark_linear_regression, classOf[AspenLinearRegressionModel])
+      creatorMap.put(AspenLogisticRegressionPredictionModel.spark_logistic_regression_prediction, classOf[AspenLogisticRegressionPredictionModel])
+      creatorMap.put(AspenNaiveBayesPredictionModel.spark_naive_bayes_prediction, classOf[AspenNaiveBayesPredictionModel])
+      creatorMap.put(AspenPageRankPredictionModel.spark_page_rank_prediction, classOf[AspenPageRankPredictionModel])
+      creatorMap.put(AspenRandomForestPredictionModel.spark_randomforest_prediction, classOf[AspenRandomForestPredictionModel])
+      creatorMap.put(AspenRandomForestRegressionModel.spark_randomforest_regression, classOf[AspenRandomForestRegressionModel])
+      creatorMap.put(AspenSVMWithSGDPredictionModel.spark_svm_w_sgd_prediction, classOf[AspenSVMWithSGDPredictionModel])
       
       return creatorMap
     }

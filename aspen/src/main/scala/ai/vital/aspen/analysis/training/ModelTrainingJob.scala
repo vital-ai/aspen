@@ -47,7 +47,7 @@ import ai.vital.aspen.groovy.predict.tasks.TestModelTask
 import ai.vital.aspen.groovy.predict.tasks.TrainModelTask
 import ai.vital.aspen.job.AbstractJob
 import ai.vital.aspen.model.PredictionModel
-import ai.vital.aspen.model.LinearRegressionModel
+import ai.vital.aspen.model.AspenLinearRegressionModel
 import ai.vital.aspen.util.SetOnceHashMap
 import ai.vital.vitalservice.factory.VitalServiceFactory
 import ai.vital.vitalsigns.VitalSigns
@@ -423,7 +423,7 @@ object ModelTrainingJob extends AbstractJob {
   }
 
   //this is a special vectorization
-  def vectorizeWithScaling (trainRDD: RDD[(String, Array[Byte])], model: LinearRegressionModel) : RDD[LabeledPoint] = {
+  def vectorizeWithScaling (trainRDD: RDD[(String, Array[Byte])], model: AspenLinearRegressionModel) : RDD[LabeledPoint] = {
 		
 		  val vectorized = trainRDD.map { pair =>
 		  
