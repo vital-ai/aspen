@@ -518,7 +518,7 @@ public class FeatureExtraction {
 							if(m != null) msg += m + "\n"; 
 						}
 						
-						Object minValueInclusive = restriction.getMinValueExclusive();
+						Object minValueInclusive = restriction.getMinValueInclusive();
 						if(minValueInclusive != null) {
 							String m = validate(v, minValueInclusive, false, true);
 							if(m != null) msg += m + "\n"; 
@@ -536,7 +536,7 @@ public class FeatureExtraction {
 							
 						} else {
 							
-							throw new RuntimeException(msg);
+							throw new RuntimeException("Feature " + feature.getName() + " restriction not passed: " + msg.trim());
 							
 						}
 					}
@@ -601,7 +601,7 @@ public class FeatureExtraction {
 				
 				if(v1 > v2) {
 				
-					return "max inclusive: " + res + " input:" + v;
+					return "max inclusive: " + res + " input: " + v;
 					
 				}
 				
@@ -609,7 +609,7 @@ public class FeatureExtraction {
 				
 				if(v1 >= v2) {
 					
-					return "max exclusive: " + res + " input:" + v;
+					return "max exclusive: " + res + " input: " + v;
 					
 				}
 				
