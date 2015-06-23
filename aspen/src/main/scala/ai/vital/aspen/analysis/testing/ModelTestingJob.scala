@@ -1,66 +1,21 @@
 package ai.vital.aspen.analysis.testing
 
-import ai.vital.aspen.job.AbstractJob
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
-import com.typesafe.config.Config
 import org.apache.spark.SparkContext
-import org.apache.hadoop.fs.Path
-import org.apache.spark.rdd.RDD
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.FileSystem
-import org.apache.hadoop.io.Text
-import ai.vital.hadoop.writable.VitalBytesWritable
-import spark.jobserver.SparkJobValidation
+
+import com.typesafe.config.Config
+
+import ai.vital.aspen.groovy.predict.ModelTestingProcedure
+import ai.vital.aspen.groovy.predict.tasks.TestModelTask
+import ai.vital.aspen.job.AbstractJob
+import ai.vital.aspen.job.TasksHandler
+import ai.vital.aspen.util.SetOnceHashMap
+import ai.vital.vitalservice.factory.VitalServiceFactory
+import ai.vital.vitalsigns.VitalSigns
 import spark.jobserver.SparkJobInvalid
 import spark.jobserver.SparkJobValid
-import ai.vital.aspen.groovy.modelmanager.ModelManager
-import ai.vital.aspen.config.AspenConfig
-import ai.vital.aspen.groovy.AspenGroovyConfig
-import ai.vital.aspen.model.AspenDecisionTreePredictionModel
-import ai.vital.aspen.model.AspenNaiveBayesPredictionModel
-import ai.vital.aspen.model.AspenRandomForestPredictionModel
-import ai.vital.aspen.model.AspenRandomForestRegressionModel
-import ai.vital.aspen.groovy.modelmanager.AspenModel
-import ai.vital.vitalsigns.VitalSigns
-import scala.collection.JavaConversions._
-import ai.vital.domain.TargetNode
-import ai.vital.vitalsigns.model.property.IProperty
-import java.util.ArrayList
-import ai.vital.vitalservice.segment.VitalSegment
-import ai.vital.vitalservice.factory.VitalServiceFactory
-import ai.vital.vitalservice.factory.VitalServiceFactory
-import ai.vital.vitalsigns.model.GraphObject
-import ai.vital.query.querybuilder.VitalBuilder
-import ai.vital.vitalservice.query.VitalGraphQuery
-import ai.vital.vitalservice.VitalStatus
-import ai.vital.vitalsigns.model.GraphMatch
-import ai.vital.vitalsigns.model.property.URIProperty
-import ai.vital.vitalsigns.block.CompactStringSerializer
-import ai.vital.aspen.model.AspenKMeansPredictionModel
-import org.apache.spark.Accumulator
-import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
-import ai.vital.vitalservice.model.App
-import ai.vital.aspen.model.AspenCollaborativeFilteringPredictionModel
-import ai.vital.aspen.groovy.featureextraction.FeatureExtraction
-import org.apache.spark.mllib.recommendation.Rating
-import org.apache.spark.mllib.recommendation.Rating
-import scala.collection.mutable.MutableList
-import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
-import ai.vital.aspen.model.AspenLinearRegressionModel
-import ai.vital.vitalsigns.model.URIReference
-import org.apache.spark.mllib.regression.LabeledPoint
-import ai.vital.vitalsigns.model.VITAL_Category
-import ai.vital.aspen.model.AspenSVMWithSGDPredictionModel
-import ai.vital.predictmodel.CategoricalFeature
-import ai.vital.aspen.model.AspenLogisticRegressionPredictionModel
-import ai.vital.aspen.model.AspenDecisionTreeRegressionModel
-import ai.vital.aspen.model.AspenGradientBoostedTreesPredictionModel
-import ai.vital.aspen.model.AspenGradientBoostedTreesRegressionModel
-import ai.vital.aspen.model.AspenIsotonicRegressionModel
-import ai.vital.aspen.model.AspenGaussianMixturePredictionModel
-import ai.vital.aspen.model.PredictionModel
-import ai.vital.aspen.analysis.training.ModelTrainingJob
+import spark.jobserver.SparkJobValidation
 
 class ModelTestingJob {}
 
@@ -102,33 +57,25 @@ object ModelTestingJob extends AbstractJob {
   
   def runJob(sc: SparkContext, jobConfig: Config): Any = {
 
-    val modelPath = new Path(jobConfig.getString(modelOption.getLongOpt))
+    val globalContext = new SetOnceHashMap()
+    
+    val modelPath = jobConfig.getString(modelOption.getLongOpt)
 
     val inputName = jobConfig.getString(inputOption.getLongOpt)
     
-    val serviceProfile = getOptionalString(jobConfig, profileOption)
-        
-    var inputRDDName : String = null
-    if(inputName.startsWith("name:")) {
-      inputRDDName = inputName.substring("name:".length())
-    }
-    
-    val hadoopConfig = new Configuration()
-    
     println("Input name/path: " + inputName)
     println("Model path: " + modelPath)
-    
     println("service profile: " + serviceProfile)
+
     
+//    val mt2c = AspenGroovyConfig.get.modelType2Class
+//    mt2c.putAll(getModelManagerMap())
+//    
 //    val modelManager = new ModelManager()
-    val mt2c = AspenGroovyConfig.get.modelType2Class
-    mt2c.putAll(getModelManagerMap())
-    
-    val modelManager = new ModelManager()
-    println("Loading model ...")
-    val aspenModel = modelManager.loadModel(modelPath.toUri().toString())
-    
-    println("Model loaded successfully")
+//    println("Loading model ...")
+//    val aspenModel = modelManager.loadModel(modelPath.toUri().toString())
+//    
+//    println("Model loaded successfully")
 
     
     if(serviceProfile != null) {
@@ -137,95 +84,112 @@ object ModelTestingJob extends AbstractJob {
     
     VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
     
+    val procedure = new ModelTestingProcedure(inputName, modelPath, globalContext)
     
-      //URI, category, text
-    var inputBlockRDD : RDD[(String, Array[Byte])] = null
+    val tasks = procedure.generateTasks()
+    
+    val handler = new TasksHandler()
+    
+    handler.handleTasksList(this, tasks)
     
     
-    if(inputRDDName == null) {
-      
-      println("loading data from path...")
-      
-        val inputPath = new Path(inputName)
-        
-        val inputFS = FileSystem.get(inputPath.toUri(), hadoopConfig)
-        
-        if (!inputFS.exists(inputPath) /*|| !inputFS.isDirectory(inputPath)*/) {
-          throw new RuntimeException("Input test path does not exist " + /*or is not a directory*/ ": " + inputPath.toString())
-        }
-        
-        val inputFileStatus = inputFS.getFileStatus(inputPath)
-        
-        if(inputName.endsWith(".vital") || inputName.endsWith(".vital.gz")) {
-            
-            if(!inputFileStatus.isFile()) {
-              throw new RuntimeException("input path indicates a block file but does not denote a file: " + inputName)
-            }
-            throw new RuntimeException("Vital block files not supported yet")
-            
-        } else {
-          
-          inputBlockRDD = sc.sequenceFile(inputPath.toString(), classOf[Text], classOf[VitalBytesWritable]).map { pair =>
-            //make sure the URIReferences are resolved
-            val inputObjects = VitalSigns.get().decodeBlock(pair._2.get, 0, pair._2.get.length)
-            val vitalBlock = new VitalBlock(inputObjects)
-            
-            if(vitalBlock.getMainObject.isInstanceOf[URIReference]) {
-              
-              if( VitalSigns.get.getVitalService == null ) {
-                if(serviceProfile != null) VitalServiceFactory.setServiceProfile(serviceProfile)
-                VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
-              }
-              
-              //loads objects from features queries and train queries 
-              aspenModel.getFeatureExtraction.composeBlock(vitalBlock)
-              
-              (pair._1.toString(), VitalSigns.get.encodeBlock(vitalBlock.toList()))
-              
-            } else {
-              
-              (pair._1.toString(), pair._2.get)
-            }
-          }
-          
-        }
-        
-    } else {
-      
-      println("loading data from named rdd...")
-      
-      inputBlockRDD = this.namedRdds.get[(String, Array[Byte])](inputRDDName).get
-      
-      //quick scan to make sure the blocks are fetched
-      inputBlockRDD = inputBlockRDD.map { pair =>
-        
-        
-        //make sure the URIReferences are resolved
-        val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
-        val vitalBlock = new VitalBlock(inputObjects)
-            
-        if(vitalBlock.getMainObject.isInstanceOf[URIReference]) {
-          
-          if( VitalSigns.get.getVitalService == null ) {
-            if(serviceProfile != null) VitalServiceFactory.setServiceProfile(serviceProfile)
-            VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
-          }
-              
-          //loads objects from features queries and train queries 
-          aspenModel.getFeatureExtraction.composeBlock(vitalBlock)
-              
-          (pair._1.toString(), VitalSigns.get.encodeBlock(vitalBlock.toList()))
-              
-        } else {
-              
-          pair
-              
-        }
-        
-      }
-      
-    }
+    var output : Object = globalContext.get(TestModelTask.STATS_STRING)
     
+    if(output == null) output = "(no stats)";
+    
+    println(output.toString())
+    
+    return output
+    
+//      //URI, category, text
+//    var inputBlockRDD : RDD[(String, Array[Byte])] = null
+//    
+//    
+//    if(inputRDDName == null) {
+//      
+//      println("loading data from path...")
+//      
+//        val inputPath = new Path(inputName)
+//        
+//        val inputFS = FileSystem.get(inputPath.toUri(), hadoopConfig)
+//        
+//        if (!inputFS.exists(inputPath) /*|| !inputFS.isDirectory(inputPath)*/) {
+//          throw new RuntimeException("Input test path does not exist " + /*or is not a directory*/ ": " + inputPath.toString())
+//        }
+//        
+//        val inputFileStatus = inputFS.getFileStatus(inputPath)
+//        
+//        if(inputName.endsWith(".vital") || inputName.endsWith(".vital.gz")) {
+//            
+//            if(!inputFileStatus.isFile()) {
+//              throw new RuntimeException("input path indicates a block file but does not denote a file: " + inputName)
+//            }
+//            throw new RuntimeException("Vital block files not supported yet")
+//            
+//        } else {
+//          
+//          inputBlockRDD = sc.sequenceFile(inputPath.toString(), classOf[Text], classOf[VitalBytesWritable]).map { pair =>
+//            //make sure the URIReferences are resolved
+//            val inputObjects = VitalSigns.get().decodeBlock(pair._2.get, 0, pair._2.get.length)
+//            val vitalBlock = new VitalBlock(inputObjects)
+//            
+//            if(vitalBlock.getMainObject.isInstanceOf[URIReference]) {
+//              
+//              if( VitalSigns.get.getVitalService == null ) {
+//                if(serviceProfile != null) VitalServiceFactory.setServiceProfile(serviceProfile)
+//                VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
+//              }
+//              
+//              //loads objects from features queries and train queries 
+//              aspenModel.getFeatureExtraction.composeBlock(vitalBlock)
+//              
+//              (pair._1.toString(), VitalSigns.get.encodeBlock(vitalBlock.toList()))
+//              
+//            } else {
+//              
+//              (pair._1.toString(), pair._2.get)
+//            }
+//          }
+//          
+//        }
+//        
+//    } else {
+//      
+//      println("loading data from named rdd...")
+//      
+//      inputBlockRDD = this.namedRdds.get[(String, Array[Byte])](inputRDDName).get
+//      
+//      //quick scan to make sure the blocks are fetched
+//      inputBlockRDD = inputBlockRDD.map { pair =>
+//        
+//        
+//        //make sure the URIReferences are resolved
+//        val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
+//        val vitalBlock = new VitalBlock(inputObjects)
+//            
+//        if(vitalBlock.getMainObject.isInstanceOf[URIReference]) {
+//          
+//          if( VitalSigns.get.getVitalService == null ) {
+//            if(serviceProfile != null) VitalServiceFactory.setServiceProfile(serviceProfile)
+//            VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
+//          }
+//              
+//          //loads objects from features queries and train queries 
+//          aspenModel.getFeatureExtraction.composeBlock(vitalBlock)
+//              
+//          (pair._1.toString(), VitalSigns.get.encodeBlock(vitalBlock.toList()))
+//              
+//        } else {
+//              
+//          pair
+//              
+//        }
+//        
+//      }
+//      
+//    }
+    
+    /*
     if(aspenModel.isInstanceOf[AspenCollaborativeFilteringPredictionModel]) {
       
       //collaborative filtering model requires active spark context, it means it cannot be used inside workers
@@ -594,33 +558,6 @@ object ModelTestingJob extends AbstractJob {
           noTargets = 1 
           
         }
-          
-        
-//    	  if(targetValue != null) {
-//    		  
-//    		  val predictions = aspenModel.predict(vitalBlock)
-//    				  
-//    				  for(p <- predictions) {
-//    					  
-//    					  if(p.isInstanceOf[TargetNode]) {
-//    						  
-//    						  val pv = p.getProperty("targetStringValue");
-//    						  if(pv != null) {              
-//    							  val prediction = pv.asInstanceOf[IProperty].toString()
-//    									  
-//    									  if(targetValue.equals(prediction)) {
-//    										  matched = 1
-//    									  }
-//    							  
-//    						  }
-//    						  
-//    					  }
-//    					  
-//    				  }
-//    		  
-//    	  } else {
-//    		  noTargets = 1
-//    	  }
         
       }
        
@@ -673,7 +610,7 @@ object ModelTestingJob extends AbstractJob {
     println(output.toString())
     
     return output.toString()
-    
+    */
   }
   
   override def subvalidate(sc: SparkContext, config: Config) : SparkJobValidation = {

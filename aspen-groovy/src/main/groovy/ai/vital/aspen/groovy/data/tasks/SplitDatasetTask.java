@@ -1,13 +1,12 @@
-package ai.vital.aspen.groovy.predict.tasks;
+package ai.vital.aspen.groovy.data.tasks;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import ai.vital.aspen.groovy.modelmanager.AspenModel;
-import ai.vital.aspen.groovy.predict.ModelTrainingTask;
+import ai.vital.aspen.groovy.task.AbstractTask;
 
-public class SplitDatasetTask extends ModelTrainingTask {
+public class SplitDatasetTask extends AbstractTask {
 
 	public String inputDatasetName;
 	
@@ -18,9 +17,9 @@ public class SplitDatasetTask extends ModelTrainingTask {
 	public Double firstSplitRatio;
 	
 	
-	public SplitDatasetTask(AspenModel model, Map<String, Object> paramsMap, String inputDatasetName, String outputDatasetName1,
+	public SplitDatasetTask(Map<String, Object> paramsMap, String inputDatasetName, String outputDatasetName1,
 			String outputDatasetName2, Double firstSplitRatio) {
-		super(model, paramsMap);
+		super(paramsMap);
 		this.inputDatasetName = inputDatasetName;
 		this.outputDatasetName1 = outputDatasetName1;
 		this.outputDatasetName2 = outputDatasetName2;

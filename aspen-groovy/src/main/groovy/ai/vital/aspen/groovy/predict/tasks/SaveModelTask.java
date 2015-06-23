@@ -10,8 +10,11 @@ import ai.vital.aspen.groovy.predict.ModelTrainingTask;
 
 public class SaveModelTask extends ModelTrainingTask {
 
-	public SaveModelTask(AspenModel model, Map<String, Object> globalParameters) {
+	public String modelPath;
+	
+	public SaveModelTask(AspenModel model, String modelPath, Map<String, Object> globalParameters) {
 		super(model, globalParameters);
+		this.modelPath = modelPath;
 	}
 
 	@Override

@@ -9,7 +9,7 @@ import ai.vital.aspen.analysis.training.ModelTrainingJob
 
 class AspenLogisticRegressionPredictionTraining(model: AspenLogisticRegressionPredictionModel) extends AbstractTraining[AspenLogisticRegressionPredictionModel](model) {
   
-  def train(globalContext: SetOnceHashMap, trainRDD: RDD[(String, Array[Byte])]): java.io.Serializable = {
+  def train(globalContext: java.util.Map[String, Object], trainRDD: RDD[(String, Array[Byte])]): java.io.Serializable = {
     
     // Run training algorithm to build the model
     val vectorized = ModelTrainingJob.vectorize(trainRDD, model)

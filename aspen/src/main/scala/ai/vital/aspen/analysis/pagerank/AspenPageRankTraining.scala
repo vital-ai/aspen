@@ -23,7 +23,7 @@ import ai.vital.hadoop.writable.VitalBytesWritable
 
 class AspenPageRankTraining(model: AspenPageRankPredictionModel) extends AbstractTraining[AspenPageRankPredictionModel](model) {
   
-  def train(globalContext: SetOnceHashMap, trainRDD: RDD[(String, Array[Byte])]): java.io.Serializable = {
+  def train(globalContext: java.util.Map[String, Object], trainRDD: RDD[(String, Array[Byte])]): java.io.Serializable = {
     
     trainRDD.cache()
     

@@ -41,6 +41,10 @@ import scala.collection.JavaConversions._
 import ai.vital.aspen.model.AspenIsotonicRegressionModel
 import ai.vital.aspen.model.AspenGaussianMixturePredictionModel
 import ai.vital.aspen.model.AspenPageRankPredictionModel
+import org.apache.hadoop.conf.Configuration
+import org.apache.spark.rdd.RDD
+import scala.Array
+import ai.vital.aspen.groovy.AspenGroovyConfig
 
 
 /* this is placeholder code */
@@ -73,7 +77,15 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
   def getJobName() : String
     
   def getJobClassName() : String
-    
+  
+  var sparkContext : SparkContext = null
+  
+  var hadoopConfiguration : Configuration = null
+  
+  var datasetsMap : java.util.HashMap[String, RDD[(String, Array[Byte])]] = null;
+  
+  var serviceProfile : String = null
+  
   def _mainImpl(args: Array[String]) : Unit = {
       
       val parser = new BasicParser();
@@ -126,7 +138,12 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
         }
         
         var optValue : Object = null
-        if(opt.hasArg()) {
+        
+        if(opt.hasArgs()) {
+          
+          optValue = cmd.getOptionValues(optName).toList
+          
+        } else if(opt.hasArg()) {
           
           optValue = cmd.getOptionValue(optName)
           
@@ -157,6 +174,13 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
             return
       }
       
+      //override default aspen-groovy-datasets location
+      val location = AspenConfig.get.getDatesetsLocation
+      if(location != null) {
+        println("Custom datasets location from config: " + location)
+        optionsMap.put("datesetsLocation", location)
+      }
+      
       val config = ConfigFactory.parseMap(optionsMap)
       
       var jobServerURL : String = null;
@@ -182,6 +206,7 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
         }
         
       }
+      
       
       if(jobServerURL != null) {
         
@@ -262,6 +287,9 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
      */
     override final def validate(sc: SparkContext, config: Config): SparkJobValidation = {
       
+      sparkContext = sc
+      
+      
       for( o <- getOptions().getOptions.toArray()) {
         
         val optionCasted = o.asInstanceOf[Option]
@@ -284,6 +312,27 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
         
       }
      
+      hadoopConfiguration = new Configuration()
+      
+      if(isNamedRDDSupported()) {
+        
+      } else {
+        datasetsMap = new java.util.HashMap[String, RDD[(String, Array[Byte])]]();
+      }
+      
+      
+      try {
+    	  serviceProfile = getOptionalString(config, profileOption)
+      } catch { 
+        case ex: Exception => {}
+      }
+      
+      
+      val datesetsLocation = getOptionalString(config, "datesetsLocation")
+      if(datesetsLocation != null) {
+        AspenGroovyConfig.get.datesetsLocation = datesetsLocation
+      }
+      
       return subvalidate(sc, config)
       
     }
@@ -317,6 +366,20 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
         }        
       }
       
+    }
+    
+    def getOptionalString(config: Config, option: String) : String = {
+    		
+    		try {
+    			val v = config.getString(option)
+    					if(v.isEmpty()) return null;
+    			return v;
+    		} catch {
+    		case ex : ConfigException.Missing => {
+    			return null
+    		}        
+    		}
+    		
     }
     
     def addJobServerOptions(options: Options) : Options = {
@@ -377,6 +440,48 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       
       m
       
+    }
+    
+  def getDataset(datasetName :String) : RDD[(String, Array[Byte])] = {
+    
+    if(isNamedRDDSupported()) {
+      
+      val ds = this.namedRdds.get[(String, Array[Byte])](datasetName)
+          
+      if(!ds.isDefined) throw new RuntimeException("Dataset not loaded: " + datasetName)
+      
+      return ds.get;
+      
+    } else {
+      
+      val ds = datasetsMap.get(datasetName)
+          
+      if(ds == null) throw new RuntimeException("Dataset not loaded: " + datasetName)
+      
+      return ds;
       
     }
+    
+  }
+  
+  def getDatasetOrNull(datasetName :String) : RDD[(String, Array[Byte])] = {
+    		
+    		if(isNamedRDDSupported()) {
+    			
+    			val ds = this.namedRdds.get[(String, Array[Byte])](datasetName)
+    					
+          if(!ds.isDefined) return null
+    			
+    			return ds.get;
+    			
+    		} else {
+    			
+    			val ds = datasetsMap.get(datasetName)
+    					
+    			return ds;
+    			
+    		}
+    		
+    }
+    
 }

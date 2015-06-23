@@ -3,58 +3,31 @@ package ai.vital.aspen.analysis.training
 import java.util.Arrays
 import java.util.Date
 import java.util.HashMap
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
-
-import scala.collection.JavaConversions.asScalaBuffer
-
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
 import org.apache.commons.io.IOUtils
-import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
-
 import com.typesafe.config.Config
-
-import ai.vital.aspen.analysis.training.impl.CalculateAggregationValueTaskImpl
-import ai.vital.aspen.analysis.training.impl.CollectCategoricalFeatureTaxonomyDataTaskImpl
-import ai.vital.aspen.analysis.training.impl.CollectNumericalFeatureDataTaskImpl
-import ai.vital.aspen.analysis.training.impl.CollectTextFeatureDataTaskImpl
-import ai.vital.aspen.analysis.training.impl.CollectTrainTaxonomyDataTaskImpl
-import ai.vital.aspen.analysis.training.impl.CountDatasetTaskImpl
-import ai.vital.aspen.analysis.training.impl.LoadDataSetTaskImpl
-import ai.vital.aspen.analysis.training.impl.SplitDatasetTaskImpl
-import ai.vital.aspen.analysis.training.impl.TestModelTaskImpl
-import ai.vital.aspen.analysis.training.impl.TrainModelTaskImpl
 import ai.vital.aspen.groovy.modelmanager.AspenModel
 import ai.vital.aspen.groovy.modelmanager.ModelTaxonomySetter
 import ai.vital.aspen.groovy.predict.ModelTrainingProcedure
-import ai.vital.aspen.groovy.predict.tasks.CalculateAggregationValueTask
-import ai.vital.aspen.groovy.predict.tasks.CollectCategoricalFeatureTaxonomyDataTask
-import ai.vital.aspen.groovy.predict.tasks.CollectNumericalFeatureDataTask
-import ai.vital.aspen.groovy.predict.tasks.CollectTextFeatureDataTask
-import ai.vital.aspen.groovy.predict.tasks.CollectTrainTaxonomyDataTask
-import ai.vital.aspen.groovy.predict.tasks.CountDatasetTask
-import ai.vital.aspen.groovy.predict.tasks.LoadDataSetTask
-import ai.vital.aspen.groovy.predict.tasks.SaveModelTask
-import ai.vital.aspen.groovy.predict.tasks.SplitDatasetTask
-import ai.vital.aspen.groovy.predict.tasks.TestModelTask
-import ai.vital.aspen.groovy.predict.tasks.TrainModelTask
 import ai.vital.aspen.job.AbstractJob
-import ai.vital.aspen.model.PredictionModel
+import ai.vital.aspen.job.TasksHandler
 import ai.vital.aspen.model.AspenLinearRegressionModel
-import ai.vital.aspen.util.SetOnceHashMap
+import ai.vital.aspen.model.PredictionModel
 import ai.vital.vitalservice.factory.VitalServiceFactory
 import ai.vital.vitalsigns.VitalSigns
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 import spark.jobserver.SparkJobInvalid
 import spark.jobserver.SparkJobValid
 import spark.jobserver.SparkJobValidation
+import ai.vital.aspen.groovy.predict.ModelTestingProcedure
+import ai.vital.aspen.util.SetOnceHashMap
 
 class ModelTrainingJob {}
 
@@ -74,12 +47,6 @@ object ModelTrainingJob extends AbstractJob {
   val overwriteOption = new Option("ow", "overwrite", false, "overwrite model if exists")
   overwriteOption.setRequired(false)
   
-  //this is only used when namedRDDs support is disabled
-  var datasetsMap : java.util.HashMap[String, RDD[(String, Array[Byte])]] = null;
-  
-  var hadoopConfig : Configuration = null
-  
-  var globalContext : SetOnceHashMap = null
   
   def getOptions(): Options = {
     addJobServerOptions(
@@ -113,34 +80,16 @@ object ModelTrainingJob extends AbstractJob {
 		  
     var inputName = getOptionalString(jobConfig, inputOption)
     
-    var modelPathParam = jobConfig.getString(outputOption.getLongOpt)
-    
-    var zipContainer = false
-    var jarContainer = false
-    
-    var outputContainerPath : Path = null
-    
-    if(modelPathParam.endsWith(".jar")) {
-      outputContainerPath = new Path(modelPathParam)
-      modelPathParam = modelPathParam.substring(0, modelPathParam.length() - 4)
-      jarContainer = true
-    } else if(modelPathParam.endsWith(".zip")) {
-      outputContainerPath = new Path(modelPathParam)
-      modelPathParam = modelPathParam.substring(0, modelPathParam.length() - 4)
-      zipContainer = true
-    }
+    val modelPathParam = jobConfig.getString(outputOption.getLongOpt)
     
     val outputModelPath = new Path(modelPathParam)
     val overwrite = getBooleanOption(jobConfig, overwriteOption)
     val builderPath = new Path(jobConfig.getString(modelBuilderOption.getLongOpt))
-    val serviceProfile = getOptionalString(jobConfig, profileOption)
     
     
     println("input train name: " + inputName)
     println("builder path: " + builderPath)
     println("output model path: " + outputModelPath)
-    if(zipContainer) println("   output is a zip container (.zip)")
-    if(jarContainer) println("   output is a jar container (.jar)")
     println("overwrite if exists: " + overwrite)
     println("service profile: " + serviceProfile)
     
@@ -148,16 +97,11 @@ object ModelTrainingJob extends AbstractJob {
     	println("named RDDs supported")
     } else {
     	println("named RDDs not supported, storing RDD references in a local cache")
-    	datasetsMap = new java.util.HashMap[String, RDD[(String, Array[Byte])]]();
     }
     
     val modelCreator = getModelCreator()
     
-    hadoopConfig = new Configuration()
-    
-    globalContext = new SetOnceHashMap()
-    
-    val builderFS = FileSystem.get(builderPath.toUri(), hadoopConfig)
+    val builderFS = FileSystem.get(builderPath.toUri(), hadoopConfiguration)
     if(!builderFS.exists(builderPath)) {
       throw new RuntimeException("Builder file not found: " + builderPath.toString())
     }
@@ -213,27 +157,6 @@ object ModelTrainingJob extends AbstractJob {
     
     ModelTaxonomySetter.loadTaxonomies(aspenModel.getModelConfig, null)
 
-    val modelFS = FileSystem.get(outputModelPath.toUri(), hadoopConfig)
-
-    
-    if (modelFS.exists(outputModelPath) || (outputContainerPath != null && modelFS.exists(outputContainerPath) ) ) {
-      
-      if( !overwrite ) {
-    	  throw new RuntimeException("Output model path already exists, use -ow option")
-      }
-      
-      modelFS.delete(outputModelPath, true)
-      if(outputContainerPath != null) {
-    	  modelFS.delete(outputContainerPath, true)
-      }
-      
-    }
-    
-    var inputRDDName : String = null
-    if(inputName.startsWith("name:")) {
-      inputRDDName = inputName.substring("name:".length())
-    }
-    
       //use full set
 //      trainRDD = inputRDD
       
@@ -248,113 +171,17 @@ object ModelTrainingJob extends AbstractJob {
 //    }
     
     
-    val commandParams = new HashMap[String, String]()
-    commandParams.put(inputOption.getLongOpt, inputName)
+    var globalContext = new SetOnceHashMap()
     
-    val procedure = new ModelTrainingProcedure(aspenModel, commandParams, globalContext)
+    val procedure = new ModelTrainingProcedure(aspenModel, inputName, modelPathParam, overwrite, globalContext)
     
 //    procedure.inputPath = in
     
     val tasks = procedure.generateTasks()
     
-    val totalTasks = tasks.size()
+    val handler = new TasksHandler()
     
-    var currentTask = 0
-    
-    for( task <- tasks ) {
-    
-      
-      currentTask = currentTask + 1
-      
-      println ( "Executing task: " + task.getClass.getCanonicalName + " [" + currentTask + " of " + totalTasks + "]")
-      
-      for(i <- task.getRequiredParams) {
-    	  if(!globalContext.containsKey(i)) throw new RuntimeException("Task " + task.getClass.getSimpleName + " input param not set: " + i)
-      }
-      
-      //any inner dependencies
-      task.checkDepenedencies()
-      
-      var taskImpl : AbstractModelTrainingTaskImpl[_] = null
-      
-      if(task.isInstanceOf[CalculateAggregationValueTask]) {
-        
-        taskImpl = new CalculateAggregationValueTaskImpl(sc, task.asInstanceOf[CalculateAggregationValueTask])
-        
-      } else if(task.isInstanceOf[CollectCategoricalFeatureTaxonomyDataTask]) {
-        
-        taskImpl = new CollectCategoricalFeatureTaxonomyDataTaskImpl(sc, task.asInstanceOf[CollectCategoricalFeatureTaxonomyDataTask])
-        
-      } else if(task.isInstanceOf[CollectNumericalFeatureDataTask]) {
-
-        taskImpl = new CollectNumericalFeatureDataTaskImpl(sc, task.asInstanceOf[CollectNumericalFeatureDataTask])
-        
-      } else if(task.isInstanceOf[CollectTextFeatureDataTask]) {
-        
-        taskImpl = new CollectTextFeatureDataTaskImpl(sc, task.asInstanceOf[CollectTextFeatureDataTask])
-        
-      } else if(task.isInstanceOf[CollectTrainTaxonomyDataTask]) {
-        
-        taskImpl = new CollectTrainTaxonomyDataTaskImpl(sc, task.asInstanceOf[CollectTrainTaxonomyDataTask])
-        
-      } else if(task.isInstanceOf[CountDatasetTask]) {
-        
-        taskImpl = new CountDatasetTaskImpl(sc, task.asInstanceOf[CountDatasetTask])
-        
-      } else if(task.isInstanceOf[LoadDataSetTask]) {
-        
-        taskImpl = new LoadDataSetTaskImpl(sc, task.asInstanceOf[LoadDataSetTask], serviceProfile)
-        
-      } else if(task.isInstanceOf[SaveModelTask]) {
-        
-        val smt = task.asInstanceOf[SaveModelTask]
-        
-        //model packaging is now implemented in the model itsefl
-    
-        if(outputContainerPath != null) {
-          aspenModel.persist(modelFS, outputContainerPath, zipContainer || jarContainer)
-        } else {
-          aspenModel.persist(modelFS, outputModelPath, zipContainer || jarContainer)
-        }
-        
-        //no output
-        
-      } else if(task.isInstanceOf[SplitDatasetTask]) {
-        
-        taskImpl = new SplitDatasetTaskImpl(sc, task.asInstanceOf[SplitDatasetTask])
-        
-      } else if(task.isInstanceOf[TrainModelTask]) {
-
-        taskImpl = new TrainModelTaskImpl(sc, task.asInstanceOf[TrainModelTask])
-
-      } else if(task.isInstanceOf[TestModelTask]) {
-
-        taskImpl = new TestModelTaskImpl(sc, task.asInstanceOf[TestModelTask])
-        
-      } else {
-        throw new RuntimeException("Unhandled task: " + task.getClass.getCanonicalName);
-      }
-      
-      
-      if(taskImpl != null) {
-    	  
-    	  taskImpl.checkDependencies()
-    	  
-    	  taskImpl.execute()
-    	  
-      }
-
-      for(x <- task.getOutputParams) {
-        if(!globalContext.containsKey(x)) throw new RuntimeException("Task " + task.getClass.getCanonicalName + " did not return param: " + x);
-      }
-      
-      
-      //inner validation
-      task.onTaskComplete()
-      
-      
-    }
-    
+    handler.handleTasksList(this, tasks)
     
     var response : String = null
 
@@ -370,17 +197,6 @@ object ModelTrainingJob extends AbstractJob {
 		  
   }
   
-  def addToZipFile(zos: ZipOutputStream, modelFS: FileSystem, filePath: Path ) : Unit = {
-    
-    val entry = new ZipEntry(filePath.getName)
-    zos.putNextEntry(entry)
-    val stream = modelFS.open(filePath)
-    IOUtils.copy(stream, zos)
-    stream.close()
-    zos.closeEntry()
-    
-  }
- 
   def vectorizeNoLabels ( trainRDD: RDD[(String, Array[Byte])], model: AspenModel ) : RDD[Vector] = {
     
     val vectorized = trainRDD.map { pair =>
@@ -490,26 +306,4 @@ object ModelTrainingJob extends AbstractJob {
     
   }
  
-  def getDataset(datasetName :String) : RDD[(String, Array[Byte])] = {
-    
-    if(isNamedRDDSupported()) {
-      
-    	val ds = this.namedRdds.get[(String, Array[Byte])](datasetName)
-    			
- 			if(!ds.isDefined) throw new RuntimeException("Dataset not loaded: " + datasetName)
-    	
-    	return ds.get;
-      
-    } else {
-      
-    	val ds = datasetsMap.get(datasetName)
-    			
-    	if(ds == null) throw new RuntimeException("Dataset not loaded: " + datasetName)
-    	
-    	return ds;
-      
-    }
-    
-  }
-  
 }

@@ -25,7 +25,7 @@ List jars = [
 ]
 
 new File(homeDir, "target").eachFile(FILES) {
-  if(it.name.matches("aspen\\-\\d+\\.\\d+\\.\\d+\\.jar")) {
+  if(it.name.matches("aspen\\-(jobs\\-)?\\d+\\.\\d+\\.\\d+\\.jar")) {
     jars.add(it.absolutePath)
   }
 }

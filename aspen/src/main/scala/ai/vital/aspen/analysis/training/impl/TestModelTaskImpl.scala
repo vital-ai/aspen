@@ -44,7 +44,7 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
           
       val cfpm = aspenModel.asInstanceOf[AspenCollaborativeFilteringPredictionModel]
           
-      val values = mtj.globalContext.get("collaborative-filtering-rdd").asInstanceOf[RDD[(String, String, Double)]] 
+      val values = task.getParamsMap.get("collaborative-filtering-rdd").asInstanceOf[RDD[(String, String, Double)]] 
           
       val usersProducts = values.map( triple => {
         (cfpm.getUserURI2ID().get(triple._1).toInt, cfpm.getProductURI2ID().get(triple._2).toInt )
@@ -54,7 +54,7 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
         ((user, product), rate)
       }
           
-      val ratings = mtj.globalContext.get("collaborative-filtering-ratings").asInstanceOf[RDD[Rating]]
+      val ratings = task.getParamsMap.get("collaborative-filtering-ratings").asInstanceOf[RDD[Rating]]
       val ratesAndPreds = ratings.map { case Rating(user, product, rate) => 
         ((user, product), rate)
       }.join(predictions)

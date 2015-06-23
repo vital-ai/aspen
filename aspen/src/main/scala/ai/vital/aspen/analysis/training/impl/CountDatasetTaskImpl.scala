@@ -16,7 +16,7 @@ class CountDatasetTaskImpl(sc: SparkContext, task: CountDatasetTask) extends Abs
     val trainRDD = ModelTrainingJob.getDataset(task.datasetName)
     val x = trainRDD.count().intValue();
     
-    ModelTrainingJob.globalContext.put(task.datasetName + CountDatasetTask.DOCS_COUNT_SUFFIX, x)
+    task.getParamsMap.put(task.datasetName + CountDatasetTask.DOCS_COUNT_SUFFIX, new Integer(x))
     
   }
 }

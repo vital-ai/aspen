@@ -11,7 +11,7 @@ import org.apache.spark.mllib.clustering.KMeans
 
 class AspenKMeansClusteringTraining(model: AspenKMeansPredictionModel) extends AbstractTraining[AspenKMeansPredictionModel](model) {
   
-  def train(globalContext: SetOnceHashMap, trainRDD: RDD[(String, Array[Byte])]): Serializable = {
+  def train(globalContext: java.util.Map[String, Object], trainRDD: RDD[(String, Array[Byte])]): Serializable = {
    
     val parsedData = ModelTrainingJob.vectorizeNoLabels(trainRDD, model)
     

@@ -94,7 +94,7 @@ class CalculateAggregationValueTaskImpl(sc: SparkContext, task: CalculateAggrega
 
     aspenModel.getAggregationResults.put(a.getProvides, aggV)
     
-    ModelTrainingJob.globalContext.put(a.getProvides + CalculateAggregationValueTask.AGGREGATE_VALUE_SUFFIX, aggV);
+    task.getParamsMap.put(a.getProvides + CalculateAggregationValueTask.AGGREGATE_VALUE_SUFFIX, aggV);
         
     
   }

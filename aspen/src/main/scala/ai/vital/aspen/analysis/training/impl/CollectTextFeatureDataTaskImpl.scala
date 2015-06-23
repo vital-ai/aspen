@@ -26,7 +26,7 @@ class CollectTextFeatureDataTaskImpl(sc: SparkContext, task: CollectTextFeatureD
     
     val minDF = feature.getMinDF
     
-    val totalDocs = ModelTrainingJob.globalContext.get(task.datasetName + CountDatasetTask.DOCS_COUNT_SUFFIX)
+    val totalDocs = task.getParamsMap.get(task.datasetName + CountDatasetTask.DOCS_COUNT_SUFFIX)
     
     val maxDF = ( ( feature.getMaxDFP * totalDocs.asInstanceOf[Int] ) / 100f ).toInt
     
@@ -69,7 +69,7 @@ class CollectTextFeatureDataTaskImpl(sc: SparkContext, task: CollectTextFeatureD
     tfd.setDictionary(dict)
         
     aspenModel.getFeaturesData.put(task.feature.getName, tfd)
-    ModelTrainingJob.globalContext.put(task.feature.getName + CollectTextFeatureDataTask.TEXT_FEATURE_DATA_SUFFIX, tfd)
+    task.getParamsMap.put(task.feature.getName + CollectTextFeatureDataTask.TEXT_FEATURE_DATA_SUFFIX, tfd)
     
   }
   

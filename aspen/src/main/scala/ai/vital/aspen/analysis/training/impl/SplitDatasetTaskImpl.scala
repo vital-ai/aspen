@@ -1,11 +1,12 @@
 package ai.vital.aspen.analysis.training.impl
 
-import ai.vital.aspen.analysis.training.AbstractModelTrainingTaskImpl
-import ai.vital.aspen.groovy.predict.tasks.SplitDatasetTask
+import ai.vital.aspen.groovy.data.tasks.SplitDatasetTask
 import org.apache.spark.SparkContext
 import ai.vital.aspen.analysis.training.ModelTrainingJob
+import ai.vital.aspen.task.TaskImpl
+import ai.vital.aspen.job.AbstractJob
 
-class SplitDatasetTaskImpl(sc: SparkContext, task: SplitDatasetTask) extends AbstractModelTrainingTaskImpl[SplitDatasetTask](sc, task) {
+class SplitDatasetTaskImpl(job: AbstractJob, task: SplitDatasetTask) extends TaskImpl[SplitDatasetTask](job.sparkContext, task) {
   
   def checkDependencies(): Unit = {
     
@@ -15,7 +16,7 @@ class SplitDatasetTaskImpl(sc: SparkContext, task: SplitDatasetTask) extends Abs
 
   def execute(): Unit = {
 
-    val mtj = ModelTrainingJob
+    val mtj = job
     val inputRDD = mtj.getDataset(task.inputDatasetName)
       
     val splits = inputRDD.randomSplit(Array(task.firstSplitRatio, 1 - task.firstSplitRatio), seed = 11L)
@@ -32,8 +33,8 @@ class SplitDatasetTaskImpl(sc: SparkContext, task: SplitDatasetTask) extends Abs
         
     }
       
-    mtj.globalContext.put(task.outputDatasetName1, splits(0))
-    mtj.globalContext.put(task.outputDatasetName2, splits(1))
+    task.getParamsMap.put(task.outputDatasetName1, splits(0))
+    task.getParamsMap.put(task.outputDatasetName2, splits(1))
 
   }
   

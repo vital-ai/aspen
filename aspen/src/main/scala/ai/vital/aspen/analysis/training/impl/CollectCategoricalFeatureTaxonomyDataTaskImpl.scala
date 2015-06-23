@@ -76,7 +76,7 @@ class CollectCategoricalFeatureTaxonomyDataTaskImpl(sc: SparkContext, task: Coll
 
     aspenModel.getFeaturesData.put(categoricalFeature.getName, trainedCategories)
             
-    ModelTrainingJob.globalContext.put(categoricalFeature.getName + CollectCategoricalFeatureTaxonomyDataTask.CATEGORICAL_FEATURE_DATA_SUFFIX, trainedCategories)
+    task.getParamsMap.put(categoricalFeature.getName + CollectCategoricalFeatureTaxonomyDataTask.CATEGORICAL_FEATURE_DATA_SUFFIX, trainedCategories)
     
   }
   

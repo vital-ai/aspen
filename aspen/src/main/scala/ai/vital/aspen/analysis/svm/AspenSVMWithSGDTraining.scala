@@ -10,7 +10,7 @@ import org.apache.spark.mllib.classification.SVMWithSGD
 class AspenSVMWithSGDTraining(model: AspenSVMWithSGDPredictionModel) extends AbstractTraining[AspenSVMWithSGDPredictionModel](model) { {
   
 }
-  def train(globalContext: SetOnceHashMap, trainRDD: RDD[(String, Array[Byte])]): java.io.Serializable = {
+  def train(globalContext: java.util.Map[String, Object], trainRDD: RDD[(String, Array[Byte])]): java.io.Serializable = {
 
     val vectorized = ModelTrainingJob.vectorize(trainRDD, model);
     

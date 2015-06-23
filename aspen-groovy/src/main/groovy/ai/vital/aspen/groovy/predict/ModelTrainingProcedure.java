@@ -5,6 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ai.vital.aspen.groovy.convert.tasks.CheckPathTask;
+import ai.vital.aspen.groovy.convert.tasks.DeletePathTask;
+import ai.vital.aspen.groovy.data.tasks.LoadDataSetTask;
+import ai.vital.aspen.groovy.data.tasks.SplitDatasetTask;
 import ai.vital.aspen.groovy.featureextraction.BinaryFeatureData;
 import ai.vital.aspen.groovy.featureextraction.CategoricalFeatureData;
 import ai.vital.aspen.groovy.featureextraction.DateFeatureData;
@@ -17,17 +21,17 @@ import ai.vital.aspen.groovy.featureextraction.StringFeatureData;
 import ai.vital.aspen.groovy.featureextraction.URIFeatureData;
 import ai.vital.aspen.groovy.featureextraction.WordFeatureData;
 import ai.vital.aspen.groovy.modelmanager.AspenModel;
-import ai.vital.aspen.groovy.modelmanager.ModelTaxonomySetter;
 import ai.vital.aspen.groovy.predict.tasks.CalculateAggregationValueTask;
 import ai.vital.aspen.groovy.predict.tasks.CollectCategoricalFeatureTaxonomyDataTask;
-import ai.vital.aspen.groovy.predict.tasks.CollectTrainTaxonomyDataTask;
 import ai.vital.aspen.groovy.predict.tasks.CollectTextFeatureDataTask;
+import ai.vital.aspen.groovy.predict.tasks.CollectTrainTaxonomyDataTask;
 import ai.vital.aspen.groovy.predict.tasks.CountDatasetTask;
-import ai.vital.aspen.groovy.predict.tasks.LoadDataSetTask;
+import ai.vital.aspen.groovy.predict.tasks.FeatureQueryTask;
+import ai.vital.aspen.groovy.predict.tasks.LoadModelTask;
 import ai.vital.aspen.groovy.predict.tasks.SaveModelTask;
-import ai.vital.aspen.groovy.predict.tasks.SplitDatasetTask;
 import ai.vital.aspen.groovy.predict.tasks.TestModelTask;
 import ai.vital.aspen.groovy.predict.tasks.TrainModelTask;
+import ai.vital.aspen.groovy.task.AbstractTask;
 import ai.vital.predictmodel.Aggregate;
 import ai.vital.predictmodel.BinaryFeature;
 import ai.vital.predictmodel.CategoricalFeature;
@@ -58,7 +62,7 @@ public class ModelTrainingProcedure {
 	//the model being trained
 	public AspenModel model;
 
-	private ArrayList<ModelTrainingTask> tasks;
+	private ArrayList<AbstractTask> tasks;
 	
 	
 	protected String inputDatasetName = "input-dataset";
@@ -68,19 +72,26 @@ public class ModelTrainingProcedure {
 	
 	private Map<String, Object> paramsMap = null;
 	
-	public ModelTrainingProcedure(AspenModel model, Map<String, String> commandParams, Map<String, Object> globalParamsMap) {
+	private String modelPath = null;
+
+	private boolean overwriteModel = false;
+	
+	public ModelTrainingProcedure(AspenModel model, String inputPath, String modelPath, boolean overwriteModel, Map<String, Object> globalParamsMap) {
 		super();
 		this.model = model;
 		paramsMap = globalParamsMap;
 		
-		inputPath = commandParams.get("input");
+		this.inputPath = inputPath;
+		this.modelPath = modelPath;
+		this.overwriteModel = overwriteModel;
+		
 		if(inputPath == null) throw new RuntimeException("No input procedure param");
 		
 	}
 	
 	
 	
-	public List<ModelTrainingTask> generateTasks() throws Exception {
+	public List<AbstractTask> generateTasks() throws Exception {
 		
 		this.model.validateConfig();
 		
@@ -98,11 +109,44 @@ public class ModelTrainingProcedure {
 		
 		List<Aggregate> aggregates = cfg.getAggregates();
 		
-		this.tasks = new ArrayList<ModelTrainingTask>();
+		this.tasks = new ArrayList<AbstractTask>();
 		
 		if(inputPath == null) throw new RuntimeException("No input path set!");
 		
-		tasks.add(new LoadDataSetTask(model, paramsMap, inputPath, inputDatasetName));
+		if(inputDatasetName.startsWith("name:")) {
+
+			inputDatasetName = inputDatasetName.substring(5);
+			
+			paramsMap.put(inputDatasetName, true);
+			
+		} else {
+			
+			tasks.add(new LoadDataSetTask(paramsMap, inputPath, inputDatasetName));
+			
+		}
+		
+		
+		if(overwriteModel) {
+			
+			tasks.add(new DeletePathTask(modelPath, paramsMap));
+			
+		} else {
+			
+			CheckPathTask cpt = new CheckPathTask(modelPath, paramsMap);
+			cpt.mustnotExist = true;
+			cpt.mustExist = false;
+			cpt.acceptFiles = true;
+			cpt.acceptFiles = true;
+			
+			tasks.add(cpt);
+			
+		}
+		
+		
+		//treat is as a loaded model
+		paramsMap.put(LoadModelTask.LOADED_MODEL_PREFIX + modelPath, model);
+		tasks.add(new FeatureQueryTask(paramsMap, inputDatasetName, modelPath));
+		
 		
 		List<String> trainingRequiredParams = new ArrayList<String>();
 		
@@ -111,7 +155,7 @@ public class ModelTrainingProcedure {
 			trainDatasetName = "train-dataset";
 			testDatasetName = "test-dataset";
 			
-			tasks.add(new SplitDatasetTask(model, paramsMap, inputDatasetName, trainDatasetName, testDatasetName, 0.6));
+			tasks.add(new SplitDatasetTask(paramsMap, inputDatasetName, trainDatasetName, testDatasetName, 0.6));
 			
 		} else {
 			
@@ -268,13 +312,23 @@ public class ModelTrainingProcedure {
 		}
 		
 		
+		//load data with feature queries, treat model as not fully loaded
+		tasks.add(new FeatureQueryTask(paramsMap, trainDatasetName, modelPath));
 		
-		tasks.add(new TrainModelTask(model, paramsMap, trainDatasetName, model.getModelConfig().getType(),trainingRequiredParams));
+		
+		tasks.add(new TrainModelTask(model, modelPath, paramsMap, trainDatasetName, model.getModelConfig().getType(),trainingRequiredParams));
 		
 		
-		if(testDatasetName != null) tasks.add(new TestModelTask(model, paramsMap, testDatasetName));
+		if(testDatasetName != null) {
+			
+			if(!trainDatasetName.equals(testDatasetName)) {
+				tasks.add(new FeatureQueryTask(paramsMap, testDatasetName, modelPath));
+			}
+			
+			tasks.add(new TestModelTask(model, paramsMap, testDatasetName));
+		}
 		
-		tasks.add(new SaveModelTask(model, paramsMap));
+		tasks.add(new SaveModelTask(model, modelPath, paramsMap));
 		
 		return tasks;
 		

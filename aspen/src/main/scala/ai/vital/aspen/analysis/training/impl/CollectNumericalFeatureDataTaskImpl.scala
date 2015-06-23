@@ -20,7 +20,7 @@ class CollectNumericalFeatureDataTaskImpl(sc: SparkContext, task: CollectNumeric
       
     }
     
-    ModelTrainingJob.globalContext.put(task.feature.getName + CollectNumericalFeatureDataTask.NUMERICAL_FEATURE_DATA_SUFFIX, task.getModel.getFeaturesData.get(task.feature.getName))
+    task.getParamsMap.put(task.feature.getName + CollectNumericalFeatureDataTask.NUMERICAL_FEATURE_DATA_SUFFIX, task.getModel.getFeaturesData.get(task.feature.getName))
     
   }
   

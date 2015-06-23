@@ -12,7 +12,7 @@ import org.apache.spark.mllib.regression.LassoWithSGD
 
 class AspenLinearRegressionTraining(model: AspenLinearRegressionModel) extends AbstractTraining[AspenLinearRegressionModel](model) {
 
-  def train(globalContext: SetOnceHashMap, trainRDD: RDD[(String, Array[Byte])]): java.io.Serializable = {
+  def train(globalContext: java.util.Map[String, Object], trainRDD: RDD[(String, Array[Byte])]): java.io.Serializable = {
 
    val vectorized = ModelTrainingJob.vectorizeWithScaling(trainRDD, model);
           

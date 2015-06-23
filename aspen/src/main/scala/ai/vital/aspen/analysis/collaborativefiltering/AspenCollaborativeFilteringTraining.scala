@@ -15,7 +15,7 @@ import org.apache.spark.mllib.recommendation.ALS
 
 object AspenCollaborativeFilteringTraining {
   
-  def collaborativeFilteringCollectData(globalContext: SetOnceHashMap, trainRDD : RDD[(String, Array[Byte])], model: AspenCollaborativeFilteringPredictionModel) : RDD[(String, String, Double)] = {
+  def collaborativeFilteringCollectData(globalContext: java.util.Map[String, Object], trainRDD : RDD[(String, Array[Byte])], model: AspenCollaborativeFilteringPredictionModel) : RDD[(String, String, Double)] = {
     
     val values = trainRDD.map( pair => {
  
@@ -79,7 +79,7 @@ object AspenCollaborativeFilteringTraining {
 class AspenCollaborativeFilteringTraining(model: AspenCollaborativeFilteringPredictionModel) extends AbstractTraining[AspenCollaborativeFilteringPredictionModel](model) {
 
     
-  def train(globalContext: SetOnceHashMap, trainRDD: RDD[(String, Array[Byte])]): Serializable = {
+  def train(globalContext: java.util.Map[String, Object], trainRDD: RDD[(String, Array[Byte])]): Serializable = {
 
      //first pass to collect user and products ids -> uris
     val values = AspenCollaborativeFilteringTraining.collaborativeFilteringCollectData(globalContext, trainRDD, model)

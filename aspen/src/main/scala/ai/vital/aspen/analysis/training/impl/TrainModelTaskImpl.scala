@@ -35,6 +35,7 @@ import ai.vital.aspen.model.AspenGaussianMixturePredictionModel
 import ai.vital.aspen.analysis.gaussianmixture.AspenGaussianMixtureTraining
 import ai.vital.aspen.model.AspenPageRankPredictionModel
 import ai.vital.aspen.analysis.pagerank.AspenPageRankTraining
+import ai.vital.aspen.groovy.predict.tasks.LoadModelTask
 
 class TrainModelTaskImpl(sc: SparkContext, task: TrainModelTask) extends AbstractModelTrainingTaskImpl[TrainModelTask](sc, task) {
   
@@ -87,9 +88,10 @@ class TrainModelTaskImpl(sc: SparkContext, task: TrainModelTask) extends Abstrac
       }
   
       
-      var outputModel = trainingImpl.train(ModelTrainingJob.globalContext, trainRDD);
+      var outputModel = trainingImpl.train(task.getParamsMap, trainRDD);
 
-      ModelTrainingJob.globalContext.put(TrainModelTask.MODEL_BINARY, outputModel)
+      task.getParamsMap.put(TrainModelTask.MODEL_BINARY, outputModel.asInstanceOf[Object])
+      task.getParamsMap.put(LoadModelTask.LOADED_MODEL_PREFIX + task.modelPath, aspenModel)
     
   }
   

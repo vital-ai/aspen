@@ -15,12 +15,15 @@ public class TrainModelTask extends ModelTrainingTask {
 	
 	public String algorithm;
 	
-	public List<String> requiredParams;
+	public String modelPath;
 	
-	public TrainModelTask(AspenModel model, Map<String, Object> paramsMap, String datasetName, String algorithm, List<String> inputFeatures) {
+	private List<String> requiredParams;
+	
+	public TrainModelTask(AspenModel model, String modelPath, Map<String, Object> paramsMap, String datasetName, String algorithm, List<String> inputFeatures) {
 		super(model, paramsMap);
 		this.datasetName = datasetName;
 		this.algorithm = algorithm;
+		this.modelPath = modelPath;
 		this.requiredParams = inputFeatures;
 	}
 

@@ -9,7 +9,7 @@ import ai.vital.aspen.model.AspenGaussianMixturePredictionModel
 
 class AspenGaussianMixtureTraining(model: AspenGaussianMixturePredictionModel) extends AbstractTraining[AspenGaussianMixturePredictionModel](model) {
   
-  def train(globalContext: SetOnceHashMap, trainRDD: RDD[(String, Array[Byte])]): java.io.Serializable = {
+  def train(globalContext: java.util.Map[String, Object], trainRDD: RDD[(String, Array[Byte])]): java.io.Serializable = {
 
     val vectorized = ModelTrainingJob.vectorizeNoLabels(trainRDD, model)
     

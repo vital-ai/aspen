@@ -24,12 +24,22 @@ public class AspenConfig {
 	
 	private String jobServerURL;
 	
+	private String datesetsLocation;
+	
 	public String getJobServerURL() {
 		return jobServerURL;
 	}
 
 	public void setJobServerURL(String jobServerURL) {
 		this.jobServerURL = jobServerURL;
+	}
+	
+	public String getDatesetsLocation() {
+		return datesetsLocation;
+	}
+
+	public void setDatesetsLocation(String datesetsLocation) {
+		this.datesetsLocation = datesetsLocation;
 	}
 
 	public static AspenConfig get() {
@@ -81,6 +91,12 @@ public class AspenConfig {
 			a.jobServerURL = cfg.getString("jobserverURL");
 		} catch(ConfigException.Missing ex) {
 			log.warn("No jobserverURL config param");
+		}
+		
+		try {
+			a.datesetsLocation = cfg.getString("datesetsLocation");
+		} catch(ConfigException.Missing ex) {
+			log.warn("No datesetsLocation config param");
 		}
 		
 		return a;

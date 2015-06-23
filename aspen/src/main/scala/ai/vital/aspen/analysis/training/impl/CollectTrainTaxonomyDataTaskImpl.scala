@@ -75,7 +75,7 @@ class CollectTrainTaxonomyDataTaskImpl(sc: SparkContext, task: CollectTrainTaxon
     val trainedCategories = CategoricalFeatureData.fromTaxonomy(taxonomy)
     aspenModel.setTrainedCategories(trainedCategories)
               
-    ModelTrainingJob.globalContext.put(CollectTrainTaxonomyDataTask.TRAIN_TAXONOMY_DATA, trainedCategories)
+    task.getParamsMap.put(CollectTrainTaxonomyDataTask.TRAIN_TAXONOMY_DATA, trainedCategories)
     
   }
 }

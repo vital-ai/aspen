@@ -9,7 +9,7 @@ import ai.vital.aspen.analysis.training.ModelTrainingJob
 
 class AspenIsotonicRegressionTraining(model: AspenIsotonicRegressionModel) extends AbstractTraining[AspenIsotonicRegressionModel](model) {
 
-  def train(globalContext: SetOnceHashMap, trainRDD: RDD[(String, Array[Byte])]): java.io.Serializable = {
+  def train(globalContext: java.util.Map[String, Object], trainRDD: RDD[(String, Array[Byte])]): java.io.Serializable = {
   
     val vectorized = ModelTrainingJob.vectorize(trainRDD, model)
     

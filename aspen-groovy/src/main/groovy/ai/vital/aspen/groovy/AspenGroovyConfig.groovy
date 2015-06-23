@@ -47,6 +47,7 @@ class AspenGroovyConfig {
 	
 	private List<String> hadoopXmlFiles = []
 	
+	
 	public static AspenGroovyConfig get() {
 		if(singleton == null) {
 			synchronized (AspenGroovyConfig.class) {
@@ -96,6 +97,10 @@ class AspenGroovyConfig {
 	public String resourcesDir = "./resources"
 	
 	
+	//hdfs:///datasets/--name--/--name--.seq
+	public String datesetsLocation = "hdfs://127.0.0.1:8020/datasets/"
+	
+	
 	//by default 
 	public Map<String, String> modelType2Class = new HashMap<String, String>();
 	
@@ -138,6 +143,15 @@ class AspenGroovyConfig {
 			
 		} catch(ConfigException.Missing ex) {
 			log.warn("No models-mapping config section, only default mappings will be used")
+		}
+		
+		try {
+			
+			this.datesetsLocation = cfg.getString("datesetsLocation")
+			
+		} catch(ConfigException.Missing ex) {
+			datesetsLocation = "hdfs://127.0.0.1:8020/datasets/"
+			log.warn("Missing datesetsLocation - using default ${this.datesetsLocation}")
 		}
 		
 	}
