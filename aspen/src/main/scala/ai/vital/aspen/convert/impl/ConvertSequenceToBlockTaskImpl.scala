@@ -107,25 +107,53 @@ class ConvertSequenceToBlockTaskImpl(job: AbstractJob, task: ConvertSequenceToBl
         
         val inputFS = FileSystem.get(inputPath.toUri(), job.hadoopConfiguration)
         
-        val reader = new SequenceFile.Reader(inputFS, inputPath, job.hadoopConfiguration)
+        val filesList = new ArrayList[Path]()
         
-        val key = new Text()
-        
-        val v = new VitalBytesWritable()
-        
-        while ( reader.next(key, v) ) {
-         
-          val block = VitalSigns.get().decodeBlock(v.get(), 0, v.get().length)
+        if( inputFS.isDirectory(inputPath) ) {
           
-          writer.startBlock()
-          for(g<-block) {
-        	  writer.writeGraphObject(g)
+          for( x <- inputFS.listStatus(inputPath) ) {
+            
+            if( x.isFile() && x.getPath.getName.startsWith("part-") ) {
+              
+              filesList.add(x.getPath)
+              
+            }
+            
           }
-          writer.endBlock()
           
-          c= c+1
+        } else {
+          
+          filesList.add(inputPath)
           
         }
+        
+        
+        for( path <- filesList ) {
+          
+        	val reader = new SequenceFile.Reader(inputFS, path, job.hadoopConfiguration)
+        	
+        	val key = new Text()
+        	
+        	val v = new VitalBytesWritable()
+        	
+        	while ( reader.next(key, v) ) {
+        		
+        		val block = VitalSigns.get().decodeBlock(v.get(), 0, v.get().length)
+        				
+        				writer.startBlock()
+        				for(g<-block) {
+        					writer.writeGraphObject(g)
+        				}
+        		writer.endBlock()
+        		
+        		c= c+1
+        		
+        	}
+        	
+        	reader.close();
+          
+        }
+        
         
         inputFS.close()
         

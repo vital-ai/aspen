@@ -1,7 +1,6 @@
 package ai.vital.aspen.groovy.predict.tasks;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +28,7 @@ public class TestModelTask extends ModelTrainingTask {
 
 	@Override
 	public List<String> getOutputParams() {
-		return Collections.emptyList();
+		return Arrays.asList(STATS_STRING);
 	}
 
 

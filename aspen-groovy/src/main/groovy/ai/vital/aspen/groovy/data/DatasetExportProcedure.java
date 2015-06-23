@@ -58,11 +58,11 @@ public class DatasetExportProcedure {
 		//check output dataset name
 		
 		CheckPathTask cpt2 = new CheckPathTask(outputPath, paramsMap);
-		cpt.mustnotExist = !overwrite;
-		cpt.acceptFiles = true;
-		cpt.acceptDirectories = true;
-		cpt.validFileExtensions = new String[]{".vital.gz", ".vital"};
-		l.add(cpt);
+		cpt2.mustnotExist = !overwrite;
+		cpt2.acceptFiles = true;
+		cpt2.acceptDirectories = true;
+		cpt2.validFileExtensions = new String[]{".vital.gz", ".vital"};
+		l.add(cpt2);
 		
 		if(!overwrite) {
 			

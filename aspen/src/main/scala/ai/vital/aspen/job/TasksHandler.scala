@@ -41,6 +41,14 @@ import ai.vital.aspen.groovy.predict.tasks.LoadModelTask
 import ai.vital.aspen.analysis.testing.impl.LoadModelTaskImpl
 import ai.vital.aspen.groovy.predict.tasks.TestModelIndependentTask
 import ai.vital.aspen.analysis.testing.impl.TestModelIndependentTaskImpl
+import ai.vital.aspen.groovy.predict.tasks.ModelPredictTask
+import ai.vital.aspen.analysis.predict.impl.ModelPredictTaskImpl
+import ai.vital.aspen.groovy.data.tasks.SaveDataSetTask
+import ai.vital.aspen.data.impl.SaveDataSetTaskImpl
+import ai.vital.aspen.groovy.select.tasks.SelectDataSetTask
+import ai.vital.aspen.select.impl.SelectDatasetTaskImpl
+import ai.vital.aspen.groovy.data.tasks.FilterDatasetTask
+import ai.vital.aspen.data.impl.FilterDatasetTaskImpl
 
 class TasksHandler {
 
@@ -113,6 +121,10 @@ class TasksHandler {
         
         taskImpl = new FeatureQueryTaskImpl(job, task.asInstanceOf[FeatureQueryTask])
         
+      } else if(task.isInstanceOf[FilterDatasetTask]) {
+        
+        taskImpl = new FilterDatasetTaskImpl(job, task.asInstanceOf[FilterDatasetTask])
+        
       } else if(task.isInstanceOf[LoadDataSetTask]) {
         
         taskImpl = new LoadDataSetTaskImpl(job, task.asInstanceOf[LoadDataSetTask])
@@ -121,10 +133,18 @@ class TasksHandler {
         
         taskImpl = new LoadModelTaskImpl(job, task.asInstanceOf[LoadModelTask])
         
+      } else if(task.isInstanceOf[ModelPredictTask]) {
+        
+        taskImpl = new ModelPredictTaskImpl(job, task.asInstanceOf[ModelPredictTask])
+        
       } else if(task.isInstanceOf[ResolveURIReferencesTask]) {
         
         taskImpl = new ResolveURIsTaskImpl(job, task.asInstanceOf[ResolveURIReferencesTask])
       
+      } else if(task.isInstanceOf[SaveDataSetTask]) {
+        
+        taskImpl = new SaveDataSetTaskImpl(job, task.asInstanceOf[SaveDataSetTask])
+        
       } else if(task.isInstanceOf[SaveModelTask]) {
         
         val smt = task.asInstanceOf[SaveModelTask]
@@ -133,13 +153,9 @@ class TasksHandler {
     
         taskImpl = new SaveModelTaskImpl(job, task.asInstanceOf[SaveModelTask])
         
-//        if(outputContainerPath != null) {
-//          aspenModel.persist(modelFS, outputContainerPath, zipContainer || jarContainer)
-//        } else {
-//          aspenModel.persist(modelFS, outputModelPath, zipContainer || jarContainer)
-//        }
+      } else if(task.isInstanceOf[SelectDataSetTask]) {
         
-        //no output
+        taskImpl = new SelectDatasetTaskImpl(job, task.asInstanceOf[SelectDataSetTask])
         
       } else if(task.isInstanceOf[SplitDatasetTask]) {
         

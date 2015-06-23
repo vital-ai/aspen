@@ -31,6 +31,9 @@ import spark.jobserver.SparkJobInvalid
 import ai.vital.vitalsigns.model.URIReference
 import ai.vital.vitalsigns.uri.URIGenerator
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
+import ai.vital.aspen.groovy.select.SelectDatasetProcedure
+import ai.vital.aspen.util.SetOnceHashMap
+import ai.vital.aspen.job.TasksHandler
 
 class SelectDatasetJob {}
 
@@ -103,15 +106,16 @@ object SelectDatasetJob extends AbstractJob {
     
     val overwrite = jobConfig.getBoolean(overwriteOption.getLongOpt)
     
-    val builderPath = new Path(jobConfig.getString(modelBuilderOption.getLongOpt))
+    val builderPath = jobConfig.getString(modelBuilderOption.getLongOpt)
     
-    var percent = 100D
+    var percent = 100
     val percentValue = getOptionalString(jobConfig, percentOption)
     if(percentValue != null) {
-    	percent = java.lang.Double.parseDouble(percentValue)
+    	percent = java.lang.Integer.parseInt(percentValue)
     }
     
     val uriOnly = jobConfig.getBoolean(uriOnlyOption.getLongOpt)
+    
     
     
     if(queryPathParam != null) {
@@ -126,59 +130,6 @@ object SelectDatasetJob extends AbstractJob {
     println("URI only ? " + uriOnly)
     println("builder path: " + builderPath)
 
-    val hadoopConfiguration = new Configuration()
-    
-    var outputRDDName : String = null
-    
-    if(outputPath.startsWith("name:")) {
-      outputRDDName = outputPath.substring("name:".length())
-      println("output is a namedRDD: " + outputRDDName)
-    }
-    
-    if(outputRDDName != null) {
-      
-    } else {
-      
-      val outputBlockPath = new Path(outputPath)
-      
-      val outpuBlockFS = FileSystem.get(outputBlockPath.toUri(), hadoopConfiguration)
-      
-      //check if output exists
-      if(outpuBlockFS.exists(outputBlockPath)) {
-        if(!overwrite) {
-          throw new RuntimeException("Output file path already exists, use --overwrite option - " + outputBlockPath)
-        } else {
-//          if(!outpuBlockFS.isFile(outputBlockPath)) {
-//            throw new RuntimeException("Output block file path exists but is not a file: " + outputBlockPath)
-//          }
-          outpuBlockFS.delete(outputBlockPath, true)
-        }
-      }
-      
-    }
-    
-    val builderFS = FileSystem.get(builderPath.toUri(), hadoopConfiguration)
-    if(!builderFS.exists(builderPath)) {
-      throw new RuntimeException("Builder file not found: " + builderPath.toString())
-    }
-    
-    val builderStatus = builderFS.getFileStatus(builderPath)
-    if(!builderStatus.isFile()) {
-      throw new RuntimeException("Builder path does not denote a file: " + builderPath.toString())
-    }
-    
-    
-    val buildInputStream = builderFS.open(builderPath)
-    val builderBytes = IOUtils.toByteArray(buildInputStream)
-    buildInputStream.close()
-    
-    
-    val modelCreator = getModelCreator()
-        //not loaded!
-    val aspenModel = modelCreator.createModel(builderBytes)
-    
-    
-    
     var profile = getOptionalString(jobConfig, profileOption) 
     
     var limit = 1000
@@ -187,6 +138,7 @@ object SelectDatasetJob extends AbstractJob {
     } catch {
       case ex: Exception => {}
     }
+    
     
     if(limit <= 0) throw new RuntimeException("Limit must be greater than 0: " + limit)
     
@@ -204,216 +156,20 @@ object SelectDatasetJob extends AbstractJob {
     } else {
       println("Using default service profile...")
     }
-    
     VitalSigns.get.setVitalService( VitalServiceFactory.getVitalService )
     
-    val vitalService = VitalServiceFactory.getVitalService
     
-    val builder = new VitalBuilder()
+    val globalContext = new SetOnceHashMap()
     
-    var offset = 0
-    
-    var total = 0
-    
-    
-    var inputURIsList : RDD[(String, Array[Byte])] = null;
-    
-    var output : RDD[(String, Array[Byte])] = null
-    
-    
-    val expandObjects = urisListPath != null || ( !uriOnly && ( aspenModel.getModelConfig.getFeatureQueries.size() > 0 || aspenModel.getModelConfig.getTrainQueries.size() > 0 ) )
-    
-  
-    if(queryPathParam != null) {
+    val procedure = new SelectDatasetProcedure(builderPath, outputPath, queryPathParam, urisListPath, limit, percent, maxDocs, overwrite, uriOnly, globalContext)
 
-      if(expandObjects) {
-        
-        inputURIsList = sc.parallelize(Array[(String, Array[Byte])]())
-        
-      } else {
-        
-        output = sc.parallelize(Array[(String, Array[Byte])]())
-        
-      }
-      
-      val queryPath = new Path(queryPathParam)
-      println("query builder path: " + queryPath)
-      val queryFS = FileSystem.get(queryPath.toUri(), new Configuration())
-      
-      if(!queryFS.exists(queryPath)) throw new RuntimeException("Query builder file not found: " + queryPath.toString())
-      
-      val queryStream = queryFS.open(queryPath)
-      val queryString = IOUtils.toString(queryStream, StandardCharsets.UTF_8.name())
-      queryStream.close()
-      
-      
-      val queryObject = builder.queryString(queryString).toQuery()
-      
-      if(!queryObject.getClass().equals(classOf[VitalSelectQuery])) {
-        throw new RuntimeException("Query string must evaluate to VitalSelectQuery (exact)")
-      }
-      
-      val selectQuery = queryObject.asInstanceOf[VitalSelectQuery]
-  
-      selectQuery.setLimit(limit)
-      
-      val random = new Random(1000L)
-      
-      var skipped = 0
-      
-      
-      
-      
-      while(offset >= 0) {
-        
-  
-        selectQuery.setOffset(offset)
-        
-        val rl = vitalService.query(selectQuery)
-        
-        var c = 0
-        
-        var l = new java.util.ArrayList[(String, Array[Byte])]()
-        
-        var limitReached = false
-        
-        for( g <- rl) {
-          
-          if(maxDocs > 0 && total >= maxDocs) {
-            
-            limitReached = true
-            
-          } else {
-          
-            total = total + 1
-            
-            var accept = true
-            
-            if(percent < 100D) {
-            
-              if(random.nextDouble() * 100D > percent) {
-                accept = false
-                skipped = skipped + 1
-              }
-            }
-              
-            if(accept) {
-              
-          	  var bytes : Array[Byte] = null;
-              
-              //dump to output
-              if(uriOnly || expandObjects) {
-                
-                val uriRef = new URIReference()
-                uriRef.setURI(URIGenerator.generateURI(null, classOf[URIReference], true))
-                uriRef.setProperty("uRIRef", URIProperty.withString(g.getURI()));
-                
-                l.add((g.getURI, VitalSigns.get.encodeBlock(Arrays.asList(uriRef))))
-                
-                //just dump to output
-              } else {
-                
-            	  l.add((g.getURI, VitalSigns.get.encodeBlock(Arrays.asList(g))))
-                
-              }
-              
-            }
-              
-          }
-          
-          
-        }
-        
-        if(l.size() > 0) {
-          
-          if(uriOnly || !expandObjects) {
-            
-        	  output = output.union(sc.parallelize(l))
-            
-          } else {
-            
-            inputURIsList = inputURIsList.union(sc.parallelize(l))
-            
-          }
-          
-          
-        }
-        
-        if( !limitReached && c == limit ) {
-          offset += limit
-        } else {
-          offset = -1
-        }
-        
-  
-      }
-      
-      println("Total graph objects: " + total + ", skipped: " + skipped)
-      
-    } else {
-      
-      inputURIsList = sc.sequenceFile(urisListPath.toString(), classOf[Text], classOf[VitalBytesWritable]).map { pair =>
-        
-        //verify input list is a list of URI elements ?
-        (pair._1.toString(), pair._2.get)
-      }
-      
-//      inputBlockRDD = sc.sequenceFile(inputPath.toString(), classOf[Text], classOf[VitalBytesWritable]).map { pair =>
-//            (pair._1.toString(), pair._2.get)
-//          }
-      //just load uris list from collection
-      
-    }
+    val tasks = procedure.generateTasks()
     
+    val handler = new TasksHandler()
     
-    //expand objects now
-    if(inputURIsList != null) {
-      
-      output = inputURIsList.map { pair =>
-        
-        if(VitalSigns.get.getVitalService() == null) {
-          
-          if(profile != null) {
-            VitalServiceFactory.setServiceProfile(profile)
-          }
-    
-          VitalSigns.get.setVitalService( VitalServiceFactory.getVitalService() )
-          
-        }
-        
-        val inputObjects = VitalSigns.get().decodeBlock(pair._2, 0, pair._2.length)
-            
-        val vitalBlock = new VitalBlock(inputObjects)
-        
-        //model is not intialized but has feature exctractor that will fetch all the data
-        aspenModel.getFeatureExtraction.composeBlock(vitalBlock)
-        
-        (vitalBlock.getMainObject.getURI, VitalSigns.get.encodeBlock(vitalBlock.toList()))
-        
-      }
-      
-    }
-    
-    if(outputPath.startsWith("name:")) {
-      
-    	println("persisting as named RDD: " + outputRDDName)
-      
-      this.namedRdds.update(outputRDDName, output)
-      
-    } else {
-      
-    	println("writing results to sequence file: " + outputPath)
-    	
-    	val hadoopOutput = output.map( pair =>
-    	  (new Text(pair._1), new VitalBytesWritable(pair._2))
-      )
-    			
-    	hadoopOutput.saveAsSequenceFile(outputPath)
-      
-      
-      
-    }
-    
+    handler.handleTasksList(this, tasks)
+
+    println("DONE")
     
   }
   
@@ -446,12 +202,12 @@ object SelectDatasetJob extends AbstractJob {
       return new SparkJobInvalid("uris-list and uri-only as output does not make sense")
     }
     
-    var percent = 100D
+    var percent = 100
     val percentValue = getOptionalString(config, percentOption)
     if(percentValue != null) {
-      percent = java.lang.Double.parseDouble(percentValue)
+      percent = java.lang.Integer.parseInt(percentValue)
     }
-    if(percent <= 0D || percent > 100D) {
+    if(percent <= 0 || percent > 100) {
       return new SparkJobInvalid("percent value must be in (0; 100] range: " + percent)
     }
     

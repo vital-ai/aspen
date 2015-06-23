@@ -30,7 +30,7 @@ public class ConvertSequenceToBlockTask extends AbstractTask {
 		
 		for(String path : inputPaths) {
 			
-			l.add(CheckPathTask.PATH_EXISTS_PREFIX + path);
+//			l.add(CheckPathTask.PATH_EXISTS_PREFIX + path);
 			
 		}
 		return l;
