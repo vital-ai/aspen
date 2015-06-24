@@ -49,6 +49,10 @@ import ai.vital.aspen.groovy.select.tasks.SelectDataSetTask
 import ai.vital.aspen.select.impl.SelectDatasetTaskImpl
 import ai.vital.aspen.groovy.data.tasks.FilterDatasetTask
 import ai.vital.aspen.data.impl.FilterDatasetTaskImpl
+import ai.vital.aspen.groovy.predict.tasks.CalculatePageRankValuesTask
+import ai.vital.aspen.analysis.pagerank.CalculatePageRankValuesTaskImpl
+import ai.vital.aspen.groovy.predict.tasks.AssignPageRankValuesTask
+import ai.vital.aspen.analysis.pagerank.AssignPageRankValuesTaskImpl
 
 class TasksHandler {
 
@@ -77,9 +81,17 @@ class TasksHandler {
       var taskImpl : TaskImpl[_] = null
       
         
-      if(task.isInstanceOf[CalculateAggregationValueTask]) {
+      if(task.isInstanceOf[AssignPageRankValuesTask]) {
+        
+        taskImpl = new AssignPageRankValuesTaskImpl(job, task.asInstanceOf[AssignPageRankValuesTask])
+        
+      } else if(task.isInstanceOf[CalculateAggregationValueTask]) {
         
         taskImpl = new CalculateAggregationValueTaskImpl(sc, task.asInstanceOf[CalculateAggregationValueTask])
+        
+      } else if(task.isInstanceOf[CalculatePageRankValuesTask]) {
+        
+        taskImpl = new CalculatePageRankValuesTaskImpl(job, task.asInstanceOf[CalculatePageRankValuesTask])
         
       } else if(task.isInstanceOf[CheckPathTask]) {
         

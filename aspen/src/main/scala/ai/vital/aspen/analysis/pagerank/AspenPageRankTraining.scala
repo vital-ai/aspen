@@ -34,6 +34,9 @@ class AspenPageRankTraining(model: AspenPageRankPredictionModel, task: TrainMode
   
   def train(globalContext: java.util.Map[String, Object], trainRDD: RDD[(String, Array[Byte])]): java.io.Serializable = {
     
+    throw new RuntimeException("Moved to separate tasks")
+    
+    /*
     trainRDD.cache()
     
     //first iteration to collect uri->id
@@ -152,6 +155,8 @@ class AspenPageRankTraining(model: AspenPageRankPredictionModel, task: TrainMode
     task.getParamsMap.put(task.outputDatasetName, outputRDD)
     
     null
+    */
+    
     
   }
 }

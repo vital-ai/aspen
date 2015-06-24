@@ -6,4 +6,6 @@ class ClusterPrediction extends Prediction {
 
   var clusterID : java.lang.Integer = null
   
+  var squaredDistance : java.lang.Double = null
+  
 }

@@ -28,7 +28,9 @@ import ai.vital.aspen.groovy.featureextraction.StringFeatureData;
 import ai.vital.aspen.groovy.featureextraction.URIFeatureData;
 import ai.vital.aspen.groovy.featureextraction.WordFeatureData;
 import ai.vital.aspen.groovy.modelmanager.AspenModel;
+import ai.vital.aspen.groovy.predict.tasks.AssignPageRankValuesTask;
 import ai.vital.aspen.groovy.predict.tasks.CalculateAggregationValueTask;
+import ai.vital.aspen.groovy.predict.tasks.CalculatePageRankValuesTask;
 import ai.vital.aspen.groovy.predict.tasks.CollectCategoricalFeatureTaxonomyDataTask;
 import ai.vital.aspen.groovy.predict.tasks.CollectTextFeatureDataTask;
 import ai.vital.aspen.groovy.predict.tasks.CollectTrainTaxonomyDataTask;
@@ -355,10 +357,11 @@ public class ModelTrainingProcedure {
 		//page rank special
 		
 		
-		tasks.add(new TrainModelTask(model, modelPath, paramsMap, trainDatasetName, model.getModelConfig().getType(), outputDatasetName, trainingRequiredParams));
 		
 		
 		if(outputDatasetName == null) {
+			
+			tasks.add(new TrainModelTask(model, modelPath, paramsMap, trainDatasetName, model.getModelConfig().getType(), trainingRequiredParams));
 			
 			if(testDatasetName != null) {
 				
@@ -372,6 +375,11 @@ public class ModelTrainingProcedure {
 			tasks.add(new SaveModelTask(model, modelPath, paramsMap));
 			
 		} else {
+			
+			
+			tasks.add(new CalculatePageRankValuesTask(model, paramsMap, inputDatasetName));
+			
+			tasks.add(new AssignPageRankValuesTask(model, paramsMap, inputDatasetName, outputDatasetName));
 			
 			//persist the dataset
 		
