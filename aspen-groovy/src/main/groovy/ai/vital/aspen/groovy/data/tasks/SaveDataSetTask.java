@@ -6,6 +6,11 @@ import java.util.Map;
 
 import ai.vital.aspen.groovy.task.AbstractTask;
 
+/**
+ * Saves a dataset into sequence file
+ * @author Derek
+ *
+ */
 public class SaveDataSetTask extends AbstractTask {
 
 	public final static String SAVE_DATASET_PREFIX = "saved-dataset-";

@@ -23,6 +23,7 @@ import ai.vital.aspen.model.AspenGradientBoostedTreesRegressionModel
 import ai.vital.aspen.model.AspenIsotonicRegressionModel
 import ai.vital.aspen.model.AspenGaussianMixturePredictionModel
 import ai.vital.aspen.model.AspenPageRankPredictionModel
+import ai.vital.aspen.model.PredictionModel
 
 class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractModelTrainingTaskImpl[TestModelTask](sc, task) {
   
@@ -108,7 +109,7 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
       
     } else if( AspenGaussianMixturePredictionModel.spark_gaussian_mixture_prediction.equals(aspenModel.getType)) {
       
-      println("GAUSSIAN MIXTURE does not provide testing implementation")
+      aspenModel.asInstanceOf[AspenGaussianMixturePredictionModel].setError("GAUSSIAN MIXTURE does not provide testing implementation")
       
     } else if( AspenGradientBoostedTreesPredictionModel.spark_gradient_boosted_trees_prediction.equals(aspenModel.getType)) {
       
@@ -206,7 +207,7 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
           
     } else if(AspenKMeansPredictionModel.spark_kmeans_prediction.equals(aspenModel.getType)) {
           
-      println("KMEANS does not provide testing implementation")
+    	aspenModel.asInstanceOf[AspenKMeansPredictionModel].setError("KMEANS does not provide testing implementation");
       
     } else if(AspenLinearRegressionModel.spark_linear_regression.equals(aspenModel.getType)) {
           
@@ -262,7 +263,7 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
       
     } else if(AspenPageRankPredictionModel.spark_page_rank_prediction.equals(aspenModel.getType)) {
       
-      println("PAGE RANK does not provide testing implementation")
+      aspenModel.asInstanceOf[AspenPageRankPredictionModel].setError("PAGE RANK does not provide testing implementation");
       
     } else if(AspenRandomForestRegressionModel.spark_randomforest_regression.equals(aspenModel.getType)) {
           
@@ -308,6 +309,8 @@ class TestModelTaskImpl(sc: SparkContext, task: TestModelTask) extends AbstractM
     } else {
       throw new RuntimeException("Unhandled model testing: " + aspenModel.getType)
     }
+    
+    task.getParamsMap.put(TestModelTask.STATS_STRING, aspenModel.asInstanceOf[PredictionModel].getError())
     
   }
   

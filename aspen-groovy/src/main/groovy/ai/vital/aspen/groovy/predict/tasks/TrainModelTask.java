@@ -16,15 +16,19 @@ public class TrainModelTask extends ModelTrainingTask {
 	public String algorithm;
 	
 	public String modelPath;
+
+	//in page rank or other model without serialized output
+	public String outputDatasetName;
 	
 	private List<String> requiredParams;
 	
-	public TrainModelTask(AspenModel model, String modelPath, Map<String, Object> paramsMap, String datasetName, String algorithm, List<String> inputFeatures) {
+	public TrainModelTask(AspenModel model, String modelPath, Map<String, Object> paramsMap, String datasetName, String algorithm, String outputDatasetName, List<String> inputFeatures) {
 		super(model, paramsMap);
 		this.datasetName = datasetName;
 		this.algorithm = algorithm;
 		this.modelPath = modelPath;
 		this.requiredParams = inputFeatures;
+		this.outputDatasetName = outputDatasetName;
 	}
 
 	@Override

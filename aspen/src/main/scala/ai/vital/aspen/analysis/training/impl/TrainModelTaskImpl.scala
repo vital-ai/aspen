@@ -76,7 +76,7 @@ class TrainModelTaskImpl(sc: SparkContext, task: TrainModelTask) extends Abstrac
       } else if(aspenModel.isInstanceOf[AspenNaiveBayesPredictionModel]) {
         trainingImpl = new AspenNaiveBayesTraining(aspenModel.asInstanceOf[AspenNaiveBayesPredictionModel])
       } else if(aspenModel.isInstanceOf[AspenPageRankPredictionModel]) {
-        trainingImpl = new AspenPageRankTraining(aspenModel.asInstanceOf[AspenPageRankPredictionModel])
+        trainingImpl = new AspenPageRankTraining(aspenModel.asInstanceOf[AspenPageRankPredictionModel], task)
       } else if(aspenModel.isInstanceOf[AspenRandomForestPredictionModel]) {
         trainingImpl = new AspenRandomForestTraining(aspenModel.asInstanceOf[AspenRandomForestPredictionModel])
       } else if(aspenModel.isInstanceOf[AspenRandomForestRegressionModel]) {
@@ -91,7 +91,7 @@ class TrainModelTaskImpl(sc: SparkContext, task: TrainModelTask) extends Abstrac
       var outputModel = trainingImpl.train(task.getParamsMap, trainRDD);
 
       task.getParamsMap.put(TrainModelTask.MODEL_BINARY, outputModel.asInstanceOf[Object])
-      task.getParamsMap.put(LoadModelTask.LOADED_MODEL_PREFIX + task.modelPath, aspenModel)
+//      task.getParamsMap.put(LoadModelTask.LOADED_MODEL_PREFIX + task.modelPath, aspenModel)
     
   }
   

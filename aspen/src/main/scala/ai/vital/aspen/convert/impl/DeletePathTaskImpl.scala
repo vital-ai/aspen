@@ -30,18 +30,21 @@ class DeletePathTaskImpl(job: AbstractJob, task: DeletePathTask) extends TaskImp
   
   def handleRDDName(name: String) : java.lang.Boolean = {
   
-    if( ! job.isNamedRDDSupported() ) {
-      throw new RuntimeException("NamedRDDs not supported")
-    }
+    if( job.isNamedRDDSupported() ) {
     
-    var rdd = job.namedRdds.get[(String, Array[Byte])](name)
-    
-    if(!rdd.isDefined) {
-      return false
-    }
-     
-    job.namedRdds.destroy(name)
-    
+      var rdd = job.namedRdds.get[(String, Array[Byte])](name)
+      
+      if(!rdd.isDefined) {
+        return false
+      }
+       
+      job.namedRdds.destroy(name)
+      
+    } else {
+      
+      return job.datasetsMap.remove(name) != null
+      
+    }   
     return true
     
   }

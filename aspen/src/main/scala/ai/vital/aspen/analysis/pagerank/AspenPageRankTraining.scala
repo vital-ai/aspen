@@ -20,8 +20,17 @@ import ai.vital.vitalsigns.block.CompactStringSerializer
 import ai.vital.vitalsigns.model.GraphObject
 import org.apache.hadoop.io.Text
 import ai.vital.hadoop.writable.VitalBytesWritable
+import org.apache.hadoop.fs.FileSystem
+import ai.vital.aspen.analysis.training.ModelTrainingJob
+import org.apache.hadoop.fs.Path
+import ai.vital.vitalsigns.block.BlockCompactStringSerializer
+import java.io.OutputStreamWriter
+import java.nio.charset.StandardCharsets
+import java.io.BufferedWriter
+import ai.vital.aspen.groovy.predict.tasks.TrainModelTask
+import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 
-class AspenPageRankTraining(model: AspenPageRankPredictionModel) extends AbstractTraining[AspenPageRankPredictionModel](model) {
+class AspenPageRankTraining(model: AspenPageRankPredictionModel, task: TrainModelTask) extends AbstractTraining[AspenPageRankPredictionModel](model) {
   
   def train(globalContext: java.util.Map[String, Object], trainRDD: RDD[(String, Array[Byte])]): java.io.Serializable = {
     
@@ -32,32 +41,35 @@ class AspenPageRankTraining(model: AspenPageRankPredictionModel) extends Abstrac
     //broad
     val sc = trainRDD.sparkContext
 
-    val nodes = trainRDD.flatMap { blockEncoded => 
+    //generate uris index
+    val nodesURIs = trainRDD.flatMap { blockEncoded => 
       
       val graphObjects = VitalSigns.get.decodeBlock(blockEncoded._2, 0, blockEncoded._2.length)
       
-      var uris = new ArrayList[(String, String)]
+      var uris = new ArrayList[String]
       
       for(x <- graphObjects) {
         if(x.isInstanceOf[VITAL_Node]) {
           if(!uris.contains(x.getURI)) {
             
-            uris.add( ( x.getURI, x.toCompactString() ))    
+            uris.add( x.getURI )    
           }
         }
       }
 
       uris
       
-    }.reduceByKey((v1, v2) => v1)
+    }.distinct().collect()
     
     
-    //generate uris index
-    val nodesURIs = nodes.map { pair => pair._1}.collect()
-
-    val nodesRDD : RDD[(VertexId, (String, String))] = nodes.map { pair => 
-      ( nodesURIs.indexOf(pair._1).toLong, (pair._1, pair._2) )
+    val nodesURIsList = new ArrayList[(VertexId, String)]
+    var c = 0L
+    for(x <- nodesURIs) {
+      nodesURIsList.add((c, x))
+      c = c+1
     }
+    
+    val nodesRDD : RDD[(VertexId, String)] = sc.parallelize(nodesURIsList.toSeq)
 
     val edgesRDD = trainRDD.flatMap { blockEncoded => 
       
@@ -93,7 +105,7 @@ class AspenPageRankTraining(model: AspenPageRankPredictionModel) extends Abstrac
     val missing = new VITAL_Node()
     missing.setURI("urn:missing")
     
-    val defaultUser = ( missing.getURI, missing.toCompactString())
+    val defaultUser = missing.getURI
     
     val graph = Graph(nodesRDD, edgesRDD, defaultUser)
     
@@ -101,26 +113,43 @@ class AspenPageRankTraining(model: AspenPageRankPredictionModel) extends Abstrac
     
     val thisModel = model
     
-    val outputRDD = nodesRDD.join(ranks).map { j =>
+    val nodeURI2Rank = nodesRDD.join(ranks).map { j =>
       
       val rank = j._2._2
       
+      val nodeURI = j._2._1
+      
+      (nodeURI, rank)
+      
+    }.collectAsMap()
+    
+    val outputRDD = trainRDD.map { blockEncoded =>  
+    
+      val graphObjects = VitalSigns.get.decodeBlock(blockEncoded._2, 0, blockEncoded._2.length)
+      
       val prPred = new PageRankPrediction()
-      prPred.rank = rank
-      prPred.node = CompactStringSerializer.fromString(j._2._1._2).asInstanceOf[VITAL_Node]
+      prPred.uri2Rank = nodeURI2Rank
       
-      val results = thisModel.getModelConfig.getTarget.getFunction.call(null, null, prPred).asInstanceOf[java.util.List[GraphObject]]
+      val results = thisModel.getModelConfig.getTarget.getFunction.call(new VitalBlock(graphObjects), null, prPred).asInstanceOf[java.util.List[GraphObject]]
       
-      (new Text(prPred.node.getURI), new VitalBytesWritable(VitalSigns.get.encodeBlock(results)))
+      graphObjects.addAll(results)
       
-//            val hadoopOutput = output.map( pair =>
-//        (new Text(pair._1), new VitalBytesWritable(pair._2))
-//      )
-//      
+      
+      (blockEncoded._1, VitalSigns.get.encodeBlock(graphObjects))
       
     }
     
-    outputRDD.saveAsSequenceFile(model.outputPath)
+    if( ModelTrainingJob.isNamedRDDSupported() ) {
+      
+      ModelTrainingJob.namedRdds.update(task.outputDatasetName, outputRDD)
+      
+    } else {
+      
+      ModelTrainingJob.datasetsMap.put(task.outputDatasetName, outputRDD)
+      
+    }
+    
+    task.getParamsMap.put(task.outputDatasetName, outputRDD)
     
     null
     

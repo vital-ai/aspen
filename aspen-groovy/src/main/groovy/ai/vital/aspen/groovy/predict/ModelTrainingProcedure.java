@@ -1,13 +1,20 @@
 package ai.vital.aspen.groovy.predict;
 
+import groovy.lang.GString;
+
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.convert.tasks.CheckPathTask;
+import ai.vital.aspen.groovy.convert.tasks.ConvertSequenceToBlockTask;
 import ai.vital.aspen.groovy.convert.tasks.DeletePathTask;
 import ai.vital.aspen.groovy.data.tasks.LoadDataSetTask;
+import ai.vital.aspen.groovy.data.tasks.SaveDataSetTask;
 import ai.vital.aspen.groovy.data.tasks.SplitDatasetTask;
 import ai.vital.aspen.groovy.featureextraction.BinaryFeatureData;
 import ai.vital.aspen.groovy.featureextraction.CategoricalFeatureData;
@@ -33,6 +40,7 @@ import ai.vital.aspen.groovy.predict.tasks.TestModelTask;
 import ai.vital.aspen.groovy.predict.tasks.TrainModelTask;
 import ai.vital.aspen.groovy.task.AbstractTask;
 import ai.vital.predictmodel.Aggregate;
+import ai.vital.predictmodel.AlgorithmConfig;
 import ai.vital.predictmodel.BinaryFeature;
 import ai.vital.predictmodel.CategoricalFeature;
 import ai.vital.predictmodel.DateFeature;
@@ -143,7 +151,7 @@ public class ModelTrainingProcedure {
 		}
 		
 		
-		//treat is as a loaded model
+		//treat it as a loaded model
 		paramsMap.put(LoadModelTask.LOADED_MODEL_PREFIX + modelPath, model);
 		tasks.add(new FeatureQueryTask(paramsMap, inputDatasetName, modelPath));
 		
@@ -313,22 +321,84 @@ public class ModelTrainingProcedure {
 		
 		
 		//load data with feature queries, treat model as not fully loaded
-		tasks.add(new FeatureQueryTask(paramsMap, trainDatasetName, modelPath));
+//		tasks.add(new FeatureQueryTask(paramsMap, trainDatasetName, modelPath));
 		
 		
-		tasks.add(new TrainModelTask(model, modelPath, paramsMap, trainDatasetName, model.getModelConfig().getType(),trainingRequiredParams));
+		String outputDatasetName = null;
+		String outputPath = null;
 		
-		
-		if(testDatasetName != null) {
+		if("spark-page-rank-prediction".equals(model.getType())) {
 			
-			if(!trainDatasetName.equals(testDatasetName)) {
-				tasks.add(new FeatureQueryTask(paramsMap, testDatasetName, modelPath));
+			AlgorithmConfig ac = model.getModelConfig().getAlgorithmConfig();
+			if(ac == null) throw new RuntimeException("Algorithm config in page rank model is required");
+			Serializable outputPathParam = ac.get("outputPath");
+			if(outputPathParam == null) throw new RuntimeException("outputPath algoritm config value in page rank model is required");
+			if(!(outputPathParam instanceof String || outputPathParam instanceof GString)) throw new RuntimeException("outputPath must be a string");
+			outputPath = outputPathParam.toString();
+			
+			if(outputPath.startsWith("name:")) {
+				
+				outputDatasetName = outputPath.substring(5);
+				
+			} else {
+				
+				outputDatasetName = "page-rank-training-output";
+				
+				
 			}
 			
-			tasks.add(new TestModelTask(model, paramsMap, testDatasetName));
+			tasks.add(new DeletePathTask("name:" + outputDatasetName, paramsMap));
+			tasks.add(new DeletePathTask(outputPath, paramsMap));
+			
 		}
+				
+		//page rank special
 		
-		tasks.add(new SaveModelTask(model, modelPath, paramsMap));
+		
+		tasks.add(new TrainModelTask(model, modelPath, paramsMap, trainDatasetName, model.getModelConfig().getType(), outputDatasetName, trainingRequiredParams));
+		
+		
+		if(outputDatasetName == null) {
+			
+			if(testDatasetName != null) {
+				
+//				if(!trainDatasetName.equals(testDatasetName)) {
+//					tasks.add(new FeatureQueryTask(paramsMap, testDatasetName, modelPath));
+//				}
+				
+				tasks.add(new TestModelTask(model, paramsMap, testDatasetName));
+			}
+			
+			tasks.add(new SaveModelTask(model, modelPath, paramsMap));
+			
+		} else {
+			
+			//persist the dataset
+		
+			if(outputPath.startsWith("name:")) {
+				
+				//do nothing
+				
+			} else if(outputPath.endsWith(".vital.seq")) {
+				
+				tasks.add(new SaveDataSetTask(paramsMap, outputDatasetName, outputPath));
+				
+			} else if(outputPath.endsWith(".vital") || outputPath.endsWith(".vital.gz")) {
+				
+				//dump it first
+				String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + outputDatasetName+ "/" + outputDatasetName + ".vital.seq";
+				
+				tasks.add(new DeletePathTask(datasetSequencePath, paramsMap));
+				tasks.add(new SaveDataSetTask(paramsMap, outputDatasetName, datasetSequencePath));
+				
+				//convert
+				tasks.add(new ConvertSequenceToBlockTask(Arrays.asList(datasetSequencePath), outputPath, paramsMap));
+				
+			} else {
+				throw new RuntimeException("Unexcepted outputPath value: " + outputPath);
+			}
+			 
+		}
 		
 		return tasks;
 		
