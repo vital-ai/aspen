@@ -21,7 +21,6 @@ class AssignPageRankValuesTaskImpl(job: AbstractJob, task: AssignPageRankValuesT
   def execute(): Unit = {
     
     val trainRDD = job.getDataset(task.inputDatasetName)
-    val m = trainRDD.collectAsMap()
     
     val nodeURI2Rank = task.getParamsMap.get(CalculatePageRankValuesTask.NODE_URI_2_RANK).asInstanceOf[Map[String, Double]]
     
