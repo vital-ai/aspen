@@ -11,6 +11,7 @@ import java.util.Map;
 
 import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.convert.tasks.CheckPathTask;
+import ai.vital.aspen.groovy.convert.tasks.ConvertBlockToSequenceTask;
 import ai.vital.aspen.groovy.convert.tasks.ConvertSequenceToBlockTask;
 import ai.vital.aspen.groovy.convert.tasks.DeletePathTask;
 import ai.vital.aspen.groovy.data.tasks.LoadDataSetTask;
@@ -123,18 +124,13 @@ public class ModelTrainingProcedure {
 		
 		if(inputPath == null) throw new RuntimeException("No input path set!");
 		
-		if(inputDatasetName.startsWith("name:")) {
-
-			inputDatasetName = inputDatasetName.substring(5);
-			
-			paramsMap.put(inputDatasetName, true);
-			
-		} else {
-			
-			tasks.add(new LoadDataSetTask(paramsMap, inputPath, inputDatasetName));
-			
-		}
+		CheckPathTask inputCheckTask = new CheckPathTask(inputPath, paramsMap);
+		inputCheckTask.acceptDirectories = true;
+		inputCheckTask.acceptFiles = true;
+		inputCheckTask.mustExist = true;
+		inputCheckTask.mustnotExist = false;
 		
+		tasks.add(inputCheckTask);
 		
 		if(overwriteModel) {
 			
@@ -149,6 +145,31 @@ public class ModelTrainingProcedure {
 			cpt.acceptFiles = true;
 			
 			tasks.add(cpt);
+			
+		}
+		
+		if(inputPath.startsWith("name:")) {
+
+			inputDatasetName = inputPath.substring(5);
+			
+			paramsMap.put(inputDatasetName, true);
+			
+			tasks.add(new LoadDataSetTask(paramsMap, inputPath, inputDatasetName));
+			
+		} else if(inputPath.endsWith(".vital.seq")) {
+			
+			tasks.add(new LoadDataSetTask(paramsMap, inputPath, inputDatasetName));
+			
+		} else if(inputPath.endsWith(".vital") || inputPath.endsWith(".vital.gz")) {
+			
+			//convert it into sequence file first
+			String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
+			
+			tasks.add(new DeletePathTask(datasetSequencePath, paramsMap));
+
+			tasks.add(new ConvertBlockToSequenceTask(Arrays.asList(inputPath), datasetSequencePath, paramsMap));
+			
+			tasks.add(new LoadDataSetTask(paramsMap, datasetSequencePath, inputDatasetName));
 			
 		}
 		

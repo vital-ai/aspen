@@ -209,14 +209,9 @@ class ConvertBlockToSequenceTaskImpl(job: AbstractJob, task: ConvertBlockToSeque
       
       blocksIterator.close();
 
-      
-      inputFS.close()
-			  
 		}
-    
+
     writer.close();
-    
-    outputFS.close()
     
     println("Blocks count: " + c)
     

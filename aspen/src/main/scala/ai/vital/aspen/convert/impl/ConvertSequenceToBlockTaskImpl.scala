@@ -154,18 +154,13 @@ class ConvertSequenceToBlockTaskImpl(job: AbstractJob, task: ConvertSequenceToBl
           
         }
         
-        
-        inputFS.close()
-        
-        
       }
-      
       
     }
     
-    writer.close()
+    writer.flush()
     
-    outputFS.close()
+    writer.close()
     
     task.getParamsMap.put(ConvertSequenceToBlockTask.VITAL_SEQUENCE_TO_BLOCK_PREFIX + task.outputPath, new java.lang.Integer(c));
     

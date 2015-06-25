@@ -23,11 +23,6 @@ class SaveModelTaskImpl(job: AbstractJob, task: SaveModelTask) extends AbstractM
     
     task.getModel.persist(modelFS, outputModelPath, asJar)
     
-//     if(outputContainerPath != null) {
-//       task.getModel.persist(modelFS, outputContainerPath, zipContainer || jarContainer)
-//      } else {
-//        task.getModel.persist(modelFS, outputModelPath, zipContainer || jarContainer)
-//      }
   }
   
   

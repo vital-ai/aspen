@@ -129,8 +129,6 @@ class CheckPathTaskImpl(job: AbstractJob, task: CheckPathTask) extends TaskImpl[
       var flag = new java.lang.Boolean(false)
       if(status != null) flag = true
       
-      fs.close()
-      
       flag
       
   }

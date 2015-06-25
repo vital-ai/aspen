@@ -35,9 +35,13 @@ class AssignPageRankValuesTaskImpl(job: AbstractJob, task: AssignPageRankValuesT
       
       val results = thisModel.getModelConfig.getTarget.getFunction.call(new VitalBlock(graphObjects), null, prPred).asInstanceOf[java.util.List[GraphObject]]
       
-      (blockEncoded._1, VitalSigns.get.encodeBlock(results))
+      if(results != null && results.size() > 0 ) {
+    	  (blockEncoded._1, VitalSigns.get.encodeBlock(results))
+      } else {
+        null
+      }
       
-    }
+    }.filter( pair => pair != null )
     
     if( job.isNamedRDDSupported() ) {
       

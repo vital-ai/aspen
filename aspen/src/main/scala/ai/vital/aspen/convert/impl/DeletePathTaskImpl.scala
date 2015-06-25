@@ -57,8 +57,6 @@ class DeletePathTaskImpl(job: AbstractJob, task: DeletePathTask) extends TaskImp
     
     val r = fs.delete(path, true)
     
-    fs.close()
-    
     return r
     
   }
