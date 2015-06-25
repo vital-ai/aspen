@@ -38,7 +38,7 @@ object DatasetExportJob extends AbstractJob {
   overwriteOption.setRequired(false)
   
   def getJobClassName(): String = {
-    classOf[DatasetImportJob].getCanonicalName
+    classOf[DatasetExportJob].getCanonicalName
   }
 
   def getJobName(): String = {

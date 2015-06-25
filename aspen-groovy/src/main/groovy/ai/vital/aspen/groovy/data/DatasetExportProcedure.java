@@ -9,6 +9,7 @@ import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.convert.tasks.CheckPathTask;
 import ai.vital.aspen.groovy.convert.tasks.ConvertSequenceToBlockTask;
 import ai.vital.aspen.groovy.convert.tasks.DeletePathTask;
+import ai.vital.aspen.groovy.data.tasks.LoadDataSetTask;
 import ai.vital.aspen.groovy.data.tasks.SaveDataSetTask;
 import ai.vital.aspen.groovy.task.AbstractTask;
 
@@ -59,10 +60,13 @@ public class DatasetExportProcedure {
 		
 		CheckPathTask cpt2 = new CheckPathTask(outputPath, paramsMap);
 		cpt2.mustnotExist = !overwrite;
+		cpt2.mustExist = false;
 		cpt2.acceptFiles = true;
 		cpt2.acceptDirectories = true;
 		cpt2.validFileExtensions = new String[]{".vital.gz", ".vital"};
 		l.add(cpt2);
+
+		l.add(new LoadDataSetTask(paramsMap, "name:" + inputDatasetName, inputDatasetName));
 		
 		if(!overwrite) {
 			

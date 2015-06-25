@@ -4,7 +4,6 @@ import ai.vital.aspen.analysis.training.AbstractModelTrainingTaskImpl
 import org.apache.spark.SparkContext
 import ai.vital.aspen.groovy.data.tasks.LoadDataSetTask
 import org.apache.spark.SparkContext
-import ai.vital.aspen.analysis.training.ModelTrainingJob
 import org.apache.spark.rdd.RDD
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.fs.FileSystem
@@ -20,11 +19,6 @@ import ai.vital.aspen.task.TaskImpl
 class LoadDataSetTaskImpl(job: AbstractJob, task: LoadDataSetTask) extends TaskImpl[LoadDataSetTask](job.sparkContext, task) {
   
   def checkDependencies(): Unit = {
-    if(ModelTrainingJob.isNamedRDDSupported()) {
-//      if( this.namedRdds.get(ldt.datasetName).isDefined ) throw new RuntimeException("Dataset already loaded: " + ldt.datasetName)
-    } else {
-//      if( datasetsMap.get(ldt.datasetName) != null) throw new RuntimeException("Dataset already loaded: " + ldt.datasetName);
-    }
   }
 
   def execute(): Unit = {
@@ -68,7 +62,7 @@ class LoadDataSetTaskImpl(job: AbstractJob, task: LoadDataSetTask) extends TaskI
       (pair._1.toString(), pair._2.get)
     }
     
-    if(ModelTrainingJob.isNamedRDDSupported()) {
+    if(job.isNamedRDDSupported()) {
     	job.namedRdds.update(task.datasetName, inputBlockRDD);
     } else {
     	job.datasetsMap.put(task.datasetName, inputBlockRDD)
