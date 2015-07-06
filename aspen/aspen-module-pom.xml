@@ -340,30 +340,6 @@
   </dependency>
   
   
-  <dependency>
-	<groupId>vital-ai</groupId>
-	<artifactId>twentynews</artifactId>
-	<version>1.0.0</version>
-  </dependency>
-  
-  <dependency>
-	<groupId>vital-ai</groupId>
-	<artifactId>movielens</artifactId>
-	<version>1.0.0</version>
-  </dependency>
-  
-  <dependency>
-	<groupId>vital-ai</groupId>
-	<artifactId>autompg</artifactId>
-	<version>1.0.0</version>
-  </dependency>
-  
-  <dependency>
-	<groupId>vital-ai</groupId>
-	<artifactId>whiskies</artifactId>
-	<version>1.0.0</version>
-  </dependency>
-  
   	<dependency>
   		<groupId>org.apache.spark</groupId>
   		<artifactId>spark-core_2.10</artifactId>
