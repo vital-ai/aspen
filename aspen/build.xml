@@ -43,6 +43,8 @@
                 <include name="bin/**"/>
     		</zipfileset>
 			<zipfileset dir="${basedir}" defaultexcludes="true" prefix="${prefix}">
+				<include name="aspen-jobs-pom.xml" />
+				<include name="aspen-module-pom.xml" />
 				<include name="conf/**" />
 				<include name="dist/**" />
 				<include name="domain-ontology/**" />
@@ -61,6 +63,8 @@
 				<include name="bin/**" />
 			</tarfileset>
 			<tarfileset dir="${basedir}" defaultexcludes="true" prefix="${prefix}">
+				<include name="aspen-jobs-pom.xml" />
+				<include name="aspen-module-pom.xml" />
 				<include name="conf/**" />
 				<include name="dist/**" />
 				<include name="domain-ontology/**" />
