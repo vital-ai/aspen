@@ -18,6 +18,7 @@ import ai.vital.aspen.groovy.featureextraction.PredictionModelAnalyzer;
 import ai.vital.predictmodel.AlgorithmConfig;
 import ai.vital.predictmodel.Feature;
 import ai.vital.predictmodel.PredictionModel;
+import ai.vital.predictmodel.Taxonomy;
 import ai.vital.predictmodel.builder.ModelBuilder;
 import ai.vital.predictmodel.builder.ModelString;
 import ai.vital.predictmodel.builder.ToModelImpl;
@@ -121,6 +122,14 @@ public class ModelCreator {
 		
 		String uri = modelEl.getURI();
 		if(uri == null || uri.isEmpty()) throw new Exception("Null or empty model URI");
+		
+		//clear taxonomies - reload them in certain cases
+		for(Taxonomy t : modelEl.getModelConfig().getTaxonomies()) {
+			if( t.getTaxonomyPath() != null || t.getRoot() != null) {
+				t.setContainer(null);
+				t.setRootCategory(null);
+			}
+		}
 		
 		return modelEl;
 	}

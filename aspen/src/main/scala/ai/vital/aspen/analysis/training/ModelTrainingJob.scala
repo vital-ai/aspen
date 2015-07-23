@@ -155,7 +155,7 @@ object ModelTrainingJob extends AbstractJob {
     
     VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
     
-    ModelTaxonomySetter.loadTaxonomies(aspenModel.getModelConfig, null)
+    ModelTaxonomySetter.loadTaxonomies(aspenModel, null)
 
       //use full set
 //      trainRDD = inputRDD

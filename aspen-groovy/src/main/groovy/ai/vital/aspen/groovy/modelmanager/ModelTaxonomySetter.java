@@ -1,30 +1,42 @@
 package ai.vital.aspen.groovy.modelmanager;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
+import ai.vital.aspen.groovy.taxonomy.HierarchicalCategories;
+import ai.vital.aspen.groovy.taxonomy.HierarchicalCategories.TaxonomyNode;
 import ai.vital.predictmodel.PredictionModel;
 import ai.vital.predictmodel.Taxonomy;
 import ai.vital.vitalservice.VitalService;
 import ai.vital.vitalservice.VitalStatus;
+import ai.vital.vitalservice.model.App;
 import ai.vital.vitalservice.query.ResultList;
 import ai.vital.vitalservice.query.VitalPathQuery;
 import ai.vital.vitalsigns.VitalSigns;
 import ai.vital.vitalsigns.meta.GraphContext;
+import ai.vital.vitalsigns.model.Edge_hasChildCategory;
 import ai.vital.vitalsigns.model.GraphObject;
 import ai.vital.vitalsigns.model.VITAL_Category;
 import ai.vital.vitalsigns.model.VITAL_Container;
 import ai.vital.vitalsigns.model.property.URIProperty;
+import ai.vital.vitalsigns.uri.URIGenerator;
 import ai.vital.vitalsigns.utils.StringUtils;
 
 public class ModelTaxonomySetter {
 
 	//performs a pass over PredictionModel object and loads taxonomies objects either from VitalSigns/Vitalservice (rootURI)
 	//path
-	public static void loadTaxonomies(PredictionModel model, VitalService forcedService) throws Exception {
+	public static void loadTaxonomies(AspenModel aspenModel, VitalService forcedService) throws Exception {
 		
-		List<Taxonomy> taxonomies = model.getTaxonomies();
+		List<Taxonomy> taxonomies = aspenModel.getModelConfig().getTaxonomies();
 		
 		if(taxonomies == null) return;
 		
@@ -101,13 +113,71 @@ public class ModelTaxonomySetter {
 				
 			} else if( ! StringUtils.isEmpty(taxonomy.getTaxonomyPath()) ) {
 				
-				//TODO copy from vital taxonomy file
-				throw new RuntimeException("NOT IMPLEMENTED!");
+				Path p = new Path(taxonomy.getTaxonomyPath());
+				
+				FileSystem fs = FileSystem.get(p.toUri(), new Configuration());
+				
+				InputStream inS = null;
+				
+				HierarchicalCategories hc = null;
+				
+				String content = null;
+				
+				try {
+					
+					inS = fs.open(p);
+					
+					content = IOUtils.toString(inS, "UTF-8");
+					
+					hc = new HierarchicalCategories(new ByteArrayInputStream(content.getBytes("UTF-8")), true);
+					
+				} finally {
+					IOUtils.closeQuietly(inS);
+				}
+				
+				TaxonomyNode rootNode = hc.getRootNode();
+				
+				VITAL_Container container = new VITAL_Container();
+				VITAL_Category root = processTaxonomyNode(container, null, rootNode);
+				taxonomy.setRootCategory(root);
+				taxonomy.setContainer(container);
+
+				aspenModel.getTaxonomy2FileContent().put(taxonomy.getProvides(), content);
+				
 				
 			}
 				
 			
 		}
+		
+	}
+
+	public static VITAL_Category processTaxonomyNode(VITAL_Container container, VITAL_Category parentNode, 
+			TaxonomyNode node) {
+
+		VITAL_Category category = new VITAL_Category();
+		category.setURI(node.getURI());
+		category.setProperty("name", node.getLabel());
+		
+		if(parentNode != null) {
+			Edge_hasChildCategory edge = new Edge_hasChildCategory();
+			edge.setURI(URIGenerator.generateURI((App)null, Edge_hasChildCategory.class));
+			edge.addSource(parentNode).addDestination(category);
+			container.putGraphObject(edge);
+		}
+		container.putGraphObject(category);
+		
+		List<TaxonomyNode> children = node.getChildren();
+		
+		if(children != null) {
+			for(TaxonomyNode child : children) {
+				
+				processTaxonomyNode(container, category, child);
+				
+			}
+		}
+		
+		return category;
 		
 	}
 	

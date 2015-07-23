@@ -5,12 +5,16 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import ai.vital.aspen.groovy.modelmanager.AspenModel;
 import ai.vital.aspen.groovy.modelmanager.AspenPrediction;
 import ai.vital.predictmodel.Feature;
+import ai.vital.predictmodel.NumericalFeature;
 import ai.vital.predictmodel.Prediction;
+import ai.vital.predictmodel.StringFeature;
+import ai.vital.predictmodel.TextFeature;
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock;
 
 /**
@@ -77,14 +81,15 @@ public class ReferenceModel extends AspenModel {
 
 	@Override
 	public Collection<Class<? extends Feature>> getSupportedFeatures() {
-		// TODO Auto-generated method stub
-		return null;
+		List l = Arrays.asList(
+				StringFeature.class,
+				TextFeature.class);
+		return l;
 	}
 
 	@Override
 	public Class<? extends Feature> getTrainFeatureType() {
-		// TODO Auto-generated method stub
-		return null;
+		return NumericalFeature.class;
 	}
 
 }

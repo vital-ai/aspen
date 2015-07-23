@@ -39,6 +39,8 @@ public class ModelManager {
 	
 	public static final String MODEL_FEATURES_DIR = "features";
 	
+	public static final String MODEL_TAXONOMIES_DIR = "taxonomies";
+	
 	private List<AspenModel> loadedModels = new ArrayList<AspenModel>();
 	
 	private ModelCreator creator = null;

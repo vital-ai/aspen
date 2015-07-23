@@ -2,6 +2,7 @@ package ai.vital.aspen.groovy.modelmanager;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -32,6 +33,7 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.log4j.Hierarchy;
 
 import ai.vital.aspen.groovy.featureextraction.CategoricalFeatureData;
 import ai.vital.aspen.groovy.featureextraction.FeatureData;
@@ -40,6 +42,8 @@ import ai.vital.aspen.groovy.featureextraction.NumericalFeatureData;
 import ai.vital.aspen.groovy.featureextraction.PredictionModelAnalyzer;
 import ai.vital.aspen.groovy.featureextraction.TextFeatureData;
 import ai.vital.aspen.groovy.featureextraction.WordFeatureData;
+import ai.vital.aspen.groovy.taxonomy.HierarchicalCategories;
+import ai.vital.aspen.groovy.taxonomy.HierarchicalCategories.TaxonomyNode;
 import ai.vital.predictmodel.Aggregate;
 import ai.vital.predictmodel.CategoricalFeature;
 import ai.vital.predictmodel.Feature;
@@ -48,6 +52,7 @@ import ai.vital.predictmodel.NumericalFeature;
 import ai.vital.predictmodel.Prediction;
 import ai.vital.predictmodel.PredictionModel;
 import ai.vital.predictmodel.Target;
+import ai.vital.predictmodel.Taxonomy;
 import ai.vital.predictmodel.TextFeature;
 import ai.vital.predictmodel.TrainFeature;
 import ai.vital.predictmodel.WordFeature;
@@ -55,6 +60,8 @@ import ai.vital.predictmodel.builder.ModelString;
 import ai.vital.predictmodel.builder.ToModelImpl;
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock;
 import ai.vital.vitalsigns.model.GraphObject;
+import ai.vital.vitalsigns.model.VITAL_Category;
+import ai.vital.vitalsigns.model.VITAL_Container;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -91,6 +98,9 @@ public abstract class AspenModel implements Serializable {
 	protected transient FeatureExtraction _featureExtraction;
 	
 	protected CategoricalFeatureData trainedCategories;
+	
+	//this map contains taxonomies source file content
+	protected Map<String, String> taxonomy2FileContent = new HashMap<String, String>();
 	
 	//non-supervised
 	public abstract boolean isTestedWithTrainData();
@@ -190,7 +200,7 @@ public abstract class AspenModel implements Serializable {
 		onResourcesProcessed();
 		
 		
-		ModelTaxonomySetter.loadTaxonomies(modelConfig, null);
+		ModelTaxonomySetter.loadTaxonomies(this, null);
 		
 		getFeatureExtraction();
 		
@@ -219,6 +229,33 @@ public abstract class AspenModel implements Serializable {
 		}
 		
 		
+		for(Taxonomy t : this.modelConfig.getTaxonomies()) {
+			
+			if(t.getTaxonomyPath() != null && t.getRootCategory() == null) throw new IOException("Taxonomy " + t.getProvides() + " was initially loaded from external file but the file wasn't found in the container");
+			
+		}
+		
+		
+	}
+	
+	void listRecursively(List<FileStatus> target, FileStatus parentDir) throws IOException {
+		
+		target.add(parentDir);
+		
+		for(FileStatus ch : fileSystem.listStatus(parentDir.getPath()) ) {
+			
+			if(ch.isDirectory()) {
+				
+				listRecursively(target, ch);
+				
+			} else {
+				
+				target.add(ch);
+				
+			}
+			
+		}
+		
 	}
 
 	/**
@@ -230,7 +267,10 @@ public abstract class AspenModel implements Serializable {
 
 		if( fileStatus.isDirectory() ) {
 			
-			FileStatus[] listStatus = fileSystem.listStatus(fileStatus.getPath());
+			List<FileStatus> listStatus = new ArrayList<FileStatus>();
+			
+			listRecursively(listStatus, fileStatus);
+//			FileStatus[] listStatus = fileSystem.listStatus(fileStatus.getPath());
 			
 			String baseURI = fileStatus.getPath().toUri().toString();
 			
@@ -351,7 +391,7 @@ public abstract class AspenModel implements Serializable {
 				}
 			}
 				
-			if(feature == null) throw new IOException("Unknown feature: " + fname);
+			if(feature == null) throw new IOException("Unknown feature: " + fname + " - " + uri);
 			
 			FeatureData fd = null;
 			
@@ -374,6 +414,36 @@ public abstract class AspenModel implements Serializable {
 			if(featuresData == null) featuresData = new HashMap<String, FeatureData>();
 			
 			featuresData.put(fname, fd);
+			
+		} else if(uri.startsWith(ModelManager.MODEL_TAXONOMIES_DIR + "/")) {
+			
+			String fname = uri.substring(ModelManager.MODEL_TAXONOMIES_DIR.length() + 1);
+			
+			if(!fname.endsWith(".txt")) throw new IOException("Taxonomy file must end with .txt");
+			
+			fname = URLDecoder.decode(fname.substring(0, fname.length() - 4), StandardCharsets.UTF_8.name());
+			
+			Taxonomy taxonomy = null;
+			
+			for( Taxonomy t :  this.modelConfig.getTaxonomies() ) {
+				if( t.getProvides().equals(fname) ) {
+					taxonomy = t; 
+					break;
+				}
+			}
+			
+			if(taxonomy == null) throw new IOException("Unknown taxonomy file found: " + fname + " - " + uri );
+			
+			if( taxonomy.getTaxonomyPath() == null ) throw new IOException("Taxonomy " + fname + " is not loaded from external file but the file was copied into model container: " + uri);
+			
+			HierarchicalCategories hc = new HierarchicalCategories(inS, false);
+			
+			TaxonomyNode rootNode = hc.getRootNode();
+			
+			VITAL_Container container = new VITAL_Container();
+			VITAL_Category root = ModelTaxonomySetter.processTaxonomyNode(container, null, rootNode);
+			taxonomy.setRootCategory(root);
+			taxonomy.setContainer(container);
 			
 		} else throw new IOException("Unhandled inner model resource: " + uri);
 		
@@ -403,7 +473,8 @@ public abstract class AspenModel implements Serializable {
 		if(uri.equals(ModelManager.MODEL_BUILDER_FILE)
 				|| uri.equals(ModelManager.MODEL_AGGREGATION_RESULTS_FILE)
 				|| uri.startsWith(ModelManager.MODEL_FEATURES_DIR + "/")
-				) {
+				|| uri.startsWith(ModelManager.MODEL_TAXONOMIES_DIR + "/")
+		) {
 			return true;
 		}
 
@@ -567,6 +638,21 @@ public abstract class AspenModel implements Serializable {
 			}
 			
 			
+			//persist external taxonomies
+			for(Entry<String, String> te : taxonomy2FileContent.entrySet()) {
+			
+				File taxDir = new File(tempDir, ModelManager.MODEL_TAXONOMIES_DIR);
+				taxDir.mkdir();
+				
+				String n = URLEncoder.encode(te.getKey(), StandardCharsets.UTF_8.name());
+				
+				File taxFile = new File(taxDir, n + ".txt");
+				
+				FileUtils.writeStringToFile(taxFile, te.getValue(), StandardCharsets.UTF_8.name());
+				
+			}
+			
+			
 			persistFiles(tempDir);
 			
 			//persist object file as first
@@ -715,4 +801,9 @@ public abstract class AspenModel implements Serializable {
 	 * must match the value in the builder
 	 */
 	public abstract Class<? extends Feature> getTrainFeatureType();
+
+	public Map<String, String> getTaxonomy2FileContent() {
+		return taxonomy2FileContent;
+	}
+	
 }
