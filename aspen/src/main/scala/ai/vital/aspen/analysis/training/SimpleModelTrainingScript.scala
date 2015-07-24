@@ -41,6 +41,8 @@ import ai.vital.aspen.groovy.featureextraction.URIFeatureData
 import ai.vital.predictmodel.WordFeature
 import ai.vital.aspen.groovy.featureextraction.WordFeatureData
 import ai.vital.aspen.groovy.featureextraction.Dictionary
+import ai.vital.predictmodel.ImageFeature
+import ai.vital.aspen.groovy.featureextraction.ImageFeatureData
 
 /**
  * A script that generates simple models - models that do not require training
@@ -147,6 +149,8 @@ object SimpleModelTrainingScript {
     	  fd.put(f.getName, new DateTimeFeatureData())
       } else if(f.isInstanceOf[GeoLocationFeature]) {
     	  fd.put(f.getName, new GeoLocationFeatureData())
+      } else if(f.isInstanceOf[ImageFeature]) {
+        fd.put(f.getName, new ImageFeatureData())
       } else if(f.isInstanceOf[NumericalFeature]) {
     	  fd.put(f.getName, new NumericalFeatureData())
       } else if(f.isInstanceOf[OrdinalFeature]) {

@@ -35,26 +35,41 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Hierarchy;
 
+import ai.vital.aspen.groovy.featureextraction.BinaryFeatureData;
 import ai.vital.aspen.groovy.featureextraction.CategoricalFeatureData;
+import ai.vital.aspen.groovy.featureextraction.DateFeatureData;
 import ai.vital.aspen.groovy.featureextraction.FeatureData;
 import ai.vital.aspen.groovy.featureextraction.FeatureExtraction;
+import ai.vital.aspen.groovy.featureextraction.GeoLocationFeatureData;
+import ai.vital.aspen.groovy.featureextraction.ImageFeatureData;
 import ai.vital.aspen.groovy.featureextraction.NumericalFeatureData;
+import ai.vital.aspen.groovy.featureextraction.OrdinalFeatureData;
 import ai.vital.aspen.groovy.featureextraction.PredictionModelAnalyzer;
+import ai.vital.aspen.groovy.featureextraction.StringFeatureData;
 import ai.vital.aspen.groovy.featureextraction.TextFeatureData;
+import ai.vital.aspen.groovy.featureextraction.URIFeatureData;
 import ai.vital.aspen.groovy.featureextraction.WordFeatureData;
 import ai.vital.aspen.groovy.taxonomy.HierarchicalCategories;
 import ai.vital.aspen.groovy.taxonomy.HierarchicalCategories.TaxonomyNode;
 import ai.vital.predictmodel.Aggregate;
+import ai.vital.predictmodel.BinaryFeature;
 import ai.vital.predictmodel.CategoricalFeature;
+import ai.vital.predictmodel.DateFeature;
+import ai.vital.predictmodel.DateTimeFeature;
 import ai.vital.predictmodel.Feature;
 import ai.vital.predictmodel.Function;
+import ai.vital.predictmodel.GeoLocationFeature;
+import ai.vital.predictmodel.ImageFeature;
 import ai.vital.predictmodel.NumericalFeature;
+import ai.vital.predictmodel.OrdinalFeature;
 import ai.vital.predictmodel.Prediction;
 import ai.vital.predictmodel.PredictionModel;
+import ai.vital.predictmodel.StringFeature;
 import ai.vital.predictmodel.Target;
 import ai.vital.predictmodel.Taxonomy;
 import ai.vital.predictmodel.TextFeature;
 import ai.vital.predictmodel.TrainFeature;
+import ai.vital.predictmodel.URIFeature;
 import ai.vital.predictmodel.WordFeature;
 import ai.vital.predictmodel.builder.ModelString;
 import ai.vital.predictmodel.builder.ToModelImpl;
@@ -395,14 +410,30 @@ public abstract class AspenModel implements Serializable {
 			
 			FeatureData fd = null;
 			
-			if(feature instanceof TextFeature) {
-				fd = new TextFeatureData();
-			} else if(feature instanceof WordFeature) {
-				fd = new WordFeatureData();
+			if(feature instanceof BinaryFeature) {
+				fd = new BinaryFeatureData();
 			} else if(feature instanceof CategoricalFeature) {
 				fd = new CategoricalFeatureData();
+			} else if(feature instanceof DateFeature) {
+				fd = new DateFeatureData();
+			} else if(feature instanceof DateTimeFeature) {
+				fd = new DateFeatureData();
+			} else if(feature instanceof GeoLocationFeature) {
+				fd = new GeoLocationFeatureData();
+			} else if(feature instanceof ImageFeature) {
+				fd = new ImageFeatureData();
 			} else if(feature instanceof NumericalFeature) {
 				fd = new NumericalFeatureData();
+			} else if(feature instanceof OrdinalFeature) {
+				fd = new OrdinalFeatureData();
+			} else if(feature instanceof StringFeature) {
+				fd = new StringFeatureData();
+			} else if(feature instanceof TextFeature) {
+				fd = new TextFeatureData();
+			} else if(feature instanceof URIFeature) {
+				fd = new URIFeatureData();
+			} else if(feature instanceof WordFeature) {
+				fd = new WordFeatureData();
 			} else throw new IOException("Unhandled feature type: " + feature.getClass().getCanonicalName());
 			
 			String aggREsults = IOUtils.toString(inS, StandardCharsets.UTF_8.name());

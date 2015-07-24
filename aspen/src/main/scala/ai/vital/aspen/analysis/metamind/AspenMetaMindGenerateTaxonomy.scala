@@ -7,6 +7,7 @@ import java.util.Map
 import java.text.Normalizer
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringEscapeUtils
+import ai.vital.vitalsigns.model.VITAL_Category
 
 object AspenMetaMindGenerateTaxonomy {
 
@@ -17,6 +18,8 @@ object AspenMetaMindGenerateTaxonomy {
       System.err.println(" mode is one of [ inline, taxonomy_file ]");
       return
     }
+    
+    val URI_BASE = "http://vital.ai/vital.ai/app/" + classOf[VITAL_Category].getSimpleName() + "/metamind_"
     
     var mode = args(0)
     
@@ -44,20 +47,20 @@ object AspenMetaMindGenerateTaxonomy {
     
     if(mode.equals("inline")) {
     
-      s = """
+      s = s"""
   TAXONOMY {
     
     value provides: 'metamind-taxonomy'
       
     CATEGORY {
       value name: 'Root Category'
-      value uri: 'http://vital.ai/vital/metamind-app/ROOT'
+      value uri: '${URI_BASE}ROOT'
 """
 
       var index = 0
       for(cls <- classes) {
       
-        val uri = "http://vital.ai/vital/metamind-app/" + index
+        val uri = URI_BASE + index
       
         s += s"""
 
@@ -82,7 +85,7 @@ object AspenMetaMindGenerateTaxonomy {
       s = s"""
 # metamind flat taxonomy
 
-+ http://vital.ai/vital/metamind-app/ROOT  "MetaMind Taxonomy Root"
++ ${URI_BASE}ROOT  "MetaMind Taxonomy Root"
 
  
 """
@@ -96,7 +99,7 @@ object AspenMetaMindGenerateTaxonomy {
       
       for(cls <- classes) {
         
-        val uri = "http://vital.ai/vital/metamind-app/" + index
+        val uri = URI_BASE + index
       
         s += s"""
 ++ $uri "$cls"

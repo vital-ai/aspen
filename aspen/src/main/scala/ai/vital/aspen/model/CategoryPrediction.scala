@@ -11,6 +11,9 @@ class CategoryPrediction extends Prediction {
   
   var category : VITAL_Category = null;
   
+  //for some type of models
+  var categoryLabel : String = null;
+  
   var score : Double = -1d
   
 }

@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ai.vital.domain.Image;
 import ai.vital.predictmodel.BinaryFeature;
 import ai.vital.predictmodel.CategoricalFeature;
 import ai.vital.predictmodel.DateFeature;
@@ -24,6 +25,7 @@ import ai.vital.predictmodel.FeatureBase.RestrictionLevel;
 import ai.vital.predictmodel.FeatureQuery;
 import ai.vital.predictmodel.Function;
 import ai.vital.predictmodel.GeoLocationFeature;
+import ai.vital.predictmodel.ImageFeature;
 import ai.vital.predictmodel.NumericalFeature;
 import ai.vital.predictmodel.OrdinalFeature;
 import ai.vital.predictmodel.PredictionModel;
@@ -414,6 +416,15 @@ public class FeatureExtraction {
 				} else {
 					throw new RuntimeException("GeoLocation feature " + feature.getName() + " only accepts GeoLocationProperty instances");
 				}
+				
+			} else if( feature instanceof ImageFeature ) {
+				
+				if(v instanceof Image) {
+					
+				} else {
+					throw new RuntimeException("Image feature " + feature.getName() + " only accepts " + Image.class.getCanonicalName() + " instances");
+				}
+				
 			} else if(feature instanceof NumericalFeature) {
 				
 				if(v instanceof Number) {

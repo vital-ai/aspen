@@ -46,6 +46,7 @@ import org.apache.spark.rdd.RDD
 import scala.Array
 import ai.vital.aspen.groovy.AspenGroovyConfig
 import ai.vital.aspen.analysis.metamind.AspenMetaMindImageCategorizationModel
+import ai.vital.aspen.analysis.alchemyapi.AspenAlchemyAPICategorizationModel
 
 
 /* this is placeholder code */
@@ -427,7 +428,7 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       creatorMap.put(AspenSVMWithSGDPredictionModel.spark_svm_w_sgd_prediction, classOf[AspenSVMWithSGDPredictionModel])
       
       creatorMap.put(AspenMetaMindImageCategorizationModel.metamind_image_categorization, classOf[AspenMetaMindImageCategorizationModel])
-      
+      creatorMap.put(AspenAlchemyAPICategorizationModel.alchemy_api_categorization, classOf[AspenAlchemyAPICategorizationModel])
       return creatorMap
     }
     

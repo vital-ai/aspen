@@ -23,6 +23,7 @@ import ai.vital.aspen.groovy.featureextraction.DateFeatureData;
 import ai.vital.aspen.groovy.featureextraction.DateTimeFeatureData;
 import ai.vital.aspen.groovy.featureextraction.FeatureData;
 import ai.vital.aspen.groovy.featureextraction.GeoLocationFeatureData;
+import ai.vital.aspen.groovy.featureextraction.ImageFeatureData;
 import ai.vital.aspen.groovy.featureextraction.NumericalFeatureData;
 import ai.vital.aspen.groovy.featureextraction.OrdinalFeatureData;
 import ai.vital.aspen.groovy.featureextraction.StringFeatureData;
@@ -50,6 +51,7 @@ import ai.vital.predictmodel.DateFeature;
 import ai.vital.predictmodel.DateTimeFeature;
 import ai.vital.predictmodel.Feature;
 import ai.vital.predictmodel.GeoLocationFeature;
+import ai.vital.predictmodel.ImageFeature;
 import ai.vital.predictmodel.NumericalFeature;
 import ai.vital.predictmodel.OrdinalFeature;
 import ai.vital.predictmodel.PredictionModel;
@@ -270,6 +272,11 @@ public class ModelTrainingProcedure {
 				
 				GeoLocationFeatureData glfd = new GeoLocationFeatureData();
 				model.getFeaturesData().put(f.getName(), glfd);
+				
+			} else if(f instanceof ImageFeature) {
+				
+				ImageFeatureData imd = new ImageFeatureData();
+				model.getFeaturesData().put(f.getName(), imd);
 				
 			} else if(f instanceof NumericalFeature) {
 				

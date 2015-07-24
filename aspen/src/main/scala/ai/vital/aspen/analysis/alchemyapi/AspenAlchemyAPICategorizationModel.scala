@@ -1,4 +1,4 @@
-package ai.vital.aspen.analysis.metamind
+package ai.vital.aspen.analysis.alchemyapi
 
 import java.io.File
 import java.io.InputStream
@@ -22,21 +22,18 @@ import ai.vital.vitalsigns.model.VITAL_Category
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import ai.vital.predictmodel.Feature
-import ai.vital.domain.Image
-import ai.vital.predictmodel.ImageFeature
+import ai.vital.predictmodel.TextFeature
 
-object AspenMetaMindImageCategorizationModel {
+object AspenAlchemyAPICategorizationModel {
   
-    val metamind_image_categorization = "metamind-image-categorization";
+    val alchemy_api_categorization = "alchemy-api-categorization";
 
 
 }
 
-class AspenMetaMindImageCategorizationModel extends PredictionModel() {
+class AspenAlchemyAPICategorizationModel extends PredictionModel {
   
   var apiKey : String = null
-  
-  var classifierID : String = null
   
   @transient
   var client : HttpClient = null 
@@ -46,7 +43,7 @@ class AspenMetaMindImageCategorizationModel extends PredictionModel() {
 	}
   
 	def supportedType(): String = {
-			AspenMetaMindImageCategorizationModel.metamind_image_categorization
+			AspenAlchemyAPICategorizationModel.alchemy_api_categorization
 	}
   
 	def persistFiles(tempDir: File): Unit = {
@@ -73,12 +70,7 @@ class AspenMetaMindImageCategorizationModel extends PredictionModel() {
       if(!value.isInstanceOf[String]) ex(key + " must be a string")
       apiKey=value.asInstanceOf[String]
       
-    } else if("classifierID".equals(key)) {
-        
-      	if(!value.isInstanceOf[String]) ex(key + " must be a string")
-        classifierID=value.asInstanceOf[String]
-        
-      } else {
+    } else {
       
       return false
       
@@ -91,37 +83,32 @@ class AspenMetaMindImageCategorizationModel extends PredictionModel() {
   @Override
   override def _predict(vitalBlock : VitalBlock, featuresMap : Map[String, Object]): Prediction = {
     
-    var img : Image = null;
+    val content = new StringBuilder()
     
     for(f <- featuresMap.values()) {
       
-      if(f.isInstanceOf[Image]) {
-        img = f.asInstanceOf[Image]
+      if(f.isInstanceOf[String]) {
+        content.append(f.asInstanceOf[String])
+      } else {
+        throw new RuntimeException("Only string feature values expected")
       }
       
     }
     
-    if(img == null) throw new RuntimeException("No image feature provided")
+    if(content.length == 0) throw new RuntimeException("Empty concatenated string from features")
     
-    var imageURL = img.getProperty("imageData")
-    if(imageURL == null) throw new RuntimeException("No image-content-url feature")
+    val pm = new PostMethod("http://access.alchemyapi.com/calls/text/TextGetRankedTaxonomy");
+
     
-    imageURL = imageURL.toString()
-    
-    val pm = new PostMethod("https://www.metamind.io/vision/classify");
-        
-    pm.addRequestHeader("Authorization", "Basic " + apiKey);
-       
-    val m = new HashMap[String, Object]();
-    m.put("classifier_id", "imagenet-1k-net");
-    m.put("image_url", imageURL.asInstanceOf[String]);
-    
-    val json = JsonOutput.toJson(m);
-    pm.setRequestBody(json);
+    //normal post
+    pm.addParameter("apikey", apiKey)
+    pm.addParameter("text", content.toString())
+//    pm.addParameter("url", null)
+    pm.addParameter("outputMode", "json")
     
     if(client == null) client = new HttpClient()
     
-    val status = client.executeMethod(pm);
+    val statusCode = client.executeMethod(pm);
         
     var resp = "";
     try {
@@ -133,30 +120,55 @@ class AspenMetaMindImageCategorizationModel extends PredictionModel() {
         
     pm.releaseConnection();
     
-    if(status < 200 || status > 299) {
-      throw new Exception(s"MetaMind API returned status ${status} - ${resp}")
+    if(statusCode < 200 || statusCode > 299) {
+      throw new Exception(s"AlchemyAPI returned status ${statusCode} - ${resp}")
     }
+    
+    
+    /*
+    {
+    "status": "REQUEST_STATUS",
+    "url": "REQUESTED_URL",
+    "language": "DOCUMENT_LANGUAGE",
+    "text": "DOCUMENT_TEXT"
+    "taxonomy": [
+        {
+            "label": "DETECTED_CATEGORY"
+            "score": "DETECTED_SCORE"
+            "confident": "CONFIDENCE_FLAG"
+        }
+    ]
+    }
+     */
+    
     
     val response = new JsonSlurper().parseText(resp).asInstanceOf[Map[String, Object]]
     
-    val predictions = response.get("predictions").asInstanceOf[List[Map[String, Object]]]
+    //check status
+    val status = response.get("status").asInstanceOf[String]
+    
+    if(!"OK".equalsIgnoreCase(status)) {
+      throw new RuntimeException("AlchemyAPI status: " + status + " - " + response.get("statusInfo"))
+    }
+    
+    val taxonomy = response.get("taxonomy").asInstanceOf[List[Map[String, Object]]]
     
     val outPrediction = new CategoriesListPrediction()
     
-    for(pred <- predictions) {
+    for(pred <- taxonomy) {
           
-    	var vc : VITAL_Category = null
+      val label = pred.get("label").asInstanceOf[String]
       
-      val classID = pred.get("class_id").asInstanceOf[Number].doubleValue()
+      val score = java.lang.Double.parseDouble(pred.get("score").asInstanceOf[String])
       
-      val prob = pred.get("prob").asInstanceOf[Number].doubleValue()
+//      val confident = pred.get("confident")
       
-      val cname = pred.get("class_name").asInstanceOf[String]
+      
       
       val p = new CategoryPrediction()
       
-      p.categoryID = classID
-      p.score = prob 
+      p.categoryLabel = label
+      p.score = score
       
       outPrediction.predictions.add(p)
       
@@ -169,7 +181,7 @@ class AspenMetaMindImageCategorizationModel extends PredictionModel() {
   @Override
   override def getSupportedFeatures() : Collection[Class[_ <: Feature]] = {
     return Arrays.asList(
-        classOf[ImageFeature]
+        classOf[TextFeature]
     )
   }
  
@@ -177,7 +189,7 @@ class AspenMetaMindImageCategorizationModel extends PredictionModel() {
   @Override
   override def onResourcesProcessed(): Unit = {
     
-//    if(!modelBinaryLoaded) throw new Exception("Model was not loaded, make sure " + model_bin + " file is in the model files"))))))))
+//    if(!modelBinaryLoaded) throw new Exception("Model was not loaded, make sure " + model_bin + " file is in the model files"
     
   }
   
