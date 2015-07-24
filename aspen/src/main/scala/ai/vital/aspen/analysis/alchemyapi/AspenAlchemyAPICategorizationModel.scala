@@ -23,6 +23,9 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import ai.vital.predictmodel.Feature
 import ai.vital.predictmodel.TextFeature
+import java.net.URL
+import ai.vital.predictmodel.URIFeature
+import ai.vital.vitalsigns.model.property.URIProperty
 
 object AspenAlchemyAPICategorizationModel {
   
@@ -31,6 +34,7 @@ object AspenAlchemyAPICategorizationModel {
 
 }
 
+@SerialVersionUID(1L)
 class AspenAlchemyAPICategorizationModel extends PredictionModel {
   
   var apiKey : String = null
@@ -85,25 +89,70 @@ class AspenAlchemyAPICategorizationModel extends PredictionModel {
     
     val content = new StringBuilder()
     
-    for(f <- featuresMap.values()) {
+    var url : String = null
+    
+    for(f <- modelConfig.getFeatures ) {
       
-      if(f.isInstanceOf[String]) {
-        content.append(f.asInstanceOf[String])
-      } else {
-        throw new RuntimeException("Only string feature values expected")
+      if(f.isInstanceOf[TextFeature]) {
+        
+        var c = featuresMap.get(f.getName)
+        if(c != null) {
+        	if(content.length > 0) { content.append(" ") }
+        	content.append(c.asInstanceOf[String])
+        }
+        
+        
+      } else if(f.isInstanceOf[URIFeature]) {
+        
+        var c = featuresMap.get(f.getName)
+        
+        if(c != null) {
+          if(c.isInstanceOf[String]) {
+        	  url = c.asInstanceOf[String] 
+          } else if(c.isInstanceOf[URIProperty]) {
+            url = c.asInstanceOf[URIProperty].get
+          }
+        }
+        
+        
       }
       
     }
     
-    if(content.length == 0) throw new RuntimeException("Empty concatenated string from features")
+    var cs = content.toString()
     
-    val pm = new PostMethod("http://access.alchemyapi.com/calls/text/TextGetRankedTaxonomy");
+    //check if url,
+    
+    var urlCase = false
+    
+    var endpoint : String = null
+    
+    if(cs.length() > 0) {
+      
+    	endpoint = "http://access.alchemyapi.com/calls/text/TextGetRankedTaxonomy"
+        
+    } else if(url != null) {
+    	
+    	urlCase = true
+      
+      endpoint = "http://access.alchemyapi.com/calls/url/URLGetRankedTaxonomy"
+      
+    } else {
+      throw new RuntimeException("No text nor uri features")
+    }
+    
+    
+    
+    val pm = new PostMethod(endpoint);
 
     
     //normal post
     pm.addParameter("apikey", apiKey)
-    pm.addParameter("text", content.toString())
-//    pm.addParameter("url", null)
+    if(urlCase) {
+    	pm.addParameter("url", url)
+    } else {
+    	pm.addParameter("text", cs)
+    }
     pm.addParameter("outputMode", "json")
     
     if(client == null) client = new HttpClient()
@@ -181,7 +230,8 @@ class AspenAlchemyAPICategorizationModel extends PredictionModel {
   @Override
   override def getSupportedFeatures() : Collection[Class[_ <: Feature]] = {
     return Arrays.asList(
-        classOf[TextFeature]
+        classOf[TextFeature],
+        classOf[URIFeature]
     )
   }
  
@@ -189,7 +239,7 @@ class AspenAlchemyAPICategorizationModel extends PredictionModel {
   @Override
   override def onResourcesProcessed(): Unit = {
     
-//    if(!modelBinaryLoaded) throw new Exception("Model was not loaded, make sure " + model_bin + " file is in the model files"
+//    if(!modelBinaryLoaded))))) throw new Exception("Model was not loaded, make sure " + model_bin + " file is in the model files"
     
   }
   

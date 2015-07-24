@@ -32,6 +32,7 @@ object AspenMetaMindImageCategorizationModel {
 
 }
 
+@SerialVersionUID(1L)
 class AspenMetaMindImageCategorizationModel extends PredictionModel() {
   
   var apiKey : String = null
@@ -147,7 +148,7 @@ class AspenMetaMindImageCategorizationModel extends PredictionModel() {
           
     	var vc : VITAL_Category = null
       
-      val classID = pred.get("class_id").asInstanceOf[Number].doubleValue()
+      val classID = pred.get("class_id").asInstanceOf[Number].intValue()
       
       val prob = pred.get("prob").asInstanceOf[Number].doubleValue()
       

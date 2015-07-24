@@ -518,7 +518,7 @@ abstract class PredictionModel extends AspenModel {
     
     val pred = new CategoryPrediction
     pred.categoryURI = categoryURI
-    pred.categoryID = categoryID
+    pred.categoryID = categoryID.intValue()
     
     if(taxonomyName != null) {
     

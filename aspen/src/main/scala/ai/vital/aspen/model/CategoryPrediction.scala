@@ -5,7 +5,7 @@ import ai.vital.vitalsigns.model.VITAL_Category
 
 class CategoryPrediction extends Prediction {
 
-  var categoryID : Double = -1d;
+  var categoryID : Integer = -1;
   
   var categoryURI : String = null;
   
