@@ -32,7 +32,9 @@ import org.apache.commons.lang3.SerializationUtils;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RawLocalFileSystem;
 import org.apache.log4j.Hierarchy;
 
 import ai.vital.aspen.groovy.featureextraction.BinaryFeatureData;
@@ -722,6 +724,10 @@ public abstract class AspenModel implements Serializable {
 					
 				}
 				
+				IOUtils.closeQuietly(zos);
+
+				deleteLocalCRCFile(fs, targetPath);
+				
 			} else {
 				
 				fs.mkdirs(targetPath);
@@ -730,13 +736,17 @@ public abstract class AspenModel implements Serializable {
 					
 					String name = tempDirPath.relativize(f.toPath()).toString().replace('\\', '/');
 					
-					os1 = fs.create(new Path(targetPath, name), true);
+					Path p = new Path(targetPath, name);
+					
+					os1 = fs.create(p, true);
 					
 					FileInputStream fis = new FileInputStream(f);
 					IOUtils.copy(fis, os1);
 					fis.close();
 					
 					IOUtils.closeQuietly(os1);
+					
+					deleteLocalCRCFile(fs, p);
 					
 				}
 				
@@ -750,6 +760,24 @@ public abstract class AspenModel implements Serializable {
 		
 		//it's easier to dump and compress 
 		
+		
+	}
+
+	//a utility method that deletes crc files only from local FS 
+	private void deleteLocalCRCFile(FileSystem fs, Path targetPath) {
+
+		if(targetPath.getName().startsWith(".")) return;
+		
+		if(fs instanceof LocalFileSystem || fs instanceof RawLocalFileSystem ) {
+			
+			//delete local crc file
+			Path crcPath = new Path(targetPath.getParent(),  "." + targetPath.getName() + ".crc" );
+			
+			try {
+				fs.delete(crcPath, false);
+			} catch(Exception e) {}
+			
+		}
 		
 	}
 
