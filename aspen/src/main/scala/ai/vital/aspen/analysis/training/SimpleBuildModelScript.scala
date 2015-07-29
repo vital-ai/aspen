@@ -47,7 +47,7 @@ import ai.vital.aspen.groovy.featureextraction.ImageFeatureData
 /**
  * A script that generates simple models - models that do not require training
  */
-object SimpleModelTrainingScript {
+object SimpleBuildModelScript {
 
   val modelBuilderOption = new Option("b", "model-builder", true, "model builder file")
   modelBuilderOption.setRequired(true)
@@ -72,7 +72,7 @@ object SimpleModelTrainingScript {
 
     if (args.length == 0) {
       val hf = new HelpFormatter()
-      hf.printHelp("simple-model-training", options)
+      hf.printHelp("simple-build-model", options)
       return
     }
 
