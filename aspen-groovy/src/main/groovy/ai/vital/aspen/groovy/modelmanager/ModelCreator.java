@@ -30,6 +30,7 @@ public class ModelCreator {
 	
 	protected Map<String, Class<? extends AspenModel>> type2ModelClass = new HashMap<String, Class<? extends AspenModel>>();
 
+	private AspenModelDomainsLoader domainsLoader = new AspenModelDomainsLoader();
 	
 	public ModelCreator(Map<String, Class<? extends AspenModel>> type2ModelClass) {
 		this.type2ModelClass = type2ModelClass;
@@ -48,7 +49,7 @@ public class ModelCreator {
 		ModelString modelString = new ModelString();
 		modelString.setModelString(builderCode);
 		
-		PredictionModel modelEl = new ToModelImpl().toModel(modelString.toModel());
+		PredictionModel modelEl = new ToModelImpl().toModel(modelString.toModel(domainsLoader));
 		
 		String type = modelEl.getType();
 		

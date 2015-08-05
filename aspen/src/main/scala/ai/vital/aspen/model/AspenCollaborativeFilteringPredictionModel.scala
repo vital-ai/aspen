@@ -289,34 +289,6 @@ class AspenCollaborativeFilteringPredictionModel extends PredictionModel {
       
       if(iterations < 1) ex(key + " must be >= 1")
       
-    } else if("domainJars".equals(key)) {
-
-      if(!value.isInstanceOf[java.util.List[String]]) ex(key + " must be a list")
-      
-      val domains = value.asInstanceOf[java.util.List[String]]
-      
-      for(d <- domains) {
-        
-        val p = new Path(d)
-        
-        println("Loading domain jar " + p)
-        
-        val fs = FileSystem.get(p.toUri(), new Configuration())
-        
-        val inputStream = fs.open(p)
-        
-        val tempDir = Files.createTempDirectory("domains").toFile();
-        val tempFile = new File(tempDir, p.getName) 
-        FileUtils.copyInputStreamToFile(inputStream, tempFile)
-        IOUtils.closeQuietly(inputStream)
-
-        tempFile.deleteOnExit()
-        tempDir.deleteOnExit()
-        
-        VitalSigns.get.registerOntology(tempFile.toURI().toURL());
-        
-      }
-      
     } else {
       return false
     }

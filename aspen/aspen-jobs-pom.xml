@@ -160,6 +160,11 @@
 					<resource>resources/vital-config/vitalservice/vitalservice.config</resource>
                 </transformer>
                 
+                <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                    <file>${VITAL_HOME}/vital-config/vitalsigns/vitalsigns.config</file>
+                    <resource>resources/vital-config/vitalsigns/vitalsigns.config</resource>
+                </transformer>
+                
               </transformers>
               <artifactSet>
                 <excludes>
@@ -215,8 +220,22 @@
           <groupId>org.apache.spark</groupId>
           <artifactId>spark-graphx_2.10</artifactId>
   			</exclusion>
+  			<!-- use custom groovy jar -->
+			<exclusion>
+      			<artifactId>org.codehaus.groovy</artifactId>
+      			<groupId>groovy-all</groupId>
+      		</exclusion>
   		</exclusions>
     </dependency>
+    
+    
+	<!-- overridden groovy dependency -->
+		
+	<dependency>
+		<groupId>org.codehaus.groovy</groupId>
+		<artifactId>groovy-all</artifactId>
+		<version>2.5.0-SNAPSHOT</version>
+	</dependency>
     
     
       <dependency>

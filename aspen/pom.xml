@@ -166,9 +166,20 @@
   			<groupId>com.fasterxml.jackson.core</groupId>
   			<artifactId>jackson-databind</artifactId>
   		</exclusion>
+		<exclusion>
+			<artifactId>org.codehaus.groovy</artifactId>
+     		<groupId>groovy-all</groupId>
+     	</exclusion>
   	</exclusions>
   </dependency>
   
+  	<!-- overridden groovy dependency -->
+		
+	<dependency>
+		<groupId>org.codehaus.groovy</groupId>
+		<artifactId>groovy-all</artifactId>
+		<version>2.5.0-SNAPSHOT</version>
+	</dependency>
  
   	<dependency>
   		<groupId>org.apache.spark</groupId>
