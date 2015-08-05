@@ -811,7 +811,19 @@ public abstract class AspenModel implements Serializable {
     private void readObject(ObjectInputStream in) throws IOException,ClassNotFoundException {
         in.defaultReadObject();
         restoreClosures();
+        loadDynamicOntologies();
     }
+
+	private void loadDynamicOntologies() {
+
+		List<String> domainJars = this.getModelConfig().getDomainJars();
+		
+		if(domainJars != null && domainJars.size() > 0) {
+			AspenModelDomainsLoader loader = new AspenModelDomainsLoader();
+			loader.loadDomainJars(domainJars);
+		}
+		
+	}
 
 	public CategoricalFeatureData getTrainedCategories() {
 		return trainedCategories;
