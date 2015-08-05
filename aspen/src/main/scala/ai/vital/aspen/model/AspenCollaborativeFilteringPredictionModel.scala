@@ -22,6 +22,11 @@ import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 import java.io.Serializable
 import ai.vital.predictmodel.NumericalFeature
+import ai.vital.vitalsigns.VitalSigns
+import org.apache.hadoop.fs.Path
+import org.apache.hadoop.fs.FileSystem
+import org.apache.hadoop.conf.Configuration
+import java.nio.file.Files
 
 object AspenCollaborativeFilteringPredictionModel {
 
@@ -283,6 +288,34 @@ class AspenCollaborativeFilteringPredictionModel extends PredictionModel {
       iterations = value.asInstanceOf[Number].intValue()
       
       if(iterations < 1) ex(key + " must be >= 1")
+      
+    } else if("domainJars".equals(key)) {
+
+      if(!value.isInstanceOf[java.util.List[String]]) ex(key + " must be a list")
+      
+      val domains = value.asInstanceOf[java.util.List[String]]
+      
+      for(d <- domains) {
+        
+        val p = new Path(d)
+        
+        println("Loading domain jar " + p)
+        
+        val fs = FileSystem.get(p.toUri(), new Configuration())
+        
+        val inputStream = fs.open(p)
+        
+        val tempDir = Files.createTempDirectory("domains").toFile();
+        val tempFile = new File(tempDir, p.getName) 
+        FileUtils.copyInputStreamToFile(inputStream, tempFile)
+        IOUtils.closeQuietly(inputStream)
+
+        tempFile.deleteOnExit()
+        tempDir.deleteOnExit()
+        
+        VitalSigns.get.registerOntology(tempFile.toURI().toURL());
+        
+      }
       
     } else {
       return false
