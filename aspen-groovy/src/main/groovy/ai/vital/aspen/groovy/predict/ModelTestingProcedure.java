@@ -60,6 +60,8 @@ public class ModelTestingProcedure {
 			cpt.mustnotExist = false;
 			l.add(cpt);
 			
+			l.add(new LoadModelTask(paramsMap, modelPath));
+			
 			LoadDataSetTask loadDataSetTask = new LoadDataSetTask(paramsMap, inputPath, inputDatasetName);
 			l.add(loadDataSetTask);
 			
@@ -73,6 +75,8 @@ public class ModelTestingProcedure {
 			cpt.mustnotExist = false;
 			cpt.validFileExtensions = new String[]{".vital", ".vital.gz"};
 			l.add(cpt);
+			
+			l.add(new LoadModelTask(paramsMap, modelPath));
 			
 			String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
 			
@@ -101,6 +105,8 @@ public class ModelTestingProcedure {
 			cpt.validFileExtensions = new String[]{".vital.seq"};
 			l.add(cpt);
 			
+			l.add(new LoadModelTask(paramsMap, modelPath));
+			
 			String datasetSequencePath = inputPath;
 			
 			LoadDataSetTask loadDataSetTask = new LoadDataSetTask(paramsMap, datasetSequencePath, inputDatasetName);
@@ -110,8 +116,6 @@ public class ModelTestingProcedure {
 		} else {
 			throw new RuntimeException("Expected input to be either a named RDD, vital seq or block file");
 		}
-		
-		l.add(new LoadModelTask(paramsMap, modelPath));
 		
 		l.add(new FeatureQueryTask(paramsMap, inputDatasetName, modelPath));
 		

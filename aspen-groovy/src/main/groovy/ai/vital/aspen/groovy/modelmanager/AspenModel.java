@@ -2,7 +2,6 @@ package ai.vital.aspen.groovy.modelmanager;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -35,7 +34,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RawLocalFileSystem;
-import org.apache.log4j.Hierarchy;
 
 import ai.vital.aspen.groovy.featureextraction.BinaryFeatureData;
 import ai.vital.aspen.groovy.featureextraction.CategoricalFeatureData;

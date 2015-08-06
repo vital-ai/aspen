@@ -2,7 +2,7 @@ package ai.vital.aspen.analysis.training
 
 import java.util.Arrays
 import java.util.Date
-import java.util.HashMap
+
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
 import org.apache.commons.io.IOUtils
@@ -12,7 +12,9 @@ import org.apache.spark.SparkContext
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
+
 import com.typesafe.config.Config
+
 import ai.vital.aspen.groovy.modelmanager.AspenModel
 import ai.vital.aspen.groovy.modelmanager.ModelTaxonomySetter
 import ai.vital.aspen.groovy.predict.ModelTrainingProcedure
@@ -20,14 +22,13 @@ import ai.vital.aspen.job.AbstractJob
 import ai.vital.aspen.job.TasksHandler
 import ai.vital.aspen.model.AspenLinearRegressionModel
 import ai.vital.aspen.model.PredictionModel
+import ai.vital.aspen.util.SetOnceHashMap
 import ai.vital.vitalservice.factory.VitalServiceFactory
 import ai.vital.vitalsigns.VitalSigns
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 import spark.jobserver.SparkJobInvalid
 import spark.jobserver.SparkJobValid
 import spark.jobserver.SparkJobValidation
-import ai.vital.aspen.groovy.predict.ModelTestingProcedure
-import ai.vital.aspen.util.SetOnceHashMap
 
 class ModelTrainingJob {}
 
@@ -173,18 +174,7 @@ object ModelTrainingJob extends AbstractJob {
     
     var globalContext = new SetOnceHashMap()
     
-    
-    //distribute that model to all workers
-    if(aspenModel.getModelConfig.getDomainJars != null && aspenModel.getModelConfig.getDomainJars.size() > 0) {
-      //broadcast the model so that each worker will receive
-      
-      //not loaded!
-      val tempModel = modelCreator.createModel(builderBytes)
-      
-      println("Broadcasting a dummy model in order to load the dynamic domains")
-      sc.broadcast(tempModel)
-      
-    }
+    loadDynamicDomainJars(aspenModel)
     
     val procedure = new ModelTrainingProcedure(aspenModel, inputName, modelPathParam, overwrite, globalContext)
     

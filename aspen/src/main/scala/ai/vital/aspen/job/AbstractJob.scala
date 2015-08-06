@@ -47,6 +47,7 @@ import scala.Array
 import ai.vital.aspen.groovy.AspenGroovyConfig
 import ai.vital.aspen.analysis.metamind.AspenMetaMindImageCategorizationModel
 import ai.vital.aspen.analysis.alchemyapi.AspenAlchemyAPICategorizationModel
+import ai.vital.aspen.groovy.modelmanager.AspenModelDomainsLoader
 
 
 /* this is placeholder code */
@@ -486,6 +487,35 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
     			
     		}
     		
+  }
+  
+  def loadDynamicDomainJars(aspenModel: AspenModel) = {
+    
+    val domainJars = aspenModel.getModelConfig.getDomainJars
+    
+    //distribute that model to all workers
+    
+    if( domainJars != null && domainJars.size() > 0) {
+
+      //let's call it 20
+      var i = 0
+      val list = new java.util.ArrayList[String]()
+      while( i < 20) {
+        list.add("" + i)
+        i = i + 1
+      }
+
+      val parallel = sparkContext.parallelize(list.toSeq, list.size())
+      
+      parallel.map { x =>
+        println("Loading dynamic domains: " + domainJars)
+        val loader = new AspenModelDomainsLoader()
+        loader.loadDomainJars(domainJars)
+        x.length() 
+      }.collect()
+      
     }
+      
+  }
     
 }
