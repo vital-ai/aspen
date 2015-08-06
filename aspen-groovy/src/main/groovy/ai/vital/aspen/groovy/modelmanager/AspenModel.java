@@ -693,14 +693,24 @@ public abstract class AspenModel implements Serializable {
 
 				@Override
 				public int compare(File f1, File f2) {
+					
+					int f1v = 0;
+					int f2v = 0;
+					
 					if(f1.getName().equals(ModelManager.MODEL_OBJECT_FILE)) {
-						return -1;
-					} else if(f2.getName().equals(ModelManager.MODEL_OBJECT_FILE)) {
-						return 1;
+						f1v = -2;
+					} else if(f1.getName().equals(ModelManager.MODEL_BUILDER_FILE)) {
+						f1v = -1;
+					}
+					
+					if(f2.getName().equals(ModelManager.MODEL_OBJECT_FILE)) {
+						f2v = -2;
+					} else if(f2.getName().equals(ModelManager.MODEL_BUILDER_FILE)) {
+						f2v = -1;
 					}
 						
 					//any order
-					return 0;
+					return new Integer(f1v).compareTo(f2v);
 				}});
 			
 			java.nio.file.Path tempDirPath = tempDir.toPath();

@@ -36,6 +36,16 @@ public class ModelCreator {
 		this.type2ModelClass = type2ModelClass;
 	}
 
+	
+	public void loadDomainsFromBuilder(byte[] builderFileContent) throws Exception {
+
+		String builderCode = new String(builderFileContent, StandardCharsets.UTF_8);
+		ModelString modelString = new ModelString();
+		modelString.setModelString(builderCode);
+		
+		new ToModelImpl().toModel(modelString.toModel(domainsLoader));
+		
+	}
 
 	//creates an instance of a model but does not load the details
 	public AspenModel createModel(byte[] builderFileContent) throws Exception {

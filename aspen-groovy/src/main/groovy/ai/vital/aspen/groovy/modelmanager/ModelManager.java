@@ -172,7 +172,11 @@ public class ModelManager {
 		
 		ZipInputStream inputS = null;
 		
-		byte[] objectFileContent= null;
+		byte[] objectFileContent = null;
+		
+		byte[] builderFileContent = null;
+		
+		InputStream builderInputStream = null;
 		
 		InputStream objectInputStream = null;
 		
@@ -186,9 +190,21 @@ public class ModelManager {
 				
 				log.info("Model URL is a directory: " + path.toString());
 				
+				Path builderFile = new Path(path, MODEL_BUILDER_FILE);
+				
+				FileStatus bStatus = fs.getFileStatus(builderFile);
+				
+				if(!bStatus.isFile()) throw new RuntimeException(MODEL_BUILDER_FILE + " file path does not denote a file: " + builderFile.toString());
+				
 				Path objectFile = new Path(path, MODEL_OBJECT_FILE);
 				
 				FileStatus builderStatus = fs.getFileStatus(objectFile);
+				
+				builderInputStream = fs.open(builderFile);
+				
+				builderFileContent = IOUtils.toByteArray(builderInputStream);
+				
+				builderInputStream.close();
 				
 				if(!builderStatus.isFile()) throw new RuntimeException(MODEL_OBJECT_FILE + " file path does not denote a file: " + objectFile.toString());
 				
@@ -210,7 +226,15 @@ public class ModelManager {
 					
 					String name = nextEntry.getName();
 					
-					if(name.equals(MODEL_OBJECT_FILE)) {
+					if(name.equalsIgnoreCase(MODEL_BUILDER_FILE)) {
+						
+						ByteArrayOutputStream os = new ByteArrayOutputStream();
+						IOUtils.copy(inputS, os);
+						os.close();
+						
+						builderFileContent = os.toByteArray();
+						
+					} else if(name.equals(MODEL_OBJECT_FILE)) {
 						
 						ByteArrayOutputStream os = new ByteArrayOutputStream();
 						IOUtils.copy(inputS, os);
@@ -218,8 +242,11 @@ public class ModelManager {
 						
 						objectFileContent = os.toByteArray();
 						
-						break;
 						
+					}
+					
+					if(builderFileContent != null && objectFileContent != null) {
+						break;
 					}
 					
 					
@@ -230,6 +257,9 @@ public class ModelManager {
 				if(objectFileContent == null) throw new RuntimeException("No " + MODEL_OBJECT_FILE + " file found in model jar/zip, path:" + path.toString());
 				
 			}
+			
+			//temp model
+			creator.loadDomainsFromBuilder(builderFileContent);
 			
 			AspenModel newModel = creator.createModelFromObject(objectFileContent);
 			
@@ -285,9 +315,10 @@ public class ModelManager {
 			return newModel;
 			
 		} finally {
+			IOUtils.closeQuietly(builderInputStream);
 			IOUtils.closeQuietly(objectInputStream);
 			IOUtils.closeQuietly(inputS);
-			IOUtils.closeQuietly(fs);
+//			IOUtils.closeQuietly(fs);
 		}
 	
 		
