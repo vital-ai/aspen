@@ -173,6 +173,19 @@ object ModelTrainingJob extends AbstractJob {
     
     var globalContext = new SetOnceHashMap()
     
+    
+    //distribute that model to all workers
+    if(aspenModel.getModelConfig.getDomainJars != null && aspenModel.getModelConfig.getDomainJars.size() > 0) {
+      //broadcast the model so that each worker will receive
+      
+      //not loaded!
+      val tempModel = modelCreator.createModel(builderBytes)
+      
+      println("Broadcasting a dummy model in order to load the dynamic domains")
+      sc.broadcast(tempModel)
+      
+    }
+    
     val procedure = new ModelTrainingProcedure(aspenModel, inputName, modelPathParam, overwrite, globalContext)
     
 //    procedure.inputPath = in
