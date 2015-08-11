@@ -53,6 +53,8 @@ import ai.vital.aspen.groovy.predict.tasks.CalculatePageRankValuesTask
 import ai.vital.aspen.analysis.pagerank.CalculatePageRankValuesTaskImpl
 import ai.vital.aspen.groovy.predict.tasks.AssignPageRankValuesTask
 import ai.vital.aspen.analysis.pagerank.AssignPageRankValuesTaskImpl
+import ai.vital.aspen.data.DowngradeUpgradeProcedureTask
+import ai.vital.aspen.data.impl.DowngradeUpgradeProcedureTaskImpl
 
 class TasksHandler {
 
@@ -127,7 +129,11 @@ class TasksHandler {
 
       } else if(task.isInstanceOf[DeletePathTask]) {
         
-        taskImpl = new DeletePathTaskImpl(job, task.asInstanceOf[DeletePathTask])
+    	  taskImpl = new DeletePathTaskImpl(job, task.asInstanceOf[DeletePathTask])
+        
+      } else if(task.isInstanceOf[DowngradeUpgradeProcedureTask]) {
+        
+        taskImpl = new DowngradeUpgradeProcedureTaskImpl(job, task.asInstanceOf[DowngradeUpgradeProcedureTask])
         
       } else if(task.isInstanceOf[FeatureQueryTask]) {
         

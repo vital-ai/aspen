@@ -15,6 +15,7 @@ import ai.vital.vitalsigns.model.URIReference
 import ai.vital.vitalservice.factory.VitalServiceFactory
 import ai.vital.aspen.job.AbstractJob
 import ai.vital.aspen.task.TaskImpl
+import ai.vital.aspen.data.LoaderSingleton
 
 class LoadDataSetTaskImpl(job: AbstractJob, task: LoadDataSetTask) extends TaskImpl[LoadDataSetTask](job.sparkContext, task) {
   
@@ -52,12 +53,18 @@ class LoadDataSetTaskImpl(job: AbstractJob, task: LoadDataSetTask) extends TaskI
     }
         
     val inputFileStatus = inputFS.getFileStatus(inputPath)
-        
+    
+    val loader = LoaderSingleton.getActiveInputLoader 
+    
+    val useSpecialLoader = (loader != null)
+    
+    
     inputBlockRDD = job.sparkContext.sequenceFile(inputPath.toString(), classOf[Text], classOf[VitalBytesWritable]).map { pair =>
-            
+      
+//      if(useSpecialLoader)
       //make sure the URIReferences are resolved
-      val inputObjects = VitalSigns.get().decodeBlock(pair._2.get, 0, pair._2.get.length)
-      val vitalBlock = new VitalBlock(inputObjects)
+//      val inputObjects = VitalSigns.get().decodeBlock(pair._2.get, 0, pair._2.get.length)
+//      val vitalBlock = new VitalBlock(inputObjects)
             
       (pair._1.toString(), pair._2.get)
     }

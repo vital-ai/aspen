@@ -25,6 +25,8 @@ import java.nio.charset.StandardCharsets
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.BlockIterator
 import java.io.OutputStreamWriter
 import java.io.BufferedWriter
+import ai.vital.aspen.data.LoaderSingleton
+import ai.vital.vitalsigns.binary.VitalSignsBinaryFormat
 
 class ConvertSequenceToBlockTaskImpl(job: AbstractJob, task: ConvertSequenceToBlockTask) extends TaskImpl[ConvertSequenceToBlockTask](job.sparkContext, task) {
   
@@ -62,7 +64,19 @@ class ConvertSequenceToBlockTaskImpl(job: AbstractJob, task: ConvertSequenceToBl
     
     val bw = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))
     
-    val writer = new BlockCompactStringSerializer(bw)
+    val loader = LoaderSingleton.getActiveOutputLoader()
+    
+    var writer : BlockCompactStringSerializer = null;
+    
+    if(loader != null) {
+      
+      writer = new BlockCompactStringSerializer(bw, loader.getDomainURI2VersionMap)
+      
+    } else {
+      
+    	writer = new BlockCompactStringSerializer(bw)
+    }
+    
     
     var c = 0
     
@@ -84,15 +98,31 @@ class ConvertSequenceToBlockTaskImpl(job: AbstractJob, task: ConvertSequenceToBl
           
           for( g <- f) {
             
-            val b = VitalSigns.get.decodeBlock(g._2, 0, g._2.length)
+        	  writer.startBlock()
             
-            writer.startBlock()
-            
-            for(go <- b) {
-              writer.writeGraphObject(go)
+            if(loader != null) {
+              
+              for( s <- VitalSignsBinaryFormat.decodeBlockStrings(g._2, 0, g._2.length) ) {
+                
+                val go  = loader.readConverted(s)
+                
+                writer.writeGraphObject(go)
+                
+              }
+              
+            } else {
+              
+            	val b = VitalSigns.get.decodeBlock(g._2, 0, g._2.length)
+            			
+            	for(go <- b) {
+            	  writer.writeGraphObject(go)
+              }
+            	
+              
             }
             
-            writer.endBlock()
+        	  writer.endBlock()
+            
             
           }
           
@@ -138,12 +168,27 @@ class ConvertSequenceToBlockTaskImpl(job: AbstractJob, task: ConvertSequenceToBl
         	
         	while ( reader.next(key, v) ) {
         		
-        		val block = VitalSigns.get().decodeBlock(v.get(), 0, v.get().length)
-        				
-        				writer.startBlock()
-        				for(g<-block) {
-        					writer.writeGraphObject(g)
-        				}
+        		writer.startBlock()
+            
+            if(loader != null) {
+              
+              for( s <- VitalSignsBinaryFormat.decodeBlockStrings(v.get(), 0, v.get().length) ) {
+                
+                val go  = loader.readConverted(s)
+                
+                writer.writeGraphObject(go)
+                
+              }
+              
+            } else {
+              
+            	val block = VitalSigns.get().decodeBlock(v.get(), 0, v.get().length)
+            			
+              for (g <- block) {
+            	  writer.writeGraphObject(g)
+              }
+              
+            }
         		writer.endBlock()
         		
         		c= c+1

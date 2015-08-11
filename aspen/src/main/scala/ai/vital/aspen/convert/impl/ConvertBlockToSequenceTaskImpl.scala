@@ -24,6 +24,10 @@ import java.util.zip.GZIPInputStream
 import java.nio.charset.StandardCharsets
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.BlockIterator
 import org.apache.hadoop.io.compress.CompressionCodec
+import ai.vital.aspen.data.LoaderSingleton
+import ai.vital.vitalservice.impl.UpgradeDowngradeProcedure
+import ai.vital.vitalsigns.model.GraphObject
+import ai.vital.vitalsigns.binary.VitalSignsBinaryFormat
 
 class ConvertBlockToSequenceTaskImpl(job: AbstractJob, task: ConvertBlockToSequenceTask) extends TaskImpl[ConvertBlockToSequenceTask](job.sparkContext, task) {
   
@@ -57,6 +61,8 @@ class ConvertBlockToSequenceTaskImpl(job: AbstractJob, task: ConvertBlockToSeque
     
     var c = 0
     
+    val loader = LoaderSingleton.getActiveInputLoader()
+    
 		for(x <- task.inputPaths ) {
 
 			  val inputPath = new Path(x)
@@ -67,27 +73,89 @@ class ConvertBlockToSequenceTaskImpl(job: AbstractJob, task: ConvertBlockToSeque
         
         val reader = new BufferedReader(new InputStreamReader(inputStream))
         
-        val iter = BlockCompactStringSerializer.getBlocksIterator(reader)
+			  val buffer = new ArrayList[VitalBlock]()
         
-        //buffer 1000 blocks
-        
-        val buffer = new ArrayList[VitalBlock]()
-        
-        while(iter.hasNext()) {
+        if(loader != null) {
           
-          val block = iter.next()
           
-          c = c+1
+          var line = reader.readLine()
+          
+          var lastBlock = new ArrayList[GraphObject]()
+
+          var inblock = false
+          
+          while(line != null) {
+            
+            if(line.isEmpty() || line.startsWith(BlockCompactStringSerializer.DOMAIN_HEADER_PREFIX)) {
+            } else if(line.startsWith(BlockCompactStringSerializer.BLOCK_SEPARATOR)) {
               
-          buffer.add(block)
+              inblock = true;
+              
+              if(lastBlock.size() > 0) {
+                
+                c = c+1
+                
+                buffer.add(new VitalBlock(lastBlock));
+                
+                outputRDD = flushBufferToRDD(outputRDD, buffer, false)
+                
+                lastBlock = new ArrayList[GraphObject]();
+               
+              }
+              
+            } else {
+              
+              lastBlock.add(loader.readConverted(line))
+              
+            }
+            
+        	  line = reader.readLine()
+          }
+
+          if (lastBlock.size() > 0) {
+  
+            c = c + 1
+  
+            buffer.add(new VitalBlock(lastBlock));
+  
+            outputRDD = flushBufferToRDD(outputRDD, buffer, false)
+  
+            lastBlock = new ArrayList[GraphObject]();
+  
+          }
           
-          outputRDD = flushBufferToRDD(outputRDD, buffer, false)
+          outputRDD = flushBufferToRDD(outputRDD, buffer, true)
+          
+          reader.close()
+          
+          
+        } else {
+          
+        	val iter = BlockCompactStringSerializer.getBlocksIterator(reader)
+        			
+          //buffer 1000 blocks
+        			
+        			
+        	while(iter.hasNext()) {
+        				
+        	  val block = iter.next()
+        						
+            c = c+1
+        						
+        		buffer.add(block)
+        						
+        		outputRDD = flushBufferToRDD(outputRDD, buffer, false)
+        						
+          }
+          
+        	outputRDD = flushBufferToRDD(outputRDD, buffer, true)
+          
+          iter.close()
           
         }
         
-			  outputRDD = flushBufferToRDD(outputRDD, buffer, true)
         
-        iter.close()
+        
         
 		}
     
@@ -178,36 +246,96 @@ class ConvertBlockToSequenceTaskImpl(job: AbstractJob, task: ConvertBlockToSeque
       
       val br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8.name()));
       
-      var blocksIterator : BlockIterator = BlockCompactStringSerializer.getBlocksIterator(br)
+      val loader = LoaderSingleton.getActiveInputLoader()
       
+      if(loader != null) {
+
+        var line = br.readLine()
+        
+        var lastBlock = new ArrayList[GraphObject]()
+
+        var inblock = false
+
+        while (line != null) {
+
+          if (line.isEmpty() || line.startsWith(BlockCompactStringSerializer.DOMAIN_HEADER_PREFIX)) {
+          } else if (line.startsWith(BlockCompactStringSerializer.BLOCK_SEPARATOR)) {
+
+            inblock = true;
+
+            if (lastBlock.size() > 0) {
+
+
+              key.set(lastBlock.get(0).getURI());
+              
+              value.set(VitalSignsBinaryFormat.encodeBlock(lastBlock))
+              
+              writer.append(key, value);
+              
+              c = c + 1
+
+              lastBlock = new ArrayList[GraphObject]();
+
+            }
+
+          } else {
+
+            lastBlock.add(loader.readConverted(line))
+
+          }
+
+          line = br.readLine()
+        }
+
+        if (lastBlock.size() > 0) {
+
+          key.set(lastBlock.get(0).getURI());
+              
+          value.set(VitalSignsBinaryFormat.encodeBlock(lastBlock))
+              
+          writer.append(key, value);
+              
+          c = c + 1
+
+          lastBlock = new ArrayList[GraphObject]();
+
+        }
+        
+      } else {
+        
+    	  var blocksIterator : BlockIterator = BlockCompactStringSerializer.getBlocksIterator(br)
+    			  
 //      var duplicatedURIsCount = null
-      
-      while( blocksIterator.hasNext() ) {
-        
-        val block = blocksIterator.next();
-        
-        val mainObject = block.getMainObject();
-        
-        val u = mainObject.getURI();
-        
+    			  
+    			  while( blocksIterator.hasNext() ) {
+    				  
+    				  val block = blocksIterator.next();
+    				  
+    				  val mainObject = block.getMainObject();
+    				  
+    				  val u = mainObject.getURI();
+    				  
 //        u = u.substring(u.lastIndexOf('/')+1);
-        
+    				  
 //        if(!duplicatedURIs.add(u)) {
 //          duplicatedURIsCount++;
 //          continue;
 //        }
-        
-        key.set(mainObject.getURI());
-        
-        value.set(VitalSigns.get().encodeBlock(block.toList()));
-        
-        writer.append(key, value);
-        
-        c = c+1
+    				  
+    				  key.set(mainObject.getURI());
+    				  
+    				  value.set(VitalSigns.get().encodeBlock(block.toList()));
+    				  
+    				  writer.append(key, value);
+    				  
+    				  c = c+1
+    						  
+    			  }
+      
+        blocksIterator.close();
         
       }
       
-      blocksIterator.close();
 
 		}
 

@@ -489,9 +489,15 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
     		
   }
   
-  def loadDynamicDomainJars(aspenModel: AspenModel) = {
+  def loadDynamicDomainJars(aspenModel: AspenModel) : Unit = {
     
     val domainJars = aspenModel.getModelConfig.getDomainJars
+    
+    loadDynamicDomainJarsList(domainJars)
+     
+  }
+  
+  def loadDynamicDomainJarsList(domainJars : java.util.List[String]) : Unit = {
     
     //distribute that model to all workers
     
