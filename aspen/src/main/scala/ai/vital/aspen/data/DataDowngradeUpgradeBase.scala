@@ -1,23 +1,22 @@
 package ai.vital.aspen.data
 
-import ai.vital.aspen.job.AbstractJob
+import java.util.ArrayList
+
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
-import com.typesafe.config.Config
-import org.apache.spark.SparkContext
-import ai.vital.aspen.util.SetOnceHashMap
+import org.apache.commons.io.IOUtils
 import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.fs.Path
-import ai.vital.query.querybuilder.VitalBuilder
-import org.apache.commons.io.IOUtils
+import org.apache.spark.SparkContext
+
+import com.typesafe.config.Config
+
+import ai.vital.aspen.job.AbstractJob
 import ai.vital.aspen.job.TasksHandler
-import ai.vital.aspen.job.TasksHandler
-import ai.vital.vitalservice.ServiceOperations
-import ai.vital.vitalservice.UpgradeOptions
-import ai.vital.vitalservice.DowngradeOptions
+import ai.vital.aspen.util.SetOnceHashMap
 import ai.vital.vitalservice.BaseDowngradeUpgradeOptions
-import java.util.ArrayList
-import scala.collection.JavaConversions._
+import ai.vital.vitalservice.ServiceOperations
+import ai.vital.vitalservice.impl.UpgradeDowngradeProcedure
 
 trait DataDowngradeUpgradeBase extends AbstractJob {
 
@@ -102,11 +101,8 @@ trait DataDowngradeUpgradeBase extends AbstractJob {
       builderContents = IOUtils.toString(builderIS, "UTF-8")
       IOUtils.closeQuietly(builderIS)
       
-      var builder = new VitalBuilder()
-      
-      ops = builder.queryString(builderContents).toService()
-
-      builder = null
+      //don't use builder yet, avoid the issue with missing classes
+      ops = UpgradeDowngradeProcedure.parseUpgradeDowngradeBuilder(builderContents)      
       
       var bop : BaseDowngradeUpgradeOptions = null;
       
@@ -118,10 +114,6 @@ trait DataDowngradeUpgradeBase extends AbstractJob {
         
         if(ops.getDowngradeOptions() != null) throw new Exception("Cannot use both downgrade and upgrade options")
         
-        for( um <- uop.getUpgradeMappings ) {
-          um.setClosure(um.getClosure.dehydrate()) 
-        }
-        
         bop = uop
         
       } else {
@@ -131,10 +123,6 @@ trait DataDowngradeUpgradeBase extends AbstractJob {
         if(dop == null) throw new Exception("No downgrade options set"); 
         
         if(ops.getUpgradeOptions() != null) throw new Exception("Cannot use both downgrade and upgrade options")
-        
-        for( dm <- dop.getDowngradeMappings ) {
-          dm.setClosure(dm.getClosure.dehydrate())
-        }
         
         bop = dop
         
@@ -198,13 +186,9 @@ trait DataDowngradeUpgradeBase extends AbstractJob {
         
       }
       
-      var builder = new VitalBuilder()
       
-      ops = builder.queryString(builderContents).toService()
-
-      builder = null
-      
-      ops = new ServiceOperations()
+      //don't use builder yet, avoid the issue with missing classes
+      ops = UpgradeDowngradeProcedure.parseUpgradeDowngradeBuilder(builderContents)
       
       if(inputPath == null) throw new Exception("input path is required when no builder file is specified")
       
