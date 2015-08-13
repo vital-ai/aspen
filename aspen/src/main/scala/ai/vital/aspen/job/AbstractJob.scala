@@ -48,6 +48,9 @@ import ai.vital.aspen.groovy.AspenGroovyConfig
 import ai.vital.aspen.analysis.metamind.AspenMetaMindImageCategorizationModel
 import ai.vital.aspen.analysis.alchemyapi.AspenAlchemyAPICategorizationModel
 import ai.vital.aspen.groovy.modelmanager.AspenModelDomainsLoader
+import ai.vital.vitalsigns.VitalSigns
+import ai.vital.vitalsigns.conf.VitalSignsConfig.DomainsStrategy
+import ai.vital.vitalservice.VitalStatus
 
 
 /* this is placeholder code */
@@ -497,10 +500,50 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
      
   }
   
+  def unloadDynamicDomains() : Unit = {
+
+    if( VitalSigns.get.getConfig.domainsStrategy == DomainsStrategy.dynamic ) {
+      
+      for( dm <- VitalSigns.get.getDomainModels ) {
+        println("Unloading some old ontology: " + dm.getURI)
+        val vs = VitalSigns.get.deregisterOntology(dm.getURI);
+        println("Status: " + vs.getStatus +  " - " + vs.getMessage)
+      }
+      
+      
+      //let's call it 20
+      var i = 0
+      val list = new java.util.ArrayList[String]()
+      while( i < 20) {
+        list.add("" + i)
+        i = i + 1
+      }
+
+      val parallel = sparkContext.parallelize(list.toSeq, list.size())
+      
+      parallel.map { x =>
+        for( dm <- VitalSigns.get.getDomainModels ) {
+          println("Unloading some old ontology: " + dm.getURI)
+          val vs = VitalSigns.get.deregisterOntology(dm.getURI);
+          println("Status: " + vs.getStatus +  " - " + vs.getMessage)
+        }
+        x.length() 
+      }.collect()
+      
+    }
+
+    
+  }
+  
   def loadDynamicDomainJarsList(domainJars : java.util.List[String]) : Unit = {
     
-    //distribute that model to all workers
     
+    
+    //load it locally
+    val loaderLocal = new AspenModelDomainsLoader()
+    loaderLocal.loadDomainJars(domainJars)
+    
+    //distribute that model to all workers
     if( domainJars != null && domainJars.size() > 0) {
 
       //let's call it 20

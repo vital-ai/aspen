@@ -99,6 +99,8 @@ object ModelTestingJob extends AbstractJob {
     
     println(output.toString())
     
+    unloadDynamicDomains()
+    
     return output
     
   }

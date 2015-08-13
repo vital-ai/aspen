@@ -229,6 +229,13 @@
   		</exclusions>
     </dependency>
     
+    <!-- guava for dynamic ontologies -->
+	<dependency>
+		<groupId>com.google.guava</groupId>
+		<artifactId>guava</artifactId>
+		<version>18.0</version>
+	</dependency>
+    
     
 	<!-- overridden groovy dependency -->
 		

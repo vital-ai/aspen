@@ -209,6 +209,8 @@ trait DataDowngradeUpgradeBase extends AbstractJob {
     }
     
     
+    unloadDynamicDomains()
+    
     loadDynamicDomainJarsList(domainJarsList)
     
     
@@ -238,6 +240,8 @@ trait DataDowngradeUpgradeBase extends AbstractJob {
     if(stats == null) stats = "(no dataset stats)"
     
     println(stats)
+    
+    unloadDynamicDomains()
     
     println("DONE")
     

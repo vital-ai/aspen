@@ -174,6 +174,8 @@ object ModelTrainingJob extends AbstractJob {
     
     var globalContext = new SetOnceHashMap()
     
+    unloadDynamicDomains()
+    
     loadDynamicDomainJars(aspenModel)
     
     val procedure = new ModelTrainingProcedure(aspenModel, inputName, modelPathParam, overwrite, globalContext)
@@ -194,7 +196,10 @@ object ModelTrainingJob extends AbstractJob {
       
     }
     
+    unloadDynamicDomains()
+    
     if(response == null) response  = "DONE " + new Date().toString()
+    
     
     return response
 		  

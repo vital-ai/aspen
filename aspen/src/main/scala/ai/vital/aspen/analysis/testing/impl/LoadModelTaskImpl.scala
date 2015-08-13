@@ -26,6 +26,8 @@ class LoadModelTaskImpl(job: AbstractJob, task: LoadModelTask) extends TaskImpl[
     
     println("Model loaded successfully")
     
+    job.unloadDynamicDomains()
+    
     job.loadDynamicDomainJars(aspenModel)
     
     task.getParamsMap.put(LoadModelTask.LOADED_MODEL_PREFIX + task.modelPath, aspenModel)

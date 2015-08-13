@@ -37,9 +37,29 @@ public class LoaderSingleton {
 	
 	List<byte[]> otherDomainBytes = new ArrayList<byte[]>();
 	
+	public static void cleanup() {
+		if(loader != null) {
+			try {
+				loader.cleanup();
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+			loader = null;
+		}
+	}
+	
 	public static LoaderSingleton initParent(String owlDirectory, String owlFileName, Configuration hadoopConfig) throws Exception {
 		
-		if(singleton != null) throw new Exception("Singleton already initialized");
+		if(singleton != null) {
+			System.out.println("WARNING: removing left-over parent domain loader singleton");
+			singleton = null;
+			if(loader != null) {
+				try {
+					loader.cleanup();
+				} catch(Exception e) {}
+				loader = null;
+			}
+		}
 		
 		singleton = new LoaderSingleton();
 		
