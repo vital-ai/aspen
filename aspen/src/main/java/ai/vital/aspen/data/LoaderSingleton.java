@@ -41,6 +41,11 @@ public class LoaderSingleton {
 	
 	public static void cleanup() {
 	
+		OLD_DOMAIN_INPUT = false;
+		OLD_DOMAIN_OUTPUT = false;
+				
+				
+		
 		if(parentSingleton != null) {
 			parentSingleton.doCleanup();
 			parentSingleton= null;
