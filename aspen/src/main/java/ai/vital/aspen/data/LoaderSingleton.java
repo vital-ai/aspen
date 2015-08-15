@@ -25,7 +25,7 @@ public class LoaderSingleton {
 
 	private DifferentDomainVersionLoader loader;
 	
-	public ServiceOperations serviceOps;
+	private ServiceOperations serviceOps;
 	
 	public static boolean OLD_DOMAIN_OUTPUT = false;
 	
@@ -73,6 +73,7 @@ public class LoaderSingleton {
 		return parentSingleton;
 		
 	}
+	
 	public static LoaderSingleton initParent(String owlDirectory, String owlFileName, Configuration hadoopConfig) throws Exception {
 		
 		if(parentSingleton != null) {
@@ -122,41 +123,58 @@ public class LoaderSingleton {
 			
 		}
 		
+		if(parentSingleton.mainDomainBytes == null) throw new Exception("No main owl domain found: " + owlDirectoryPath + " / " + owlFileName);
+		
 		return parentSingleton;
 		
 		
 	}
 	
-	private LoaderSingleton() {
 
+	
+	private LoaderSingleton(DifferentDomainVersionLoader loader,
+			ServiceOperations serviceOps) {
+		super();
+		if(loader == null) throw new NullPointerException("Loader must not be null");
+		if(serviceOps == null) throw new NullPointerException("ServiceOps must not be null");
+		this.loader = loader;
+		this.serviceOps = serviceOps;
 	}
 	
+	private LoaderSingleton() {
+		super();
+	}
+
 	public static LoaderSingleton getChild(byte[] mainDomainBytes, List<byte[]> otherDomainBytes, String serviceOpsContent) throws Exception {
 		
 		if(childSingleton == null) {
 		
 			synchronized(LoaderSingleton.class) {
 				
-				if(childSingleton != null) return childSingleton;
-	
-				childSingleton = new LoaderSingleton();
-				
-				childSingleton.loader = new DifferentDomainVersionLoader();
-				
-				List<DomainWrapper> otherDomains = new ArrayList<DomainWrapper>();
-				for(byte[] otherDomain : otherDomainBytes) {
+				if(childSingleton == null) {
 					
-					Model model = ModelFactory.createDefaultModel();
-					model.read(new ByteArrayInputStream(otherDomain), null);
-					DomainOntology ontologyMetaData = OntologyProcessor.getOntologyMetaData(model);
 					
-					otherDomains.add(new DomainWrapper(model, ontologyMetaData, otherDomain));
+					DifferentDomainVersionLoader loader = new DifferentDomainVersionLoader();
+					
+					List<DomainWrapper> otherDomains = new ArrayList<DomainWrapper>();
+					for(byte[] otherDomain : otherDomainBytes) {
+						
+						Model model = ModelFactory.createDefaultModel();
+						model.read(new ByteArrayInputStream(otherDomain), null);
+						DomainOntology ontologyMetaData = OntologyProcessor.getOntologyMetaData(model);
+						
+						otherDomains.add(new DomainWrapper(model, ontologyMetaData, otherDomain));
+						
+					}
+					
+					loader.load(mainDomainBytes, otherDomains);
+					
+					ServiceOperations serviceOps = new VitalBuilder().queryString(serviceOpsContent).toService();
+					
+					childSingleton = new LoaderSingleton(loader, serviceOps);
 					
 				}
-				
-				childSingleton.loader.load(mainDomainBytes, otherDomains);
-				
-				childSingleton.serviceOps = new VitalBuilder().queryString(serviceOpsContent).toService();
+	
 			}
 		}
 		

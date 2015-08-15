@@ -35,7 +35,9 @@ class DowngradeUpgradeProcedureTaskImpl(job: AbstractJob, task: DowngradeUpgrade
     
       val child = LoaderSingleton.getChild(mainDomainBytes, otherDomainBytes, serviceOpsContent)
       
+      
       val serviceOps = child.getServiceOps
+      
       
       val loader = child.getLoader
       
