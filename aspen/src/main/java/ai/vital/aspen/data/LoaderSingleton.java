@@ -133,33 +133,31 @@ public class LoaderSingleton {
 	
 	public static LoaderSingleton getChild(byte[] mainDomainBytes, List<byte[]> otherDomainBytes, String serviceOpsContent) throws Exception {
 		
-		if(childSingleton != null) {
-			return childSingleton;
-		}
+		if(childSingleton == null) {
 		
-		synchronized(LoaderSingleton.class) {
-			
-			if(childSingleton != null) return childSingleton;
-
-			childSingleton = new LoaderSingleton();
-			
-			childSingleton.loader = new DifferentDomainVersionLoader();
-			
-			List<DomainWrapper> otherDomains = new ArrayList<DomainWrapper>();
-			for(byte[] otherDomain : otherDomainBytes) {
+			synchronized(LoaderSingleton.class) {
 				
-				Model model = ModelFactory.createDefaultModel();
-				model.read(new ByteArrayInputStream(otherDomain), null);
-				DomainOntology ontologyMetaData = OntologyProcessor.getOntologyMetaData(model);
+				if(childSingleton != null) return childSingleton;
+	
+				childSingleton = new LoaderSingleton();
 				
-				otherDomains.add(new DomainWrapper(model, ontologyMetaData, otherDomain));
+				childSingleton.loader = new DifferentDomainVersionLoader();
 				
+				List<DomainWrapper> otherDomains = new ArrayList<DomainWrapper>();
+				for(byte[] otherDomain : otherDomainBytes) {
+					
+					Model model = ModelFactory.createDefaultModel();
+					model.read(new ByteArrayInputStream(otherDomain), null);
+					DomainOntology ontologyMetaData = OntologyProcessor.getOntologyMetaData(model);
+					
+					otherDomains.add(new DomainWrapper(model, ontologyMetaData, otherDomain));
+					
+				}
+				
+				childSingleton.loader.load(mainDomainBytes, otherDomains);
+				
+				childSingleton.serviceOps = new VitalBuilder().queryString(serviceOpsContent).toService();
 			}
-			
-			childSingleton.loader.load(mainDomainBytes, otherDomains);
-			
-			childSingleton.serviceOps = new VitalBuilder().queryString(serviceOpsContent).toService();
-			
 		}
 		
 		return childSingleton;
