@@ -22,7 +22,7 @@ class DowngradeUpgradeProcedureTaskImpl(job: AbstractJob, task: DowngradeUpgrade
 
     var inputRDD = job.getDataset( task.getInputDatasetName )
     
-    val singleton = LoaderSingleton.get
+    val singleton = LoaderSingleton.getParent
     
     val mainDomainBytes = singleton.getMainDomainBytes
     val otherDomainBytes = singleton.getOtherDomainBytes
@@ -33,9 +33,11 @@ class DowngradeUpgradeProcedureTaskImpl(job: AbstractJob, task: DowngradeUpgrade
     
     val outputRDD = inputRDD.map { pair => 
     
-      val loader = LoaderSingleton.init(mainDomainBytes, otherDomainBytes, serviceOpsContent)
+      val child = LoaderSingleton.getChild(mainDomainBytes, otherDomainBytes, serviceOpsContent)
       
-      val serviceOps = LoaderSingleton.getServiceOperations
+      val serviceOps = child.getServiceOps
+      
+      val loader = child.getLoader
       
       val key = pair._1
       

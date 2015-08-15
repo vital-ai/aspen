@@ -23,21 +23,38 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 public class LoaderSingleton {
 
-	private static DifferentDomainVersionLoader loader;
+	private DifferentDomainVersionLoader loader;
 	
-	private static ServiceOperations serviceOps;
+	public ServiceOperations serviceOps;
 	
 	public static boolean OLD_DOMAIN_OUTPUT = false;
 	
 	public static boolean OLD_DOMAIN_INPUT = false;
 	
-	private static LoaderSingleton singleton = null;
+	private static LoaderSingleton parentSingleton = null;
+	
+	private static LoaderSingleton childSingleton = null;
 	
 	byte[] mainDomainBytes;
 	
 	List<byte[]> otherDomainBytes = new ArrayList<byte[]>();
 	
 	public static void cleanup() {
+	
+		if(parentSingleton != null) {
+			parentSingleton.doCleanup();
+			parentSingleton= null;
+		}
+		
+		if(childSingleton != null) {
+			childSingleton.doCleanup();
+			childSingleton = null;
+		}
+		
+	}
+	
+	private void doCleanup() {
+		
 		if(loader != null) {
 			try {
 				loader.cleanup();
@@ -45,26 +62,27 @@ public class LoaderSingleton {
 				e.printStackTrace();
 			}
 			loader = null;
+			serviceOps = null;
 		}
+
 	}
 	
+	
+	public static LoaderSingleton getParent() {
+		if(parentSingleton == null) throw new RuntimeException("parent singleton not initialized");
+		return parentSingleton;
+		
+	}
 	public static LoaderSingleton initParent(String owlDirectory, String owlFileName, Configuration hadoopConfig) throws Exception {
 		
-		if(singleton != null) {
+		if(parentSingleton != null) {
 			System.out.println("WARNING: removing left-over parent domain loader singleton");
-			singleton = null;
-			if(loader != null) {
-				try {
-					loader.cleanup();
-				} catch(Exception e) {}
-				loader = null;
-			}
+			cleanup();
 		}
 		
-		singleton = new LoaderSingleton();
+		parentSingleton = new LoaderSingleton();
 		
 		Path owlDirectoryPath = new Path(owlDirectory);
-		Path owlPath = new Path(owlDirectoryPath, owlFileName);
 		
 		FileSystem fs = FileSystem.get(owlDirectoryPath.toUri(), hadoopConfig);
 		
@@ -80,7 +98,7 @@ public class LoaderSingleton {
 					
 					ins = fs.open(f.getPath());
 					
-					singleton.mainDomainBytes = IOUtils.toByteArray(ins); 
+					parentSingleton.mainDomainBytes = IOUtils.toByteArray(ins); 
 					
 				} finally {
 					IOUtils.closeQuietly(ins);
@@ -94,7 +112,7 @@ public class LoaderSingleton {
 					
 					ins = fs.open(f.getPath());
 					
-					singleton.otherDomainBytes.add(IOUtils.toByteArray(ins)); 
+					parentSingleton.otherDomainBytes.add(IOUtils.toByteArray(ins)); 
 					
 				} finally {
 					IOUtils.closeQuietly(ins);
@@ -104,63 +122,57 @@ public class LoaderSingleton {
 			
 		}
 		
-		return singleton;
+		return parentSingleton;
 		
 		
-	}
-	
-	public static LoaderSingleton get() {
-		if(singleton == null) throw new RuntimeException("No singleton active");
-		return singleton;
 	}
 	
 	private LoaderSingleton() {
 
 	}
 	
-	public static ServiceOperations getServiceOperations() {
-		if(serviceOps == null) throw new RuntimeException("Service ops not set!");
-		return serviceOps;
-	}
-	
-	public static DifferentDomainVersionLoader init(byte[] mainDomainBytes, List<byte[]> otherDomainBytes, String serviceOpsContent) throws Exception {
+	public static LoaderSingleton getChild(byte[] mainDomainBytes, List<byte[]> otherDomainBytes, String serviceOpsContent) throws Exception {
 		
-		if(loader != null) return loader;
+		if(childSingleton != null) {
+			return childSingleton;
+		}
 		
 		synchronized(LoaderSingleton.class) {
 			
-			if(loader != null) return loader;
+			if(childSingleton != null) return childSingleton;
+
+			childSingleton = new LoaderSingleton();
 			
-			loader = new DifferentDomainVersionLoader();
+			childSingleton.loader = new DifferentDomainVersionLoader();
 			
 			List<DomainWrapper> otherDomains = new ArrayList<DomainWrapper>();
 			for(byte[] otherDomain : otherDomainBytes) {
 				
-	            Model model = ModelFactory.createDefaultModel();
-	            model.read(new ByteArrayInputStream(otherDomain), null);
-	            DomainOntology ontologyMetaData = OntologyProcessor.getOntologyMetaData(model);
+				Model model = ModelFactory.createDefaultModel();
+				model.read(new ByteArrayInputStream(otherDomain), null);
+				DomainOntology ontologyMetaData = OntologyProcessor.getOntologyMetaData(model);
 				
 				otherDomains.add(new DomainWrapper(model, ontologyMetaData, otherDomain));
 				
 			}
 			
-			loader.load(mainDomainBytes, otherDomains);
+			childSingleton.loader.load(mainDomainBytes, otherDomains);
 			
-			serviceOps = new VitalBuilder().queryString(serviceOpsContent).toService();
+			childSingleton.serviceOps = new VitalBuilder().queryString(serviceOpsContent).toService();
 			
 		}
 		
-		return loader;
+		return childSingleton;
 		
 	}
 	
 	public static DifferentDomainVersionLoader getActiveOutputLoader() {
-		if(OLD_DOMAIN_OUTPUT) return loader;
+		if(OLD_DOMAIN_OUTPUT && childSingleton != null) return childSingleton.loader;
 		return null;
 	}
 	
 	public static DifferentDomainVersionLoader getActiveInputLoader() {
-		if(OLD_DOMAIN_INPUT) return loader;
+		if(OLD_DOMAIN_INPUT && childSingleton != null) return childSingleton.loader;
 		return null;
 	}
 
@@ -170,6 +182,14 @@ public class LoaderSingleton {
 
 	public List<byte[]> getOtherDomainBytes() {
 		return otherDomainBytes;
+	}
+
+	public DifferentDomainVersionLoader getLoader() {
+		return loader;
+	}
+
+	public ServiceOperations getServiceOps() {
+		return serviceOps;
 	}
 
 }

@@ -18,6 +18,8 @@ import ai.vital.vitalservice.BaseDowngradeUpgradeOptions
 import ai.vital.vitalservice.ServiceOperations
 import ai.vital.vitalservice.impl.UpgradeDowngradeProcedure
 
+import scala.collection.JavaConversions._
+
 trait DataDowngradeUpgradeBase extends AbstractJob {
 
   val inputOption  = new Option("i", "input", true, "overrides path in a builder, input RDD[(String, Array[Byte])], either named RDD name (name:<name>) or <path> (no prefix), where path is a .vital.seq or .vital[.gz] file")
@@ -209,15 +211,18 @@ trait DataDowngradeUpgradeBase extends AbstractJob {
     }
     
     
+    //clean up loaders
+    cleanupLoaders();
+    
     unloadDynamicDomains()
+    
+    
     
     loadDynamicDomainJarsList(domainJarsList)
     
     
     val parentLoader = LoaderSingleton.initParent(owlDirectory, owlFile, hadoopConfiguration);
-
-    
-    LoaderSingleton.init(parentLoader.getMainDomainBytes, parentLoader.getOtherDomainBytes, builderContents)
+    LoaderSingleton.getChild(parentLoader.getMainDomainBytes, parentLoader.getOtherDomainBytes, builderContents)
     
     if(isUpgradeNotDowngrade()) {
       LoaderSingleton.OLD_DOMAIN_INPUT = true
@@ -241,11 +246,33 @@ trait DataDowngradeUpgradeBase extends AbstractJob {
     
     println(stats)
     
+    cleanupLoaders();
+    
     unloadDynamicDomains()
     
     println("DONE")
     
     return stats
+    
+  }
+  
+  def cleanupLoaders() = {
+    
+    LoaderSingleton.cleanup()
+        //let's call it 20
+    var i = 0
+    val list = new java.util.ArrayList[String]()
+    while( i < 20) {
+      list.add("" + i)
+      i = i + 1
+    }
+
+    val parallel = sparkContext.parallelize(list.toSeq, list.size())
+    
+    parallel.map { x =>
+      LoaderSingleton.cleanup()
+      x.length() 
+    }.collect()
     
   }
   
