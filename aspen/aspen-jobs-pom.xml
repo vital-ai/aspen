@@ -2,13 +2,13 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>vital-ai</groupId>
   <artifactId>aspen-jobs</artifactId>
-  <version>0.2.253</version>
+  <version>0.2.254</version>
   <packaging>jar</packaging>
   
   
   <properties>
   
-	<vital.version>0.2.253</vital.version>
+	<vital.version>0.2.254</vital.version>
 	
 	<!-- github server corresponds to entry in ~/.m2/settings.xml -->
     <github.global.server>github</github.global.server>
@@ -207,7 +207,7 @@
     <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>aspen</artifactId>
-      <version>0.2.253</version>
+      <version>0.2.254</version>
   		<exclusions>
   			<exclusion>
           <groupId>org.apache.spark</groupId>
