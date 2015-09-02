@@ -30,6 +30,33 @@
   <build>
     <plugins>
 
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>1.4.1</version>
+        <executions>
+          <execution>
+            <id>enforce-property</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireEnvironmentVariable>
+                  <variableName>VITAL_HOME</variableName>
+                  <message>You must set VITAL_HOME property which is the source of jars</message>
+                </requireEnvironmentVariable>
+                <requireProperty>
+                  <property>vital.release.repo</property>
+                  <message>You must set vital.release.repo property which is the path to cloned releases branch of https://github.com/vital-ai/vital-public-mvn-repo/</message>
+                </requireProperty>
+              </rules>
+              <fail>true</fail>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-install-plugin</artifactId>
@@ -57,11 +84,9 @@
                         <goal>install-file</goal>
                     </goals>
                     <configuration>
-				      <groupId>vital-ai</groupId>
-				      <artifactId>vital-domain</artifactId>
-				      <version>${vital.version}</version>
-				      <packaging>jar</packaging>
-					  <file>${VITAL_HOME}/vital-domain/VitalDomain-groovy-${vital.version}.jar</file>
+                      <packaging>jar</packaging>
+                      <file>${VITAL_HOME}/vital-domain/VitalDomain-groovy-${vital.version}.jar</file>
+                      <pomFile>${vital.release.repo}/vital-ai/vital-domain/${vital.version}/vital-domain-${vital.version}.pom</pomFile>
                     </configuration>
                     
                 </execution>
@@ -74,11 +99,9 @@
                     <goal>install-file</goal>
                   </goals>
                   <configuration>
-                    <groupId>vital-ai</groupId>
-                    <artifactId>vitalsigns</artifactId>
-                    <version>${vital.version}</version>
                     <packaging>jar</packaging>
                     <file>${VITAL_HOME}/vitalsigns/command/VitalSigns-${vital.version}.jar</file>
+                    <pomFile>${vital.release.repo}/vital-ai/vitalsigns/${vital.version}/vitalsigns-${vital.version}.pom</pomFile>
                   </configuration>
                 </execution>
                 
@@ -90,11 +113,9 @@
                     <goal>install-file</goal>
                   </goals>
                   <configuration>
-                    <groupId>vital-ai</groupId>
-                    <artifactId>vital-lucene</artifactId>
-                    <version>${vital.version}</version>
                     <packaging>jar</packaging>
                     <file>${VITAL_HOME}/vital-lucene/vital-lucene-${vital.version}.jar</file>
+                    <pomFile>${vital.release.repo}/vital-ai/vital-lucene/${vital.version}/vital-lucene-${vital.version}.pom</pomFile>
                   </configuration>
                 </execution>
 
@@ -106,11 +127,9 @@
                     <goal>install-file</goal>
                   </goals>
                   <configuration>
-                    <groupId>vital-ai</groupId>
-                    <artifactId>vital-triplestore</artifactId>
-                    <version>${vital.version}</version>
                     <packaging>jar</packaging>
                     <file>${VITAL_HOME}/vital-triplestore/vital-triplestore-${vital.version}.jar</file>
+                    <pomFile>${vital.release.repo}/vital-ai/vital-triplestore/${vital.version}/vital-triplestore-${vital.version}.pom</pomFile>
                   </configuration>
                 </execution>
 
@@ -122,11 +141,9 @@
                     <goal>install-file</goal>
                   </goals>
                   <configuration>
-                    <groupId>vital-ai</groupId>
-                    <artifactId>vitalservice</artifactId>
-                    <version>${vital.version}</version>
                     <packaging>jar</packaging>
                     <file>${VITAL_HOME}/vitalservice/VitalService-${vital.version}.jar</file>
+                    <pomFile>${vital.release.repo}/vital-ai/vitalservice/${vital.version}/vitalservice-${vital.version}.pom</pomFile>
                   </configuration>
                 </execution>
 
