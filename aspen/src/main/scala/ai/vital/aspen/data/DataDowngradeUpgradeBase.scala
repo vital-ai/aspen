@@ -1,24 +1,23 @@
 package ai.vital.aspen.data
 
 import java.util.ArrayList
-
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
 import org.apache.commons.io.IOUtils
 import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.fs.Path
 import org.apache.spark.SparkContext
-
 import com.typesafe.config.Config
-
 import ai.vital.aspen.job.AbstractJob
 import ai.vital.aspen.job.TasksHandler
 import ai.vital.aspen.util.SetOnceHashMap
 import ai.vital.vitalservice.BaseDowngradeUpgradeOptions
 import ai.vital.vitalservice.ServiceOperations
 import ai.vital.vitalservice.impl.UpgradeDowngradeProcedure
-
 import scala.collection.JavaConversions._
+import com.google.common.jimfs.JimfsFileSystemProvider
+import java.nio.file.Files
+import java.nio.file.spi.FileSystemProvider
 
 trait DataDowngradeUpgradeBase extends AbstractJob {
 
@@ -80,6 +79,17 @@ trait DataDowngradeUpgradeBase extends AbstractJob {
     println("OWL File: " + owlFile)
     println("OWL Directory: " + owlDirectory)
     println("Overwrite: " + overwrite)
+    
+    val providers = FileSystemProvider.installedProviders()
+    
+    println("Installed file systems: " + providers.size())
+    
+    for(fsp <- providers) {
+      println(fsp.getScheme + " - " + fsp.getClass.getCanonicalName)
+    }
+    
+    
+    hadoopConfiguration.set("fs.jimfs.impl", classOf[JimfsFileSystemProvider].getCanonicalName) 
     
     val globalContext = new SetOnceHashMap
     

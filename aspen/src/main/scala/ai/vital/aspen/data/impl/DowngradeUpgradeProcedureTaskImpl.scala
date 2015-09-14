@@ -47,11 +47,11 @@ class DowngradeUpgradeProcedureTaskImpl(job: AbstractJob, task: DowngradeUpgrade
       
       if(serviceOps.getUpgradeOptions != null) {
         
-        val lines = VitalSignsBinaryFormat.decodeBlockStrings(pair._2, 0, pair._2.length)
+        val gs = VitalSignsBinaryFormat.decodeBlock(pair._2, 0, pair._2.length)
 
-        for(line <- lines) {
+        for(g <- gs) {
         
-          outputObjects.add( UpgradeDowngradeProcedure.upgrade(serviceOps, line, loader) )
+          outputObjects.add( UpgradeDowngradeProcedure.upgrade(serviceOps, g, loader) )
           
         }
         
@@ -66,8 +66,19 @@ class DowngradeUpgradeProcedureTaskImpl(job: AbstractJob, task: DowngradeUpgrade
       
       acc.+=(1)
       
+      
+      //only if downgrading!
+      var encoded : Array[Byte] = null;
+      
+      if(serviceOps.getUpgradeOptions != null) {
+        encoded = VitalSignsBinaryFormat.encodeBlock(outputObjects)
+      } else {
+        encoded = VitalSignsBinaryFormat.encodeBlock(outputObjects, loader.getDomainURI2VersionMap)
+      }
+      
+      
       //encoded
-      (key, VitalSigns.get.encodeBlock(outputObjects))
+      (key, encoded)
       
     }
     

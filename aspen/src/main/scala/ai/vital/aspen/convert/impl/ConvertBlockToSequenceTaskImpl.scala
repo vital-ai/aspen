@@ -28,6 +28,7 @@ import ai.vital.aspen.data.LoaderSingleton
 import ai.vital.vitalservice.impl.UpgradeDowngradeProcedure
 import ai.vital.vitalsigns.model.GraphObject
 import ai.vital.vitalsigns.binary.VitalSignsBinaryFormat
+import java.util.Map
 
 class ConvertBlockToSequenceTaskImpl(job: AbstractJob, task: ConvertBlockToSequenceTask) extends TaskImpl[ConvertBlockToSequenceTask](job.sparkContext, task) {
   
@@ -75,6 +76,7 @@ class ConvertBlockToSequenceTaskImpl(job: AbstractJob, task: ConvertBlockToSeque
         
 			  val buffer = new ArrayList[VitalBlock]()
         
+        /* loader no longer needed, objects versions are persisted in seq files
         if(loader != null) {
           
           
@@ -130,7 +132,7 @@ class ConvertBlockToSequenceTaskImpl(job: AbstractJob, task: ConvertBlockToSeque
           
           
         } else {
-          
+         */
         	val iter = BlockCompactStringSerializer.getBlocksIterator(reader)
         			
           //buffer 1000 blocks
@@ -152,7 +154,7 @@ class ConvertBlockToSequenceTaskImpl(job: AbstractJob, task: ConvertBlockToSeque
           
           iter.close()
           
-        }
+//        }
         
         
         
@@ -245,7 +247,7 @@ class ConvertBlockToSequenceTaskImpl(job: AbstractJob, task: ConvertBlockToSeque
       
       
       val br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8.name()));
-      
+      /*
       val loader = LoaderSingleton.getActiveInputLoader()
       
       if(loader != null) {
@@ -302,6 +304,7 @@ class ConvertBlockToSequenceTaskImpl(job: AbstractJob, task: ConvertBlockToSeque
         }
         
       } else {
+        */
         
     	  var blocksIterator : BlockIterator = BlockCompactStringSerializer.getBlocksIterator(br)
     			  
@@ -324,7 +327,20 @@ class ConvertBlockToSequenceTaskImpl(job: AbstractJob, task: ConvertBlockToSeque
     				  
     				  key.set(mainObject.getURI());
     				  
-    				  value.set(VitalSigns.get().encodeBlock(block.toList()));
+              var overriddenDomainVersions : Map[String, String] = null;
+              
+              
+              val loader = LoaderSingleton.getActiveInputLoader()
+              
+              if(loader != null) {
+                overriddenDomainVersions = loader.getDomainURI2VersionMap
+              }
+              
+              val encoded = VitalSignsBinaryFormat.encodeBlock(block.toList(), overriddenDomainVersions);
+              
+              val s = new String(encoded, "UTF-8")
+              
+    				  value.set(encoded);
     				  
     				  writer.append(key, value);
     				  
@@ -334,7 +350,7 @@ class ConvertBlockToSequenceTaskImpl(job: AbstractJob, task: ConvertBlockToSeque
       
         blocksIterator.close();
         
-      }
+//      }
       
 
 		}

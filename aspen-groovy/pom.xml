@@ -2,9 +2,15 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>vital-ai</groupId>
   <artifactId>aspen-groovy</artifactId>
-  <version>0.2.254</version>
+  <version>0.2.255</version>
   <name>Aspen Groovy Modules</name>
   
+  
+  <properties>
+    <!-- github server corresponds to entry in ~/.m2/settings.xml -->
+    <github.global.server>github</github.global.server>
+    <vital.version>0.2.255</vital.version>
+  </properties>
   
   <repositories>
   
@@ -158,10 +164,7 @@
   </build>
   
   
-  <properties>
-    <!-- github server corresponds to entry in ~/.m2/settings.xml -->
-    <github.global.server>github</github.global.server>
-</properties>
+
   
   
   <distributionManagement>
@@ -283,7 +286,7 @@
   <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vital-domain</artifactId>
-      <version>0.2.254</version>
+      <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
   
@@ -291,7 +294,7 @@
   <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vitalsigns</artifactId>
-      <version>0.2.254</version>
+      <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
   	
@@ -301,7 +304,7 @@
     <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vitalservice</artifactId>
-      <version>0.2.254</version>
+      <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
      
@@ -310,7 +313,7 @@
     <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vital-lucene</artifactId>
-      <version>0.2.254</version>
+      <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
   
@@ -318,7 +321,7 @@
     <dependency>
 	  <groupId>vital-ai</groupId>
       <artifactId>vital-triplestore</artifactId>
-      <version>0.2.254</version>
+      <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
     

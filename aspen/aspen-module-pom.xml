@@ -2,13 +2,13 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>vital-ai</groupId>
   <artifactId>aspen</artifactId>
-  <version>0.2.254-module</version>
+  <version>0.2.255-module</version>
   <packaging>jar</packaging>
   
   
   <properties>
   
-	<vital.version>0.2.254</vital.version>
+	<vital.version>0.2.255</vital.version>
 	
 	<!-- github server corresponds to entry in ~/.m2/settings.xml -->
     <github.global.server>github</github.global.server>
@@ -318,7 +318,7 @@
   <dependency>
   	<groupId>vital-ai</groupId>
   	<artifactId>aspen-groovy</artifactId>
-  	<version>0.2.254</version>
+  	<version>0.2.255</version>
   	<exclusions>
   		<exclusion>
   			<groupId>io.netty</groupId>
