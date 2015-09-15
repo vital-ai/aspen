@@ -68,9 +68,12 @@ object DataProfileJobWrapper  {
         var tempOutputPath : Path = null
         
         
-        val copyInput = "file".equals(inputPath.toUri().getScheme)
+        val u1 = inputPath.toUri();
+        val u2 = outputPath.toUri();
         
-        val copyOutput = "file".equals(outputPath.toUri().getScheme)
+        val copyInput = u1.getScheme == null || "file".equals(u1.getScheme)
+        
+        val copyOutput = u2.getScheme == null || "file".equals(u2.getScheme)
         
         var tempPath : Path = null
         
@@ -120,6 +123,8 @@ object DataProfileJobWrapper  {
         
         
         if(copyInput || copyOutput) {
+          
+          println("local files paths detected, using temp remote location")
           
         	val updatedArgs = new ArrayList[String]()
         	

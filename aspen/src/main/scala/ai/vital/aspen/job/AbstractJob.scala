@@ -277,6 +277,7 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
          if(waitForJob) {
            
            print("Waiting for the job to complete ")
+           System.out.flush()
            
            while(true) {
              
@@ -286,13 +287,16 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
            
              if(status.equalsIgnoreCase("error")) {
                print("\n")
+               System.out.flush()
                return false
-             } else if(status.equalsIgnoreCase("finished")) {
+             } else if(status.equalsIgnoreCase("finished") || status.equalsIgnoreCase("ok")) {
             	 print("\n")
+            	 System.out.flush()
                return true
              }
              
         	   print(".")
+        	   System.out.flush()
              Thread.sleep(3000)
            }
            
