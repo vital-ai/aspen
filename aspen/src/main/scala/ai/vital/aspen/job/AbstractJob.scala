@@ -51,6 +51,7 @@ import ai.vital.aspen.groovy.modelmanager.AspenModelDomainsLoader
 import ai.vital.vitalsigns.VitalSigns
 import ai.vital.vitalsigns.conf.VitalSignsConfig.DomainsStrategy
 import ai.vital.vitalservice.VitalStatus
+import java.util.LinkedHashMap
 
 
 /* this is placeholder code */
@@ -93,6 +94,12 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
   var serviceProfile : String = null
   
   def _mainImpl(args: Array[String]) : Unit = {
+   
+    _mainImpl(args, false)
+    
+  }
+  
+  def _mainImpl(args: Array[String], waitForJob: Boolean) : Boolean = {
       
       val parser = new BasicParser();
       
@@ -101,7 +108,7 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       if (args.length == 0) {
         val hf = new HelpFormatter()
         hf.printHelp(getJobClassName, options)
-        return
+        return false
       }
 
 
@@ -112,7 +119,7 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       } catch {
         case ex: ParseException => {
           System.err.println(ex.getLocalizedMessage());
-          return
+          return false
         }
       }
       
@@ -177,7 +184,7 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
             "it has to either support all 4 cli options [" + 
             jobServerOption.getLongOpt + ", " + appNameOption.getLongOpt + ", " + contextOption.getLongOpt + ", " + syncOption.getLongOpt + "] " + 
             "or none of them")
-            return
+            return false
       }
       
       //override default aspen-groovy-datasets location
@@ -221,7 +228,7 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
          val appName = getOptionalString(config, appNameOption)
          if(appName == null || appName.isEmpty) {
            System.err.println("No " + appNameOption.getLongOpt + " parameter - it is required in jobserver mode.")
-           return
+           return false
          }
          
          
@@ -247,17 +254,57 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
           
          val paramsString = config.root().render()
          
+         var jobId : String = null;
+         
          try {
         	 val response = client.jobs_post(appName, getJobClassName(), context, sync, paramsString)
+           
+           val result = response.get("result").asInstanceOf[LinkedHashMap[String, Object]];
+           
+           jobId = result.get("jobId").asInstanceOf[String]
+           
+           println("jobId: " + jobId)
            
            println( new ObjectMapper().defaultPrettyPrintingWriter().writeValueAsString(response) )
            
          } catch {
            case ex : Exception => {
              System.err.println("Job posting error: " + ex.getLocalizedMessage)
+             return false
            }
          }
-          
+         
+         if(waitForJob) {
+           
+           print("Waiting for the job to complete ")
+           
+           while(true) {
+             
+        	   var jobResponse = client.jobs_get_details(jobId)
+             
+             var status = jobResponse.get("status").asInstanceOf[String]
+           
+             if(status.equalsIgnoreCase("error")) {
+               print("\n")
+               return false
+             } else if(status.equalsIgnoreCase("finished")) {
+            	 print("\n")
+               return true
+             }
+             
+        	   print(".")
+             Thread.sleep(3000)
+           }
+           
+           
+           print("\n")
+           return true;
+           
+           
+         } else {
+           return true
+         }
+         
           
       } else {
         
@@ -280,6 +327,8 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
           }
         
       	  runJob(sc, config)
+          
+          return true
       }
       
       
