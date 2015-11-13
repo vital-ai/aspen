@@ -43,6 +43,8 @@ import ai.vital.aspen.groovy.featureextraction.WordFeatureData
 import ai.vital.aspen.groovy.featureextraction.Dictionary
 import ai.vital.predictmodel.ImageFeature
 import ai.vital.aspen.groovy.featureextraction.ImageFeatureData
+import ai.vital.vitalsigns.model.VitalServiceKey
+import ai.vital.vitalsigns.model.VitalApp
 
 /**
  * A script that generates simple models - models that do not require training
@@ -60,6 +62,11 @@ object SimpleBuildModelScript {
   
   val profileOption = new Option("prof", "profile", true, "optional vitalservice profile option")
   profileOption.setRequired(false)
+    
+  val defaultServiceKey = "aaaa-aaaa-aaa"
+  
+  val serviceKeyOption = new Option("sk", "service-key", true, "service key, xxxx-xxxx-xxxx format, '" + defaultServiceKey + "' if not set")
+  serviceKeyOption.setRequired(false)
 
   def main(args: Array[String]): Unit = {
 
@@ -69,6 +76,8 @@ object SimpleBuildModelScript {
       .addOption(modelBuilderOption)
       .addOption(outputOption)
       .addOption(overwriteOption)
+      .addOption(profileOption)
+      .addOption(serviceKeyOption)
 
     if (args.length == 0) {
       val hf = new HelpFormatter()
@@ -93,8 +102,15 @@ object SimpleBuildModelScript {
     
     val overwrite = cmd.hasOption(overwriteOption.getLongOpt);
     
-    val serviceProfile = cmd.getOptionValue(profileOption.getLongOpt)
+    var serviceProfile = cmd.getOptionValue(profileOption.getLongOpt)
+    if(serviceProfile == null) serviceProfile = "default"
     
+    var serviceKey = cmd.getOptionValue(serviceKeyOption.getLongOpt)
+    if(serviceKey == null) serviceKey = defaultServiceKey
+    
+    val sk = new VitalServiceKey()
+    sk.generateURI(null.asInstanceOf[VitalApp])
+     
     println("builder path: " + builderPath)
     println("output model path: " + outputModelPath)
     println("overwrite if exists: " + overwrite)
@@ -128,11 +144,9 @@ object SimpleBuildModelScript {
     
     val aspenModel = creator.createModel(builderBytes)
     
-    if(serviceProfile != null) {
-      VitalServiceFactory.setServiceProfile(serviceProfile)
-    }
+    val vitalService = VitalServiceFactory.openService(sk, serviceProfile)
     
-    VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
+    VitalSigns.get.setVitalService(vitalService)
  
     
     ModelTaxonomySetter.loadTaxonomies(aspenModel, null)

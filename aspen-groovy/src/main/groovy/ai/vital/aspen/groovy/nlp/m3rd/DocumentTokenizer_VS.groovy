@@ -5,11 +5,11 @@ import opennlp.tools.tokenize.WhitespaceTokenizer;
 import java.util.ArrayList;
 import java.util.List;
 
-import ai.vital.domain.Document;
-import ai.vital.domain.Sentence;
-import ai.vital.domain.TextBlock;
-import ai.vital.domain.Token;
 import ai.vital.aspen.groovy.nlp.model.TokenUtils;
+import com.vitalai.domain.nlp.Document
+import com.vitalai.domain.nlp.Sentence
+import com.vitalai.domain.nlp.TextBlock
+import com.vitalai.domain.nlp.Token
 import edu.cmu.minorthird.text.TextToken;
 import edu.cmu.minorthird.text.Tokenizer;
 public class DocumentTokenizer_VS implements Tokenizer {

@@ -58,6 +58,7 @@ object ModelTrainingJob extends AbstractJob {
       .addOption(outputOption)
       .addOption(overwriteOption)
       .addOption(profileOption)
+      .addOption(serviceKeyOption)
     )
   }
   
@@ -149,12 +150,9 @@ object ModelTrainingJob extends AbstractJob {
     
     //create training class instance, it will validate the algorithm params
 
+    val vitalService = VitalServiceFactory.openService(serviceKey, serviceProfile)
     
-    if(serviceProfile != null) {
-        VitalServiceFactory.setServiceProfile(serviceProfile)
-    }
-    
-    VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
+    VitalSigns.get.setVitalService(vitalService)
     
     ModelTaxonomySetter.loadTaxonomies(aspenModel, null)
 

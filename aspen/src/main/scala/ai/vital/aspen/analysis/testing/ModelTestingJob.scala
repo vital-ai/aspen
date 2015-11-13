@@ -52,6 +52,7 @@ object ModelTestingJob extends AbstractJob {
       .addOption(inputOption)
       .addOption(modelOption)
       .addOption(profileOption)
+      .addOption(serviceKeyOption)
     )
   }
   
@@ -78,11 +79,9 @@ object ModelTestingJob extends AbstractJob {
 //    println("Model loaded successfully")
 
     
-    if(serviceProfile != null) {
-        VitalServiceFactory.setServiceProfile(serviceProfile)
-    }
+    val vitalService = VitalServiceFactory.openService(serviceKey, serviceProfile)
     
-    VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
+    VitalSigns.get.setVitalService(vitalService)
     
     val procedure = new ModelTestingProcedure(inputName, modelPath, globalContext)
     

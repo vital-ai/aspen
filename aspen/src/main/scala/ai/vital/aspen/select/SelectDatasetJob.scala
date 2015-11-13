@@ -84,6 +84,7 @@ object SelectDatasetJob extends AbstractJob {
     new Options()
     .addOption(masterOption)
     .addOption(profileOption)
+    .addOption(serviceKeyOption)
     .addOption(modelBuilderOption)
     .addOption(outputOption)
     .addOption(queryOption)
@@ -150,13 +151,8 @@ object SelectDatasetJob extends AbstractJob {
     println("limit: " + limit)
     println("maxDocs: " + maxDocs)
     
-    if(profile != null) {
-      println("Setting custom vitalservice profile: " + profile)
-      VitalServiceFactory.setServiceProfile(profile)
-    } else {
-      println("Using default service profile...")
-    }
-    VitalSigns.get.setVitalService( VitalServiceFactory.getVitalService )
+    val vitalService = VitalServiceFactory.openService(serviceKey, serviceProfile)
+    VitalSigns.get.setVitalService( vitalService )
     
     
     val globalContext = new SetOnceHashMap()

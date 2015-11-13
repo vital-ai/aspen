@@ -4,8 +4,8 @@ import com.cybozu.labs.langdetect.DetectorFactory;
 
 import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.nlp.models.LanguageDetector;
-import ai.vital.domain.Annotation;
-import ai.vital.domain.Document
+import com.vitalai.domain.nlp.Annotation;
+import com.vitalai.domain.nlp.Document
 import ai.vital.vitalsigns.model.GraphObject
 import junit.framework.TestCase;
 

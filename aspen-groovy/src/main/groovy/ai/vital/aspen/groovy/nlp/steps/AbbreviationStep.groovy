@@ -17,14 +17,14 @@ import org.slf4j.LoggerFactory;
 
 import com.hp.hpl.jena.rdf.model.Model;
 
-import ai.vital.domain.Abbreviation;
-import ai.vital.domain.AbbreviationInstance;
-import ai.vital.domain.Document;
-import ai.vital.domain.Edge_hasAbbreviation;
-import ai.vital.domain.Edge_hasAbbreviationInstance;
-import ai.vital.domain.Edge_hasSentenceAbbreviationInstance;
-import ai.vital.domain.Sentence;
-import ai.vital.domain.TextBlock;
+import com.vitalai.domain.nlp.Abbreviation;
+import com.vitalai.domain.nlp.AbbreviationInstance;
+import com.vitalai.domain.nlp.Document;
+import com.vitalai.domain.nlp.Edge_hasAbbreviation;
+import com.vitalai.domain.nlp.Edge_hasAbbreviationInstance;
+import com.vitalai.domain.nlp.Edge_hasSentenceAbbreviationInstance;
+import com.vitalai.domain.nlp.Sentence;
+import com.vitalai.domain.nlp.TextBlock;
 import ai.vital.aspen.groovy.nlp.model.DocumentUtils;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.vitalsigns.global.GlobalHashTable;

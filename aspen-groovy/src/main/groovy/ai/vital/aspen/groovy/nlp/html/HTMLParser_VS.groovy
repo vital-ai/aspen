@@ -16,12 +16,10 @@ import org.htmlparser.util.ParserFeedback;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory;
 
-import ai.vital.domain.Edge_hasTagElement;
-import ai.vital.domain.TagElement;
-import ai.vital.domain.TextBlock;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.TransformationVectorUtils;
 import ai.vital.vitalsigns.model.VITAL_Container;
+import com.vitalai.domain.nlp.TextBlock
 
 
 public class HTMLParser_VS {

@@ -1,7 +1,7 @@
 package ai.vital.aspen.groovy.nlp.test
 
-import ai.vital.vitalservice.model.App;
 import ai.vital.vitalsigns.VitalSigns
+import ai.vital.vitalsigns.model.VitalApp
 import ai.vital.vitalsigns.uri.URIGenerator
 import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.nlp.steps.ChunkerStep
@@ -10,18 +10,18 @@ import ai.vital.aspen.groovy.nlp.steps.PosTaggerStep
 import ai.vital.aspen.groovy.nlp.steps.SentenceDetectorStep
 import ai.vital.aspen.groovy.nlp.steps.TextExtractStep
 import ai.vital.aspen.groovy.nlp.steps.WhiteSpaceTokenizerStep
-import ai.vital.domain.Document
-import ai.vital.domain.Sentence
-import ai.vital.domain.TextBlock
+import com.vitalai.domain.nlp.Document
+import com.vitalai.domain.nlp.Sentence
+import com.vitalai.domain.nlp.TextBlock
 
 
 
 class MinorThirdStepTest {
 
-	static App app
+	static VitalApp app
 	
 	static {
-		app = new App(ID: 'vitalai-demo', customerID: 'vitalai-demo')
+		app = VitalApp.withId('vitalai-demo')
 	}
 	
 	

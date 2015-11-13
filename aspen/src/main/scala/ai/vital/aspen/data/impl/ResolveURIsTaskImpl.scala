@@ -42,6 +42,8 @@ class ResolveURIsTaskImpl(job: AbstractJob, task: ResolveURIReferencesTask) exte
     if(inputBlockRDD == null) throw new RuntimeException("Dataset not found: " + datasetName)
 
     val serviceProfile = job.serviceProfile
+    
+    val serviceKey = job.serviceKey
 
     inputBlockRDD = inputBlockRDD.map { pair =>
             
@@ -52,13 +54,13 @@ class ResolveURIsTaskImpl(job: AbstractJob, task: ResolveURIReferencesTask) exte
       if(vitalBlock.getMainObject.isInstanceOf[URIReference]) {
               
          if( VitalSigns.get.getVitalService == null ) {
-           if(serviceProfile != null) VitalServiceFactory.setServiceProfile(serviceProfile)
-           VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
+           val vitalService = VitalServiceFactory.openService(serviceKey, serviceProfile)
+           VitalSigns.get.setVitalService(vitalService)
          }
          
          val uriRef = vitalBlock.getMainObject.asInstanceOf[URIReference];
          
-         val go = VitalServiceFactory.getVitalService().get(GraphContext.ServiceWide, URIProperty.withString(uriRef.getProperty("uRIRef").toString())).first()
+         val go = VitalSigns.get.getVitalService.get(GraphContext.ServiceWide, URIProperty.withString(uriRef.getProperty("uRIRef").toString())).first()
 
          
          if(go != null) {

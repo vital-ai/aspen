@@ -25,12 +25,12 @@ import opennlp.tools.util.Span;
 
 import com.hp.hpl.jena.rdf.model.Model;
 
-import ai.vital.domain.Document;
-import ai.vital.domain.Edge_hasTargetNode;
-import ai.vital.domain.Sentence;
-import ai.vital.domain.TargetNode;
-import ai.vital.domain.TextBlock;
-import ai.vital.domain.Token;
+import com.vitalai.domain.nlp.Document;
+import com.vitalai.domain.nlp.Edge_hasTargetNode;
+import com.vitalai.domain.nlp.Sentence;
+import com.vitalai.domain.nlp.TargetNode;
+import com.vitalai.domain.nlp.TextBlock;
+import com.vitalai.domain.nlp.Token;
 import ai.vital.flow.server.utils.EdgeUtils;
 import ai.vital.opennlp.classifier.Classification
 import ai.vital.opennlp.classifier.Classifier;

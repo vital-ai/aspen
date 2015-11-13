@@ -65,6 +65,8 @@ class FeatureQueryTaskImpl(job: AbstractJob, task: FeatureQueryTask) extends Tas
     
     val serviceProfile = job.serviceProfile
 
+    val serviceKey = job.serviceKey
+    
     inputBlockRDD = inputBlockRDD.map { pair =>
             
       //make sure the URIReferences are resolved
@@ -84,8 +86,8 @@ class FeatureQueryTaskImpl(job: AbstractJob, task: FeatureQueryTask) extends Tas
       if(vitalBlock.getMainObject.isInstanceOf[URIReference]) {
               
          if( VitalSigns.get.getVitalService == null ) {
-           if(serviceProfile != null) VitalServiceFactory.setServiceProfile(serviceProfile)
-           VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
+           val vitalService = VitalServiceFactory.openService(serviceKey, serviceProfile)
+           VitalSigns.get.setVitalService(vitalService)
          }
               
          //loads objects from features queries and train queries 

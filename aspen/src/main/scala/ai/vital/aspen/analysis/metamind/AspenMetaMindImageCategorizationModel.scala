@@ -22,8 +22,8 @@ import ai.vital.vitalsigns.model.VITAL_Category
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import ai.vital.predictmodel.Feature
-import ai.vital.domain.Image
 import ai.vital.predictmodel.ImageFeature
+import com.vitalai.domain.nlp.Image
 
 object AspenMetaMindImageCategorizationModel {
   
@@ -178,7 +178,7 @@ class AspenMetaMindImageCategorizationModel extends PredictionModel() {
   @Override
   override def onResourcesProcessed(): Unit = {
     
-//    if(!modelBinaryLoaded) throw new Exception("Model was not loaded, make sure " + model_bin + " file is in the model files"))))))))
+//    if(!modelBinaryLoaded) throw new Exception("Model was not loaded, make sure " + model_bin + " file is in the model files")))))))))
     
   }
   

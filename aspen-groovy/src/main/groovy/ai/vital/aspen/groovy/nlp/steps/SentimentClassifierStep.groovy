@@ -13,12 +13,12 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ai.vital.domain.Document;
-import ai.vital.domain.Edge_hasTargetNode
-import ai.vital.domain.Sentence;
-import ai.vital.domain.TargetNode
-import ai.vital.domain.TextBlock;
-import ai.vital.domain.Token;
+import com.vitalai.domain.nlp.Document;
+import com.vitalai.domain.nlp.Edge_hasTargetNode
+import com.vitalai.domain.nlp.Sentence;
+import com.vitalai.domain.nlp.TargetNode
+import com.vitalai.domain.nlp.TextBlock;
+import com.vitalai.domain.nlp.Token;
 import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.model.TokenUtils;

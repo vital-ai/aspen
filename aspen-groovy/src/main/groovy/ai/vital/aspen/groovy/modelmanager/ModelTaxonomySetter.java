@@ -13,11 +13,9 @@ import org.apache.hadoop.fs.Path;
 
 import ai.vital.aspen.groovy.taxonomy.HierarchicalCategories;
 import ai.vital.aspen.groovy.taxonomy.HierarchicalCategories.TaxonomyNode;
-import ai.vital.predictmodel.PredictionModel;
 import ai.vital.predictmodel.Taxonomy;
 import ai.vital.vitalservice.VitalService;
 import ai.vital.vitalservice.VitalStatus;
-import ai.vital.vitalservice.model.App;
 import ai.vital.vitalservice.query.ResultList;
 import ai.vital.vitalservice.query.VitalPathQuery;
 import ai.vital.vitalsigns.VitalSigns;
@@ -26,8 +24,8 @@ import ai.vital.vitalsigns.model.Edge_hasChildCategory;
 import ai.vital.vitalsigns.model.GraphObject;
 import ai.vital.vitalsigns.model.VITAL_Category;
 import ai.vital.vitalsigns.model.VITAL_Container;
+import ai.vital.vitalsigns.model.VitalApp;
 import ai.vital.vitalsigns.model.property.URIProperty;
-import ai.vital.vitalsigns.uri.URIGenerator;
 import ai.vital.vitalsigns.utils.StringUtils;
 
 public class ModelTaxonomySetter {
@@ -161,7 +159,7 @@ public class ModelTaxonomySetter {
 		
 		if(parentNode != null) {
 			Edge_hasChildCategory edge = new Edge_hasChildCategory();
-			edge.setURI(URIGenerator.generateURI((App)null, Edge_hasChildCategory.class));
+			edge.generateURI((VitalApp)null);
 			edge.addSource(parentNode).addDestination(category);
 			container.putGraphObject(edge);
 		}

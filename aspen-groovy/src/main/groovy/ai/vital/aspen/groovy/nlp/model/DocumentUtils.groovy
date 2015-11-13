@@ -1,8 +1,8 @@
 package ai.vital.aspen.groovy.nlp.model
 
-import ai.vital.domain.Document
-import ai.vital.domain.Sentence;
-import ai.vital.domain.TextBlock;
+import com.vitalai.domain.nlp.Document
+import com.vitalai.domain.nlp.Sentence
+import com.vitalai.domain.nlp.TextBlock
 
 class DocumentUtils {
 

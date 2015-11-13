@@ -16,6 +16,7 @@ import spark.jobserver.SparkJobValid
 import spark.jobserver.SparkJobValidation
 import ai.vital.aspen.groovy.predict.ModelPredictProcedure
 import ai.vital.aspen.groovy.predict.tasks.ModelPredictTask
+import ai.vital.vitalservice.VitalService
 
 class ModelPredictJob {}
 
@@ -60,6 +61,7 @@ object ModelPredictJob extends AbstractJob {
       .addOption(outputOption)
       .addOption(modelOption)
       .addOption(profileOption)
+      .addOption(serviceKeyOption)
     )
   }
   
@@ -82,11 +84,9 @@ object ModelPredictJob extends AbstractJob {
     println("service profile: " + serviceProfile)
 
     
-    if(serviceProfile != null) {
-        VitalServiceFactory.setServiceProfile(serviceProfile)
-    }
+    val vitalService = VitalServiceFactory.openService(serviceKey, serviceProfile)
     
-    VitalSigns.get.setVitalService(VitalServiceFactory.getVitalService)
+    VitalSigns.get.setVitalService(vitalService)
     
     val procedure = new ModelPredictProcedure(inputPath, modelPath, outputPath, overwrite, globalContext)
     

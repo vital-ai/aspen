@@ -2,14 +2,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>vital-ai</groupId>
   <artifactId>aspen-groovy</artifactId>
-  <version>0.2.255</version>
+  <version>0.2.300</version>
   <name>Aspen Groovy Modules</name>
   
   
   <properties>
     <!-- github server corresponds to entry in ~/.m2/settings.xml -->
     <github.global.server>github</github.global.server>
-    <vital.version>0.2.255</vital.version>
+    <vital.version>0.2.300</vital.version>
   </properties>
   
   <repositories>
@@ -274,13 +274,24 @@
 
    
  
-    <!-- dependencies installed into local repo from vital software --> 
+    <!-- dependencies installed into local repo from vital software -->
+    <!-- 
   	<dependency>
        <groupId>vital-ai</groupId>
        <artifactId>vitalai-demoapp-groovy</artifactId>
        <version>0.2.0</version>
       <scope>compile</scope>
    	</dependency>
+     --> 
+     
+         
+  
+	<!-- nlp domain -->
+  <dependency>
+    <groupId>vitalai-com</groupId>
+    <artifactId>vital-nlp</artifactId>
+    <version>${vital.version}</version>
+  </dependency>
    
     
   <dependency>
@@ -324,7 +335,6 @@
       <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
-    
   
  
     <dependency>

@@ -3,7 +3,6 @@ package ai.vital.aspen.model
 import ai.vital.aspen.groovy.modelmanager.AspenModel
 import scala.collection.mutable.LinkedHashMap
 import ai.vital.vitalsigns.model.GraphObject
-import ai.vital.domain.TargetNode
 import java.io.InputStream
 import org.apache.commons.io.IOUtils
 import scala.collection.JavaConversions._
@@ -18,7 +17,6 @@ import org.apache.spark.mllib.linalg.Vector
 import java.util.Arrays
 import ai.vital.vitalsigns.uri.URIGenerator
 import java.util.ArrayList
-import ai.vital.domain.Edge_hasTargetNode
 import ai.vital.vitalsigns.model.VITAL_Node
 import java.nio.charset.StandardCharsets
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock

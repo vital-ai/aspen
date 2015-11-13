@@ -27,12 +27,12 @@ import ai.vital.aspen.analysis.training.ModelTrainingJob
 import org.apache.spark.rdd.RDD
 import ai.vital.aspen.model.PredictionModel
 import ai.vital.vitalsigns.model.property.IProperty
-import ai.vital.domain.TargetNode
 import ai.vital.vitalsigns.model.VITAL_Category
 import ai.vital.predictmodel.CategoricalFeature
 import scala.collection.JavaConversions._
-import ai.vital.vitalservice.model.App
 import ai.vital.aspen.groovy.predict.tasks.TestModelTask
+import ai.vital.vitalsigns.model.VitalApp
+import com.vitalai.domain.nlp.TargetNode
 
 class TestModelIndependentTaskImpl(job: AbstractJob, task: TestModelIndependentTask) extends TaskImpl[TestModelIndependentTask](job.sparkContext, task) {
   
@@ -308,8 +308,7 @@ class TestModelIndependentTaskImpl(job: AbstractJob, task: TestModelIndependentT
     val results : RDD[(Int, Int, Int, Int)] = inputBlockRDD.map { pair =>
       
       if(VitalSigns.get.getCurrentApp == null) {
-        val app = new App()
-        app.setID("app")
+        val app = VitalApp.withId("app")
         VitalSigns.get.setCurrentApp(app);
       }
       

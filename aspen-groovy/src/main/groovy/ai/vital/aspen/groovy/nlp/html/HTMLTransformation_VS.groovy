@@ -2,8 +2,8 @@ package ai.vital.aspen.groovy.nlp.html;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
-import ai.vital.domain.TextBlock;
 import ai.vital.aspen.groovy.nlp.model.TransformationVectorUtils;
+import com.vitalai.domain.nlp.TextBlock
 
 public class HTMLTransformation_VS {
 

@@ -1,9 +1,8 @@
 package ai.vital.aspen.groovy.nlp.model
 
+import com.vitalai.domain.nlp.TextBlock
 import java.util.ArrayList;
 import java.util.List;
-
-import ai.vital.domain.TextBlock;
 
 class TransformationVectorUtils {
 

@@ -15,7 +15,6 @@ import org.apache.commons.io.FileUtils
 import java.nio.charset.StandardCharsets
 import ai.vital.aspen.groovy.featureextraction.Dictionary
 import scala.collection.JavaConversions._
-import ai.vital.domain.TargetNode
 import ai.vital.vitalsigns.model.property.IProperty
 import java.util.ArrayList
 import org.apache.spark.SparkContext
@@ -27,6 +26,7 @@ import org.apache.hadoop.fs.Path
 import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.conf.Configuration
 import java.nio.file.Files
+import com.vitalai.domain.nlp.TargetNode
 
 object AspenCollaborativeFilteringPredictionModel {
 

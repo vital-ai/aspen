@@ -52,6 +52,10 @@ import ai.vital.vitalsigns.VitalSigns
 import ai.vital.vitalsigns.conf.VitalSignsConfig.DomainsStrategy
 import ai.vital.vitalservice.VitalStatus
 import java.util.LinkedHashMap
+import ai.vital.vitalsigns.model.VitalServiceKey
+import ai.vital.vitalsigns.model.VitalApp
+import ai.vital.vitalsigns.model.properties.Property_hasKey
+import ai.vital.vitalservice.factory.VitalServiceFactory
 
 
 /* this is placeholder code */
@@ -64,6 +68,11 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
   
   val profileOption = new Option("prof", "profile", true, "optional vitalservice profile option")
   profileOption.setRequired(false)
+  
+  val defaultServiceKey = "aaaa-aaaa-aaa"
+  
+  val serviceKeyOption = new Option("sk", "service-key", true, "service key, xxxx-xxxx-xxxx format, '" + defaultServiceKey + "' if not set")
+  serviceKeyOption.setRequired(false)
   
   val masterOption = new Option("m", "master", true, "optional spark masterURL")
   masterOption.setRequired(false)
@@ -92,6 +101,8 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
   var datasetsMap : java.util.HashMap[String, RDD[(String, Array[Byte])]] = null;
   
   var serviceProfile : String = null
+  
+  var serviceKey : VitalServiceKey = null
   
   def _mainImpl(args: Array[String]) : Unit = {
    
@@ -383,7 +394,21 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       try {
     	  serviceProfile = getOptionalString(config, profileOption)
       } catch { 
-        case ex: Exception => {}
+        case ex: Exception => {
+          serviceProfile = "default"
+        }
+      }
+      
+      try {
+    	  var k = getOptionalString(config, serviceKeyOption)
+        if(k == null) {
+          k = defaultServiceKey
+        }
+        serviceKey = new VitalServiceKey()
+        serviceKey.generateURI(null.asInstanceOf[VitalApp])
+        serviceKey.set(classOf[Property_hasKey], k)
+      } catch { 
+      case ex: Exception => {}
       }
       
       

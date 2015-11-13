@@ -57,7 +57,7 @@ class FilterDatasetTaskImpl(job: AbstractJob, task: FilterDatasetTask) extends T
       val container = new VITAL_Container(true)
       container.putGraphObjects(graphObjects)
       
-      val rs = VitalServiceFactory.getVitalService.queryContainers(queryObject, Arrays.asList(container))
+      val rs = VitalSigns.get.getVitalService.queryContainers(queryObject, Arrays.asList(container))
       
       var outputURIs : java.util.HashSet[String] = null
       

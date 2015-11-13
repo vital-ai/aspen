@@ -107,6 +107,8 @@ class SelectDatasetTaskImpl(job: AbstractJob, task: SelectDataSetTask) extends T
     
     val profile = job.serviceProfile 
     
+    val serviceKey = job.serviceKey
+    
     val limit = task.limit
     
     if(limit <= 0) throw new RuntimeException("Limit must be greater than 0: " + limit)
@@ -123,7 +125,7 @@ class SelectDatasetTaskImpl(job: AbstractJob, task: SelectDataSetTask) extends T
 //      println("Using default service profile...")
 //    }
 //    VitalSigns.get.setVitalService( VitalServiceFactory.getVitalService )
-    val vitalService = VitalServiceFactory.getVitalService
+    val vitalService = VitalSigns.get.getVitalService
     
     val builder = new VitalBuilder()
     
@@ -289,11 +291,9 @@ class SelectDatasetTaskImpl(job: AbstractJob, task: SelectDataSetTask) extends T
         
         if(VitalSigns.get.getVitalService() == null) {
           
-          if(profile != null) {
-            VitalServiceFactory.setServiceProfile(profile)
-          }
+          val vitalService = VitalServiceFactory.openService(serviceKey, profile)
     
-          VitalSigns.get.setVitalService( VitalServiceFactory.getVitalService() )
+          VitalSigns.get.setVitalService( vitalService )
           
         }
         
