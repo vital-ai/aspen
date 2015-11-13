@@ -1,16 +1,12 @@
 package ai.vital.aspen.jobserver.client;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -57,6 +53,7 @@ public class JobServerClient {
 	}
 	
 	//returns json structure at this moment
+	@SuppressWarnings("unchecked")
 	public List<LinkedHashMap<String, Object>> jobs_get() throws Exception {
 		
 		GetMethod getMethod = new GetMethod(urlBase + "/jobs");
@@ -66,6 +63,7 @@ public class JobServerClient {
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	public LinkedHashMap<String, Object> jobs_get_details(String jobID) throws Exception {
 		
 		GetMethod getMethod = new GetMethod(urlBase + "/jobs/" + en(jobID));
@@ -84,6 +82,7 @@ public class JobServerClient {
 	}
 	*/
 	
+	@SuppressWarnings("unchecked")
 	public LinkedHashMap<String, Object> jobs_post(String appName, String classPath, String context, Boolean sync, String paramsString) throws Exception {
 		
 		required("appName", appName);
@@ -111,13 +110,14 @@ public class JobServerClient {
 		
 	}
 	
+	@SuppressWarnings("unchecked")
 	public LinkedHashMap<String, Object> jobs_delete(String jobID) throws Exception {
 		DeleteMethod deleteMethod = new DeleteMethod(urlBase + "/jobs/" + en(jobID));
 		return jsonImpl(deleteMethod, LinkedHashMap.class);
 	}
 	
 	
-	
+	@SuppressWarnings("unchecked")
 	public List<String> contexts_get() throws Exception {
 		
 		GetMethod getMethod = new GetMethod(urlBase + "/contexts");
@@ -152,6 +152,7 @@ public class JobServerClient {
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	/**
 	 * returns object with name:date string pairs
 	 * @return

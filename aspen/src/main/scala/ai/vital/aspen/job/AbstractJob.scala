@@ -69,7 +69,7 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
   val profileOption = new Option("prof", "profile", true, "optional vitalservice profile option")
   profileOption.setRequired(false)
   
-  val defaultServiceKey = "aaaa-aaaa-aaa"
+  val defaultServiceKey = "aaaa-aaaa-aaaa"
   
   val serviceKeyOption = new Option("sk", "service-key", true, "service key, xxxx-xxxx-xxxx format, '" + defaultServiceKey + "' if not set")
   serviceKeyOption.setRequired(false)
@@ -395,9 +395,10 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
     	  serviceProfile = getOptionalString(config, profileOption)
       } catch { 
         case ex: Exception => {
-          serviceProfile = "default"
         }
       }
+      
+      if(serviceProfile == null) serviceProfile = "default"
       
       try {
     	  var k = getOptionalString(config, serviceKeyOption)
@@ -616,6 +617,7 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
   def loadDynamicDomainJarsList(domainJars : java.util.List[String]) : Unit = {
     
     
+    if(domainJars == null) return
     
     //load it locally
     val loaderLocal = new AspenModelDomainsLoader()
