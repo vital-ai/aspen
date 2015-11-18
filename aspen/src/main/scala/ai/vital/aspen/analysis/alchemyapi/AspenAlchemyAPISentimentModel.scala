@@ -218,7 +218,17 @@ class AspenAlchemyAPISentimentModel extends PredictionModel {
     
     outPrediction.mixed = "1".equals( docSentiment.get("mixed") );
     
-    outPrediction.score = java.lang.Double.parseDouble(docSentiment.get("score").asInstanceOf[String])
+    val scoreObj = docSentiment.get("score")
+    
+    if(scoreObj != null) {
+      
+    	outPrediction.score = java.lang.Double.parseDouble(scoreObj.asInstanceOf[String])
+      
+    } else {
+      
+      outPrediction.score = 0.0D
+      
+    }
     
     outPrediction.sentimentType = docSentiment.get("type").asInstanceOf[String]
     
