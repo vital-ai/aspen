@@ -6,7 +6,7 @@
   <name>Install Vital AI Jars into Local Repo</name>
   
   <properties>
-  	<vital.version>0.2.300</vital.version>
+  	<vital.version>0.2.301</vital.version>
   </properties>
   
   <repositories>
@@ -80,7 +80,7 @@
 	     -->
 			     
 		          <execution>
-		            <id>vital-nlp-0.2.300.jar</id>
+		            <id>vital-nlp-0.2.301.jar</id>
 		            <phase>validate</phase>
 		            <goals>
 		              <goal>install-file</goal>
@@ -88,9 +88,9 @@
 		            <configuration>
 		              <groupId>vitalai-com</groupId>
 		              <artifactId>vital-nlp</artifactId>
-		              <version>0.2.300</version>
+		              <version>0.2.301</version>
 		              <packaging>jar</packaging>
-		              <file>${VITAL_HOME}/domain-groovy-jar/vital-nlp-groovy-0.2.300.jar</file>
+		              <file>${VITAL_HOME}/domain-groovy-jar/vital-nlp-groovy-0.2.301.jar</file>
 		            </configuration>
 		          </execution>
 

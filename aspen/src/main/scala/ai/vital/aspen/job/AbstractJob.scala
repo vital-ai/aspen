@@ -56,6 +56,7 @@ import ai.vital.vitalsigns.model.VitalServiceKey
 import ai.vital.vitalsigns.model.VitalApp
 import ai.vital.vitalsigns.model.properties.Property_hasKey
 import ai.vital.vitalservice.factory.VitalServiceFactory
+import ai.vital.aspen.analysis.alchemyapi.AspenAlchemyAPISentimentModel
 
 
 /* this is placeholder code */
@@ -512,6 +513,7 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       
       creatorMap.put(AspenMetaMindImageCategorizationModel.metamind_image_categorization, classOf[AspenMetaMindImageCategorizationModel])
       creatorMap.put(AspenAlchemyAPICategorizationModel.alchemy_api_categorization, classOf[AspenAlchemyAPICategorizationModel])
+      creatorMap.put(AspenAlchemyAPISentimentModel.alchemy_api_sentiment, classOf[AspenAlchemyAPISentimentModel])
       return creatorMap
     }
     

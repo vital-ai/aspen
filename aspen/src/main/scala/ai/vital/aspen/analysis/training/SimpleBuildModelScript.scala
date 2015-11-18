@@ -45,6 +45,7 @@ import ai.vital.predictmodel.ImageFeature
 import ai.vital.aspen.groovy.featureextraction.ImageFeatureData
 import ai.vital.vitalsigns.model.VitalServiceKey
 import ai.vital.vitalsigns.model.VitalApp
+import ai.vital.vitalsigns.model.properties.Property_hasKey
 
 /**
  * A script that generates simple models - models that do not require training
@@ -63,7 +64,7 @@ object SimpleBuildModelScript {
   val profileOption = new Option("prof", "profile", true, "optional vitalservice profile option")
   profileOption.setRequired(false)
     
-  val defaultServiceKey = "aaaa-aaaa-aaa"
+  val defaultServiceKey = "aaaa-aaaa-aaaa"
   
   val serviceKeyOption = new Option("sk", "service-key", true, "service key, xxxx-xxxx-xxxx format, '" + defaultServiceKey + "' if not set")
   serviceKeyOption.setRequired(false)
@@ -110,6 +111,7 @@ object SimpleBuildModelScript {
     
     val sk = new VitalServiceKey()
     sk.generateURI(null.asInstanceOf[VitalApp])
+    sk.set(classOf[Property_hasKey], serviceKey)
      
     println("builder path: " + builderPath)
     println("output model path: " + outputModelPath)
