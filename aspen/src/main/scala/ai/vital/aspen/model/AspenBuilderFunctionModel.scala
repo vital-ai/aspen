@@ -26,6 +26,11 @@ class AspenBuilderFunctionModel extends PredictionModel {
   
   val config = new java.util.HashMap[String, Object]()
   
+  @Override
+  override def mustUsePredictClosure() : Boolean = {
+    return true
+  }
+  
 	def deserializeModel(stream: InputStream): Unit = {
     throw new RuntimeException("No model binary expected")
 	}
@@ -63,11 +68,12 @@ class AspenBuilderFunctionModel extends PredictionModel {
   @Override
   override def _predict(vitalBlock : VitalBlock, featuresMap : Map[String, Object]): Prediction = {
     
-    val fmp = new BuilderFunctionPrediction()
-    
-    fmp.config = config
-    
-    return fmp
+    throw new RuntimeException("Should use closure instead")
+//    val fmp = new BuilderFunctionPrediction()
+//    
+//    fmp.config = config
+//    
+//    return fmp
      
   }
   

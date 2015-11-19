@@ -62,6 +62,7 @@ import ai.vital.predictmodel.GeoLocationFeature;
 import ai.vital.predictmodel.ImageFeature;
 import ai.vital.predictmodel.NumericalFeature;
 import ai.vital.predictmodel.OrdinalFeature;
+import ai.vital.predictmodel.Predict;
 import ai.vital.predictmodel.Prediction;
 import ai.vital.predictmodel.PredictionModel;
 import ai.vital.predictmodel.StringFeature;
@@ -174,6 +175,10 @@ public abstract class AspenModel implements Serializable {
 		return this.predict(new VitalBlock(input));
 	}
 	
+	protected boolean mustUsePredictClosure() { 
+		return false;
+	}
+	
 	/**
 	 * The output list contains either updated objects or new only (diff to the input block)
 	 * @param input
@@ -185,7 +190,25 @@ public abstract class AspenModel implements Serializable {
 		
 		Map<String, Object> features = featureExtraction.extractFeatures(input);
 		
-		Prediction prediction = _predict(input, features);
+		Prediction prediction = null;
+		
+		if(mustUsePredictClosure()) {
+			
+			Predict predict = this.modelConfig.getPredict();
+			if(predict == null) throw new RuntimeException("No PREDICT closure");
+			if(predict.getFunction() == null) throw new RuntimeException("No PREDICT function");
+			
+			Object predictionObject = predict.getFunction().call(input, features, this.modelConfig.getAlgorithmConfig());
+			if(predictionObject == null) throw new RuntimeException("PREDICT function must not return null");
+			if(!(predictionObject instanceof Prediction)) throw new RuntimeException("PREDICT function must return an instanceof " + Prediction.class.getCanonicalName() + " returned: " + predictionObject.getClass().getCanonicalName());
+
+			prediction = (Prediction) predictionObject;
+			
+		} else {
+			
+			prediction = _predict(input, features);
+			
+		}
 		
 		Object output = this.modelConfig.getTarget().getFunction().call(input, features, prediction);
 		if(!( output instanceof List)) throw new RuntimeException("Model target output should be a list of graph objects");
@@ -231,6 +254,18 @@ public abstract class AspenModel implements Serializable {
 		
 		for(Feature f : modelConfig.getFeatures()) {
 			if(!featuresData.containsKey(f.getName())) throw new IOException("No feature data found for name: " + f.getName());
+		}
+		
+		if(mustUsePredictClosure()) {
+			
+			if(modelConfig.getPredict() == null) throw new IOException("This model must provide PREDICT closure, type: " + this.getClass().getCanonicalName());
+			
+			if(modelConfig.getPredict().getFunction() == null) throw new IOException("PREDICT function is not defined");
+			
+		} else {
+			
+			if(modelConfig.getPredict() != null) throw new IOException("This model must not provide PREDICT closure, type: " + this.getClass().getCanonicalName());
+			
 		}
 		
 		
@@ -491,6 +526,7 @@ public abstract class AspenModel implements Serializable {
 		PredictionModel modelEl = new ToModelImpl().toModel(modelString.toModel());
 		//we need to copy closures from builder file
 		
+		this.modelConfig.setPredict(modelEl.getPredict());
 		this.modelConfig.setFunctions(modelEl.getFunctions());
 		this.modelConfig.setTarget(modelEl.getTarget());
 		this.modelConfig.setTrainFeature(modelEl.getTrainFeature());
@@ -809,6 +845,11 @@ public abstract class AspenModel implements Serializable {
 //				modelConfig.setTarget( modelConfig.getTarget().dehydrate() );
 				modelConfig.setTarget(null);
 			}
+		
+			if(modelConfig.getPredict() != null) {
+//				modelConfig.setPredict( modelConfig.getPredict().dehydrate() );
+				modelConfig.setPredict(null);
+			}
 			
 		}
 		
@@ -849,6 +890,11 @@ public abstract class AspenModel implements Serializable {
 			Target target = this.modelConfig.getTarget();
 			if(target != null) {
 				target.setFunction(target.getFunction().rehydrate(_featureExtraction, _featureExtraction, _featureExtraction));
+			}
+			
+			Predict predict = this.modelConfig.getPredict();
+			if(predict != null) {
+				predict.setFunction(predict.getFunction().rehydrate(_featureExtraction, _featureExtraction, _featureExtraction));
 			}
 			
 			TrainFeature trainFeature = this.modelConfig.getTrainFeature();
