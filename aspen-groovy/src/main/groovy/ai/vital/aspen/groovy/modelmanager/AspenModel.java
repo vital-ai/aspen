@@ -198,7 +198,8 @@ public abstract class AspenModel implements Serializable {
 			if(predict == null) throw new RuntimeException("No PREDICT closure");
 			if(predict.getFunction() == null) throw new RuntimeException("No PREDICT function");
 			
-			Object predictionObject = predict.getFunction().call(input, features, this.modelConfig.getAlgorithmConfig());
+			//block is no longer an input to the PREDICT function 
+			Object predictionObject = predict.getFunction().call(features, this.modelConfig.getAlgorithmConfig());
 			if(predictionObject == null) throw new RuntimeException("PREDICT function must not return null");
 			if(!(predictionObject instanceof Prediction)) throw new RuntimeException("PREDICT function must return an instanceof " + Prediction.class.getCanonicalName() + " returned: " + predictionObject.getClass().getCanonicalName());
 

@@ -10,6 +10,17 @@ import ai.vital.predictmodel.BinaryFeature
 import ai.vital.predictmodel.Prediction
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 import ai.vital.predictmodel.Feature
+import ai.vital.predictmodel.StringFeature
+import ai.vital.predictmodel.DateFeature
+import ai.vital.predictmodel.CategoricalFeature
+import ai.vital.predictmodel.DateTimeFeature
+import ai.vital.predictmodel.GeoLocationFeature
+import ai.vital.predictmodel.ImageFeature
+import ai.vital.predictmodel.NumericalFeature
+import ai.vital.predictmodel.OrdinalFeature
+import ai.vital.predictmodel.TextFeature
+import ai.vital.predictmodel.URIFeature
+import ai.vital.predictmodel.WordFeature
 
 object AspenBuilderFunctionModel {
   
@@ -79,7 +90,20 @@ class AspenBuilderFunctionModel extends PredictionModel {
   
   @Override
   override def getSupportedFeatures() : Collection[Class[_ <: Feature]] = {
-    return Arrays.asList( classOf[BinaryFeature]) 
+    return Arrays.asList( 
+        classOf[BinaryFeature],
+        classOf[CategoricalFeature],
+        classOf[DateFeature],
+        classOf[DateTimeFeature],
+        classOf[GeoLocationFeature],
+        classOf[ImageFeature],
+        classOf[NumericalFeature],
+        classOf[OrdinalFeature],
+        classOf[StringFeature],
+        classOf[TextFeature],
+        classOf[URIFeature],
+        classOf[WordFeature]
+    ) 
   }
  
   
