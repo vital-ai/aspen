@@ -2,59 +2,47 @@ package ai.vital.aspen.analysis.ibmwatson
 
 import java.io.File
 import java.io.InputStream
+import java.text.SimpleDateFormat
+import java.util.ArrayList
 import java.util.Arrays
 import java.util.Collection
-import java.util.HashMap
 import java.util.List
 import java.util.Map
-import scala.collection.JavaConversions._
+import scala.collection.JavaConversions.asScalaBuffer
 import org.apache.commons.httpclient.HttpClient
-import org.apache.commons.httpclient.methods.PostMethod
-import org.apache.spark.mllib.linalg.Vector
-import ai.vital.aspen.model.CategoriesListPrediction
-import ai.vital.aspen.model.CategoryPrediction
-import ai.vital.aspen.model.PredictionModel
-import ai.vital.predictmodel.CategoricalFeature
-import ai.vital.predictmodel.Prediction
-import ai.vital.predictmodel.StringFeature
-import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
-import ai.vital.vitalsigns.model.VITAL_Category
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
-import ai.vital.predictmodel.Feature
-import ai.vital.predictmodel.TextFeature
-import java.net.URL
-import ai.vital.predictmodel.URIFeature
-import ai.vital.vitalsigns.model.property.URIProperty
-import org.apache.commons.httpclient.auth.AuthScope
 import org.apache.commons.httpclient.UsernamePasswordCredentials
+import org.apache.commons.httpclient.auth.AuthScope
+import org.apache.commons.httpclient.methods.PostMethod
+import org.apache.commons.httpclient.methods.StringRequestEntity
+import org.apache.commons.io.FileUtils
+import org.apache.spark.mllib.linalg.Vector
 import org.codehaus.jackson.map.ObjectMapper
-import ai.vital.aspen.model.BuilderFunctionPrediction
-import java.util.ArrayList
-import com.vitalai.domain.ibmwatson.PersonalityInsight
-import com.vitalai.domain.ibmwatson.Big5
-import com.vitalai.domain.ibmwatson.Extraversion
+import org.slf4j.LoggerFactory
 import com.vitalai.domain.ibmwatson.Agreeableness
+import com.vitalai.domain.ibmwatson.Big5
 import com.vitalai.domain.ibmwatson.Conscientiousness
 import com.vitalai.domain.ibmwatson.EmotionalRange
-import com.vitalai.domain.ibmwatson.Openness
-import com.vitalai.domain.ibmwatson.Openness
-import ai.vital.vitalsigns.model.VitalApp
-import ai.vital.vitalsigns.model.properties.Property_hasName
-import com.vitalai.domain.ibmwatson.properties.Property_hasCategory
-import org.apache.commons.io.FileUtils
-import java.text.SimpleDateFormat
-import org.apache.commons.httpclient.methods.StringRequestEntity
-import com.vitalai.domain.ibmwatson.Values
+import com.vitalai.domain.ibmwatson.Extraversion
 import com.vitalai.domain.ibmwatson.Needs
-import com.vitalai.domain.ibmwatson.properties.Property_hasOpennessValue
+import com.vitalai.domain.ibmwatson.Openness
+import com.vitalai.domain.ibmwatson.PersonalityInsight
+import com.vitalai.domain.ibmwatson.Values
 import com.vitalai.domain.ibmwatson.properties.Property_hasAgreeablenessValue
+import com.vitalai.domain.ibmwatson.properties.Property_hasCategory
 import com.vitalai.domain.ibmwatson.properties.Property_hasConscientiousnessValue
 import com.vitalai.domain.ibmwatson.properties.Property_hasEmotionalRangeValue
 import com.vitalai.domain.ibmwatson.properties.Property_hasExtraversionValue
-import com.vitalai.domain.ibmwatson.properties.Property_hasValue
+import com.vitalai.domain.ibmwatson.properties.Property_hasOpennessValue
+import ai.vital.aspen.model.BuilderFunctionPrediction
+import ai.vital.aspen.model.PredictionModel
 import ai.vital.predictmodel.BinaryFeature
-import org.slf4j.LoggerFactory
+import ai.vital.predictmodel.Prediction
+import ai.vital.predictmodel.StringFeature
+import ai.vital.predictmodel.TextFeature
+import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
+import ai.vital.vitalsigns.model.VitalApp
+import ai.vital.vitalsigns.model.properties.Property_hasName
+import ai.vital.predictmodel.Feature
 
 object AspenIBMWatsonPersonalityInsightsModel {
  
@@ -142,6 +130,7 @@ class AspenIBMWatsonPersonalityInsightsModel extends PredictionModel {
       } else {
           AspenIBMWatsonPersonalityInsightsModel.log.warn("Unsupported document language: " + language)
 
+          /*
           val prediction = new BuilderFunctionPrediction()
     
           val list : List[PersonalityInsight] = new ArrayList[PersonalityInsight]()
@@ -149,8 +138,8 @@ class AspenIBMWatsonPersonalityInsightsModel extends PredictionModel {
           prediction.value = list
           
           return prediction
-          
-//        throw new Exception("Unsupported document language: " + language)
+          */
+          throw new Exception("Unsupported document language: " + language)
       }
       
     }
@@ -227,7 +216,21 @@ class AspenIBMWatsonPersonalityInsightsModel extends PredictionModel {
     
     pm.releaseConnection();
     
-    if(statusCode < 200 || statusCode > 299) {
+    if(statusCode == 400) {
+      
+      AspenIBMWatsonPersonalityInsightsModel.log.warn("Input text contains less than 100 words")
+
+//      val prediction = new BuilderFunctionPrediction()
+//    
+//      val list : List[PersonalityInsight] = new ArrayList[PersonalityInsight]()
+//          
+//      prediction.value = list
+//          
+//      return prediction
+      
+      throw new Exception("Input text contains less than 100 words")
+      
+    } else if(statusCode < 200 || statusCode > 299) {
       throw new Exception(s"IBM Watson returned status ${statusCode} - ${resp}")
     }
     
@@ -260,30 +263,6 @@ class AspenIBMWatsonPersonalityInsightsModel extends PredictionModel {
     val list : List[PersonalityInsight] = new ArrayList[PersonalityInsight]()
     
     processTree(watsonProfile.tree, null, list)
-    
-    var big5 : Big5 = null
-    
-    //post process list
-    for(pi <- list) {
-      
-      var rawValue = pi.getRaw(classOf[Property_hasValue]) 
-      
-      if(pi.getClass.equals(classOf[Big5])) {
-        big5 = pi.asInstanceOf[Big5]
-      } else if(pi.isInstanceOf[Agreeableness]) {
-        big5.set(classOf[Property_hasAgreeablenessValue], rawValue)
-      } else if(pi.isInstanceOf[Conscientiousness]) {
-        big5.set(classOf[Property_hasConscientiousnessValue], rawValue)
-      } else if(pi.isInstanceOf[EmotionalRange]) {
-        big5.set(classOf[Property_hasEmotionalRangeValue], rawValue)
-      } else if(pi.isInstanceOf[Extraversion]) {
-        big5.set(classOf[Property_hasExtraversionValue], rawValue)
-      } else if(pi.isInstanceOf[Openness]) {
-        big5.set(classOf[Property_hasOpennessValue], rawValue)
-      } 
-      
-    }
-    
     
     prediction.value = list
     
@@ -333,19 +312,25 @@ class AspenIBMWatsonPersonalityInsightsModel extends PredictionModel {
     if(el.children == null) el.children = new ArrayList[IBMWatsonTrait]()
     
     if("Big 5".equals(name)) {
-      newNode = new Big5()
+      //skip it
+//      newNode = new Big5()
     } else if("root".equals(name)) {
       //nothing
     } else if("Agreeableness".equals(name)) {
     	newNode = new Agreeableness()
+    	newNode.set(classOf[Property_hasAgreeablenessValue], el.percentage)
     } else if("Conscientiousness".equals(name)) {
       newNode = new Conscientiousness()
+      newNode.set(classOf[Property_hasConscientiousnessValue], el.percentage)
     } else if("Emotional range".equals(name)) {
       newNode= new EmotionalRange()
+      newNode.set(classOf[Property_hasEmotionalRangeValue], el.percentage)
     } else if("Extraversion".equals(name)) {
       newNode = new Extraversion()
+      newNode.set(classOf[Property_hasExtraversionValue], el.percentage)
     } else if("Openness".equals(name)) {
       newNode = new Openness()
+      newNode.set(classOf[Property_hasOpennessValue], el.percentage)
     } else if("Values".equals(name)) {
       newNode = new Values()
     } else if("Needs".equals(name)) {
@@ -355,7 +340,6 @@ class AspenIBMWatsonPersonalityInsightsModel extends PredictionModel {
     if(newNode != null) {
       newNode.generateURI(null.asInstanceOf[VitalApp])
       newNode.set(classOf[Property_hasName], name);
-      newNode.set(classOf[Property_hasValue], el.percentage)
           
       if(el.category != null) {
         newNode.set(classOf[Property_hasCategory], name)
