@@ -253,6 +253,7 @@
                   <exclude>vital-ai:autompg</exclude>
                   <exclude>vital-ai:whiskies</exclude>
                   <exclude>vitalai-com:vital-nlp</exclude>
+                  <exclude>vitalai-com:vital-ibm-watson</exclude>
                   <exclude>junit:*</exclude>
                   <exclude>commons-cli:*</exclude>
                   <exclude>commons-codec:*</exclude>
@@ -381,7 +382,11 @@
 </dependency>
   	
   	
-
+	<dependency>
+		<groupId>vitalai-com</groupId>
+		<artifactId>vital-ibm-watson</artifactId>
+		<version>${vital.version}</version>
+	</dependency>
   	
   	
   	<dependency>

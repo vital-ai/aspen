@@ -236,6 +236,11 @@
 		<version>18.0</version>
 	</dependency>
     
+    <dependency>
+	  <groupId>vitalai-com</groupId>
+	  <artifactId>vital-ibm-watson</artifactId>
+	  <version>${vital.version}</version>
+    </dependency>
     
 	<!-- overridden groovy dependency -->
 		

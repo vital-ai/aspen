@@ -93,6 +93,21 @@
 		              <file>${VITAL_HOME}/domain-groovy-jar/vital-nlp-groovy-0.2.301.jar</file>
 		            </configuration>
 		          </execution>
+		          
+              <execution>
+		            <id>vital-ibm-watson-0.2.301.jar</id>
+		            <phase>validate</phase>
+		            <goals>
+		              <goal>install-file</goal>
+		            </goals>
+		            <configuration>
+		              <groupId>vitalai-com</groupId>
+		              <artifactId>vital-ibm-watson</artifactId>
+		              <version>0.2.301</version>
+		              <packaging>jar</packaging>
+		              <file>${VITAL_HOME}/domain-groovy-jar/vital-ibm-watson-groovy-0.2.301.jar</file>
+		            </configuration>
+		          </execution>
 
 
                 <execution>

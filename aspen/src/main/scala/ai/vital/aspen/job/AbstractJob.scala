@@ -58,6 +58,7 @@ import ai.vital.vitalsigns.model.properties.Property_hasKey
 import ai.vital.vitalservice.factory.VitalServiceFactory
 import ai.vital.aspen.analysis.alchemyapi.AspenAlchemyAPISentimentModel
 import ai.vital.aspen.model.AspenBuilderFunctionModel
+import ai.vital.aspen.analysis.ibmwatson.AspenIBMWatsonPersonalityInsightsModel
 
 
 /* this is placeholder code */
@@ -517,6 +518,8 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       creatorMap.put(AspenAlchemyAPISentimentModel.alchemy_api_sentiment, classOf[AspenAlchemyAPISentimentModel])
       
       creatorMap.put(AspenBuilderFunctionModel.builder_function, classOf[AspenBuilderFunctionModel])
+      
+      creatorMap.put(AspenIBMWatsonPersonalityInsightsModel.ibm_watson_personality_insights, classOf[AspenIBMWatsonPersonalityInsightsModel])
       
       return creatorMap
     }
