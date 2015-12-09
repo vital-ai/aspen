@@ -54,8 +54,11 @@ import com.vitalai.domain.ibmwatson.properties.Property_hasEmotionalRangeValue
 import com.vitalai.domain.ibmwatson.properties.Property_hasExtraversionValue
 import com.vitalai.domain.ibmwatson.properties.Property_hasValue
 import ai.vital.predictmodel.BinaryFeature
+import org.slf4j.LoggerFactory
 
 object AspenIBMWatsonPersonalityInsightsModel {
+ 
+    val log = LoggerFactory.getLogger(classOf[AspenIBMWatsonPersonalityInsightsModel])
   
     val ibm_watson_personality_insights = "ibm-watson-personality-insights";
 
@@ -135,9 +138,21 @@ class AspenIBMWatsonPersonalityInsightsModel extends PredictionModel {
       language = languageF.asInstanceOf[String]
       if(language.equals("en") || language.startsWith("en-")) {
       } else if(language.equals("es") || language.startsWith("es-")){
+          language = "es"
       } else {
-        throw new Exception("Unsupported document language: " + language)
+          AspenIBMWatsonPersonalityInsightsModel.log.warn("Unsupported document language: " + language)
+
+          val prediction = new BuilderFunctionPrediction()
+    
+          val list : List[PersonalityInsight] = new ArrayList[PersonalityInsight]()
+          
+          prediction.value = list
+          
+          return prediction
+          
+//        throw new Exception("Unsupported document language: " + language)
       }
+      
     }
     
     for(f <- modelConfig.getFeatures ) {
