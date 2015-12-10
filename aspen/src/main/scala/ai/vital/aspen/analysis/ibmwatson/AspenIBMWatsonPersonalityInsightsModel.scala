@@ -28,7 +28,6 @@ import com.vitalai.domain.ibmwatson.Openness
 import com.vitalai.domain.ibmwatson.PersonalityInsight
 import com.vitalai.domain.ibmwatson.Values
 import com.vitalai.domain.ibmwatson.properties.Property_hasAgreeablenessValue
-import com.vitalai.domain.ibmwatson.properties.Property_hasCategory
 import com.vitalai.domain.ibmwatson.properties.Property_hasConscientiousnessValue
 import com.vitalai.domain.ibmwatson.properties.Property_hasEmotionalRangeValue
 import com.vitalai.domain.ibmwatson.properties.Property_hasExtraversionValue
@@ -179,6 +178,15 @@ class AspenIBMWatsonPersonalityInsightsModel extends PredictionModel {
   }
   
   def processContent(cs : String, language : String ) : Prediction = { 
+
+    //this will save the API quota
+    if( cs.split("\\s+").length < 100 ) {
+      
+      AspenIBMWatsonPersonalityInsightsModel.log.warn("Input text contains less than 100 words (aspen test)")
+      
+      throw new Exception("Input text contains less than 100 words (aspen test)")
+      
+    }
     
     var endpoint : String = "https://gateway.watsonplatform.net/personality-insights/api/v2/profile"
     
@@ -266,27 +274,6 @@ class AspenIBMWatsonPersonalityInsightsModel extends PredictionModel {
     
     prediction.value = list
     
-    /*
-    for(pred <- taxonomy) {
-          
-      val label = pred.get("label").asInstanceOf[String]
-      
-      val score = java.lang.Double.parseDouble(pred.get("score").asInstanceOf[String])
-      
-//      val confident = pred.get("confident")
-      
-      
-      
-      val p = new CategoryPrediction()
-      
-      p.categoryLabel = label
-      p.score = score
-      
-      outPrediction.predictions.add(p)
-      
-    }
-    */
-    
     return prediction
      
   }
@@ -340,10 +327,6 @@ class AspenIBMWatsonPersonalityInsightsModel extends PredictionModel {
     if(newNode != null) {
       newNode.generateURI(null.asInstanceOf[VitalApp])
       newNode.set(classOf[Property_hasName], name);
-          
-      if(el.category != null) {
-        newNode.set(classOf[Property_hasCategory], name)
-      }
       list.add(newNode)
     } else {
       
