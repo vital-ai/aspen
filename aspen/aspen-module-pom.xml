@@ -246,7 +246,7 @@
                   <exclude>vital-ai:vital-domain</exclude>
                   <exclude>vital-ai:vitalsigns</exclude>
                   <exclude>vital-ai:vital-lucene</exclude>
-                  <exclude>vital-ai:vital-triplestore</exclude>
+                  <exclude>vital-ai:vital-sparql</exclude>
                   <exclude>vital-ai:vitalservice</exclude>
                   <exclude>vital-ai:twentynews</exclude>
                   <exclude>vital-ai:movielens</exclude>
