@@ -6,7 +6,7 @@
   <name>Install Vital AI Jars into Local Repo</name>
   
   <properties>
-  	<vital.version>0.2.301</vital.version>
+  	<vital.version>0.2.302</vital.version>
   </properties>
   
   <repositories>
@@ -181,7 +181,7 @@
                 </execution>
 
 
-<execution>
+                <execution>
                   <id>vital-sql-${vital.version}.jar</id>
                   <phase>validate</phase>
                   <goals>
@@ -195,7 +195,18 @@
                 </execution>
 
 
-
+                <execution>
+                  <id>vital-dynamodb-${vital.version}.jar</id>
+                  <phase>validate</phase>
+                  <goals>
+                    <goal>install-file</goal>
+                  </goals>
+                  <configuration>
+                    <packaging>jar</packaging>
+                    <file>${VITAL_HOME}/vital-dynamodb/vital-dynamodb-${vital.version}.jar</file>
+                    <pomFile>${vital.release.repo}/vital-ai/vital-dynamodb/${vital.version}/vital-dynamodb-${vital.version}.pom</pomFile>
+                  </configuration>
+                </execution>
 
 
 
