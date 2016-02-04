@@ -2,13 +2,13 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>vital-ai</groupId>
   <artifactId>aspen</artifactId>
-  <version>0.2.301-module</version>
+  <version>0.2.302-module</version>
   <packaging>jar</packaging>
   
   
   <properties>
   
-	<vital.version>0.2.301</vital.version>
+	<vital.version>0.2.302</vital.version>
 	
 	<!-- github server corresponds to entry in ~/.m2/settings.xml -->
     <github.global.server>github</github.global.server>
@@ -32,7 +32,7 @@
   <repository>
   	<id>bintray-jcenter-repo</id>
   	<name>BinTray JCenter Repo</name>
-  	<url>http://jcenter.bintray.com/</url>
+  	<url>https://dl.bintray.com/spark-jobserver/maven</url>
   </repository>
 
   </repositories>
@@ -338,6 +338,9 @@
   			<groupId>com.fasterxml.jackson.core</groupId>
   			<artifactId>jackson-databind</artifactId>
   		</exclusion>
+		<exclusion>
+			<groupId>org.codehaus.groovy</groupId>
+     		<artifactId>groovy-all</artifactId>
   	</exclusions>
   </dependency>
   
@@ -345,7 +348,7 @@
   	<dependency>
   		<groupId>org.apache.spark</groupId>
   		<artifactId>spark-core_2.10</artifactId>
-  		<version>1.4.0</version>
+  		<version>1.6.0</version>
   		<exclusions>
   			<exclusion>
   				<artifactId>commons-codec</artifactId>
@@ -357,22 +360,21 @@
 	<dependency>
 		<groupId>org.apache.spark</groupId>
 		<artifactId>spark-mllib_2.10</artifactId>
-		<version>1.4.0</version>
+		<version>1.6.0</version>
 	</dependency>
   	
   	
   	<dependency>
 		<groupId>org.apache.spark</groupId>
 		<artifactId>spark-graphx_2.10</artifactId>
-		<version>1.4.0</version>
+		<version>1.6.0</version>
 	</dependency>
-  	
   	
   	
   	<dependency>
   		<groupId>spark.jobserver</groupId>
   		<artifactId>job-server-api_2.10</artifactId>
-  		<version>0.5.1</version>
+  		<version>0.6.2-SNAPSHOT</version>
   	</dependency>
   	
   	<dependency>

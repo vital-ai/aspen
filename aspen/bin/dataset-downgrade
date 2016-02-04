@@ -20,15 +20,15 @@ if ( ! sparkAssembly.exists() ) {
   return
 }
 
-List jars = [
-  sparkAssembly.absolutePath
-]
+List jars = []
 
 new File(homeDir, "target").eachFile(FILES) {
   if(it.name.matches("aspen\\-(jobs\\-)?\\d+\\.\\d+\\.\\d+\\.jar")) {
     jars.add(it.absolutePath)
   }
 }
+
+jars.add( sparkAssembly.absolutePath )
 
 
 List cmd = ['java', '-cp', (String)jars.join(File.pathSeparator), mainClass];

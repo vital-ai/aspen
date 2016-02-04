@@ -137,6 +137,7 @@ public class SparkJobsScript extends AbstractJobServerScript {
 				r = client.jobs_get();
 			} catch (Exception e) {
 				e( e.getMessage() );
+				return;
 			}
 			
 			o("All jobs count: " + r.size());

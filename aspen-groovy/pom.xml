@@ -2,14 +2,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>vital-ai</groupId>
   <artifactId>aspen-groovy</artifactId>
-  <version>0.2.301</version>
+  <version>0.2.302</version>
   <name>Aspen Groovy Modules</name>
   
   
   <properties>
     <!-- github server corresponds to entry in ~/.m2/settings.xml -->
     <github.global.server>github</github.global.server>
-    <vital.version>0.2.301</vital.version>
+    <vital.version>0.2.302</vital.version>
   </properties>
   
   <repositories>

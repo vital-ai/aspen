@@ -77,7 +77,13 @@ for( File jf : domainGroovyJarsDir.listFiles() ) {
 	
 	File processHome = new File(homeDir)
 	
-	List cmd = ['mvn', 'install:install-file', (String)"-Dfile=${jf.absolutePath}",
+	boolean isWindows = System.getProperty("os.name").toLowerCase().indexOf("win") >= 0
+	
+	String mvnCmd = 'mvn'
+	if(isWindows) mvnCmd = 'mvn.cmd'
+	
+	
+	List cmd = [mvnCmd, 'install:install-file', (String)"-Dfile=${jf.absolutePath}",
 		(String)"-DgroupId=${groupID}", (String)"-DartifactId=${artifactID}", (String)"-Dversion=${version}",
 		(String)"-Dpackaging=jar", (String) "-Dfile=${jf.absolutePath}"
 		]

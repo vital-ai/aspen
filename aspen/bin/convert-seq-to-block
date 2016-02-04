@@ -13,22 +13,22 @@ if ( ! System.getenv('SPARK_HOME') ) {
 
 def sparkhome = System.getenv('SPARK_HOME')
 
-def sparkAssembly = new File(sparkhome, 'lib/spark-assembly-1.4.0-hadoop2.6.0.jar')
+def sparkAssembly = new File(sparkhome, 'lib/spark-assembly-1.6.0-hadoop2.6.0.jar')
 
 if ( ! sparkAssembly.exists() ) {
   System.err.println("Spark assemly jar not found: " + sparkAssembly.absolutePath);
   return
 }
 
-List jars = [
-  sparkAssembly.absolutePath
-]
+List jars = []
 
 new File(homeDir, "target").eachFile(FILES) {
   if(it.name.matches("aspen\\-(jobs\\-)?\\d+\\.\\d+\\.\\d+\\.jar")) {
     jars.add(it.absolutePath)
   }
 }
+
+jars.add( sparkAssembly.absolutePath )
 
 
 List cmd = ['java', '-cp', (String)jars.join(File.pathSeparator), mainClass];

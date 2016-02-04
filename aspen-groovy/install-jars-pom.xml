@@ -80,7 +80,7 @@
 	     -->
 			     
 		          <execution>
-		            <id>vital-nlp-0.2.301.jar</id>
+		            <id>vital-nlp-${vital.version}.jar</id>
 		            <phase>validate</phase>
 		            <goals>
 		              <goal>install-file</goal>
@@ -88,14 +88,14 @@
 		            <configuration>
 		              <groupId>vitalai-com</groupId>
 		              <artifactId>vital-nlp</artifactId>
-		              <version>0.2.301</version>
+		              <version>${vital.version}</version>
 		              <packaging>jar</packaging>
-		              <file>${VITAL_HOME}/domain-groovy-jar/vital-nlp-groovy-0.2.301.jar</file>
+		              <file>${VITAL_HOME}/domain-groovy-jar/vital-nlp-groovy-${vital.version}.jar</file>
 		            </configuration>
 		          </execution>
 		          
               <execution>
-		            <id>vital-ibm-watson-0.2.301.jar</id>
+		            <id>vital-ibm-watson-${vital.version}.jar</id>
 		            <phase>validate</phase>
 		            <goals>
 		              <goal>install-file</goal>
@@ -103,9 +103,9 @@
 		            <configuration>
 		              <groupId>vitalai-com</groupId>
 		              <artifactId>vital-ibm-watson</artifactId>
-		              <version>0.2.301</version>
+		              <version>${vital.version}</version>
 		              <packaging>jar</packaging>
-		              <file>${VITAL_HOME}/domain-groovy-jar/vital-ibm-watson-groovy-0.2.301.jar</file>
+		              <file>${VITAL_HOME}/domain-groovy-jar/vital-ibm-watson-groovy-${vital.version}.jar</file>
 		            </configuration>
 		          </execution>
 

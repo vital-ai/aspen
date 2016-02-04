@@ -13,7 +13,7 @@ if ( ! System.getenv('SPARK_HOME') ) {
 
 def sparkhome = System.getenv('SPARK_HOME')
 
-def sparkAssembly = new File(sparkhome, 'lib/spark-assembly-1.4.0-hadoop2.6.0.jar')
+def sparkAssembly = new File(sparkhome, 'lib/spark-assembly-1.6.0-hadoop2.6.0.jar')
 
 if ( ! sparkAssembly.exists() ) {
   System.err.println("Spark assemly jar not found: " + sparkAssembly.absolutePath);

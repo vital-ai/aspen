@@ -2,12 +2,12 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>vital-ai</groupId>
   <artifactId>aspen</artifactId>
-  <version>0.2.301</version>
+  <version>0.2.302</version>
   <packaging>jar</packaging>
   
   <properties>
   
-	<vital.version>0.2.301</vital.version>
+	<vital.version>0.2.302</vital.version>
 	
 	<!-- github server corresponds to entry in ~/.m2/settings.xml -->
     <github.global.server>github</github.global.server>
@@ -31,7 +31,7 @@
   <repository>
   	<id>bintray-jcenter-repo</id>
   	<name>BinTray JCenter Repo</name>
-  	<url>http://jcenter.bintray.com/</url>
+  	<url>https://dl.bintray.com/spark-jobserver/maven</url>
   </repository>
 
   </repositories>
@@ -166,12 +166,16 @@
   			<artifactId>jackson-databind</artifactId>
   		</exclusion>
 		<exclusion>
-			<artifactId>org.codehaus.groovy</artifactId>
-     		<groupId>groovy-all</groupId>
+			<groupId>org.codehaus.groovy</groupId>
+     		<artifactId>groovy-all</artifactId>
      	</exclusion>
      	<exclusion>
      		<groupId>jdk.tools</groupId>
      		<artifactId>jdk.tools</artifactId>
+     	</exclusion>
+     	<exclusion>
+     		<groupId>org.apache.hadoop</groupId>
+     		<artifactId>*</artifactId>
      	</exclusion>
   	</exclusions>
   </dependency>
@@ -203,7 +207,7 @@
   	<dependency>
   		<groupId>org.apache.spark</groupId>
   		<artifactId>spark-core_2.10</artifactId>
-  		<version>1.4.0</version>
+  		<version>1.6.0</version>
   		<exclusions>
   			<exclusion>
   				<artifactId>commons-codec</artifactId>
@@ -215,21 +219,21 @@
 	<dependency>
 		<groupId>org.apache.spark</groupId>
 		<artifactId>spark-mllib_2.10</artifactId>
-		<version>1.4.0</version>
+		<version>1.6.0</version>
 	</dependency>
   	
   	
   	<dependency>
 		<groupId>org.apache.spark</groupId>
 		<artifactId>spark-graphx_2.10</artifactId>
-		<version>1.4.0</version>
+		<version>1.6.0</version>
 	</dependency>
   	
   	
   	<dependency>
   		<groupId>spark.jobserver</groupId>
   		<artifactId>job-server-api_2.10</artifactId>
-  		<version>0.5.1</version>
+  		<version>0.6.2-SNAPSHOT</version>
   	</dependency>
   	
   	<dependency>
