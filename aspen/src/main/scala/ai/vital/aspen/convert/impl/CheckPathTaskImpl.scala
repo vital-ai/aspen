@@ -9,6 +9,8 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileStatus
 import java.io.FileNotFoundException
 import ai.vital.aspen.job.AbstractJob
+import ai.vital.vitalsigns.VitalSigns
+import ai.vital.sql.service.VitalServiceSql
 
 class CheckPathTaskImpl(job: AbstractJob, task: CheckPathTask) extends TaskImpl[CheckPathTask](job.sparkContext, task) {
   
@@ -24,6 +26,10 @@ class CheckPathTaskImpl(job: AbstractJob, task: CheckPathTask) extends TaskImpl[
       
       flag = handleRDDName(task.path.substring(5));
       
+    } else if(task.path.startsWith("spark-segment:")) {
+      
+      flag = handleSparkSegment(task.path.substring("spark-segment:".length))
+      
     } else {
       
       flag = handleFS();
@@ -31,6 +37,29 @@ class CheckPathTaskImpl(job: AbstractJob, task: CheckPathTask) extends TaskImpl[
     }
     
     task.getParamsMap.put(CheckPathTask.PATH_EXISTS_PREFIX + task.path, flag);
+    
+  }
+  
+  def handleSparkSegment(segmentID : String) : java.lang.Boolean = {
+    
+    val vitalService = VitalSigns.get.getVitalService
+    
+    if(vitalService == null) throw new RuntimeException("No vitalservice instance set in VitalSigns")
+    
+    if(!vitalService.isInstanceOf[VitalServiceSql]) throw new RuntimeException("Expected instance of " + classOf[VitalServiceSql].getCanonicalName)
+    
+    val vitalServiceSql = vitalService.asInstanceOf[VitalServiceSql]
+    
+    val segment = vitalServiceSql.getSegment(segmentID)
+    
+    if(segment == null) return false
+    
+    return true
+    
+//    .getSegmentTableName(segment)
+    
+//    task.getParamsMap.
+    
     
   }
   
@@ -98,7 +127,7 @@ class CheckPathTaskImpl(job: AbstractJob, task: CheckPathTask) extends TaskImpl[
         
         if(status.isDirectory()) {
           
-          if(!task.acceptDirectories) ex("Path is a directory: " + path + " only file allowed")
+          if(!task.acceptDirectories) ex("Path is a directory: " + path + " - only files allowed")
           
           
           if(task.validFileExtensions != null) {
@@ -138,8 +167,30 @@ class CheckPathTaskImpl(job: AbstractJob, task: CheckPathTask) extends TaskImpl[
     if(status.isDirectory()) {
       
       for( sub <- fs.listStatus(status.getPath) ) {
+
+        if( task.singleDirectory ) {
+          
+        	if( sub.isDirectory() ) {
+        	  
+        	  if(sub.getPath.getName.equalsIgnoreCase("_temporary")) {
+        	    
+        	    //that's ok
+        	    
+        	  } else {
+        	    
+        		  ex("Nested directory found in path: " + status.getPath.toString() + " / " + sub.getPath.toString() + " - only single directory allowed")
+        		  
+        	  }
+        	  
+        		
+          }
+          
+        } else {
+          
+        	validateFileExtensions(fs, sub)
+        	
+        }
         
-        validateFileExtensions(fs, sub)
         
       }
       

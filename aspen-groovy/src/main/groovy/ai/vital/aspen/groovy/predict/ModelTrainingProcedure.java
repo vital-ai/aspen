@@ -39,6 +39,7 @@ import ai.vital.aspen.groovy.predict.tasks.CollectTrainTaxonomyDataTask;
 import ai.vital.aspen.groovy.predict.tasks.CountDatasetTask;
 import ai.vital.aspen.groovy.predict.tasks.FeatureQueryTask;
 import ai.vital.aspen.groovy.predict.tasks.LoadModelTask;
+import ai.vital.aspen.groovy.predict.tasks.PageRankValuesTask;
 import ai.vital.aspen.groovy.predict.tasks.SaveModelTask;
 import ai.vital.aspen.groovy.predict.tasks.TestModelTask;
 import ai.vital.aspen.groovy.predict.tasks.TrainModelTask;
@@ -158,6 +159,10 @@ public class ModelTrainingProcedure {
 			
 			tasks.add(new LoadDataSetTask(paramsMap, inputPath, inputDatasetName));
 			
+		} else if(inputPath.startsWith("spark-segment:")) {
+			
+			tasks.add(new LoadDataSetTask(paramsMap, inputPath, inputDatasetName));
+			
 		} else if(inputPath.endsWith(".vital.seq")) {
 			
 			tasks.add(new LoadDataSetTask(paramsMap, inputPath, inputDatasetName));
@@ -173,6 +178,8 @@ public class ModelTrainingProcedure {
 			
 			tasks.add(new LoadDataSetTask(paramsMap, datasetSequencePath, inputDatasetName));
 			
+		} else {
+			throw new RuntimeException("Unhandled input path URI: " + inputPath);
 		}
 		
 		
@@ -404,16 +411,21 @@ public class ModelTrainingProcedure {
 			
 		} else {
 			
+			tasks.add(new PageRankValuesTask(model, paramsMap, inputDatasetName, outputDatasetName));
 			
-			tasks.add(new CalculatePageRankValuesTask(model, paramsMap, inputDatasetName));
+//			tasks.add(new CalculatePageRankValuesTask(model, paramsMap, inputDatasetName));
 			
-			tasks.add(new AssignPageRankValuesTask(model, paramsMap, inputDatasetName, outputDatasetName));
+//			tasks.add(new AssignPageRankValuesTask(model, paramsMap, inputDatasetName, outputDatasetName));
 			
 			//persist the dataset
 		
 			if(outputPath.startsWith("name:")) {
 				
 				//do nothing
+				
+			} else if(outputPath.startsWith("spark-segment:")) {
+				
+				tasks.add(new SaveDataSetTask(paramsMap, outputDatasetName, outputPath));
 				
 			} else if(outputPath.endsWith(".vital.seq")) {
 				

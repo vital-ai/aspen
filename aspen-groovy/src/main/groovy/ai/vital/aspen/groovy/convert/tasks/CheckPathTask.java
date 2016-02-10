@@ -31,6 +31,9 @@ public class CheckPathTask extends AbstractTask {
 	//if empty accept everything
 	public String[] validFileExtensions = null;
 	
+	//check if it's a single directory
+	public boolean singleDirectory = false;
+	
 	public CheckPathTask(String path, Map<String, Object> globalParameters) {
 		super(globalParameters);
 //		this.paths = paths;

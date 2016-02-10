@@ -92,6 +92,19 @@ public class ModelPredictProcedure {
 			LoadDataSetTask loadDataSetTask = new LoadDataSetTask(paramsMap, inputPath, inputDatasetName);
 			l.add(loadDataSetTask);
 			
+		} else if(inputPath.startsWith("spark-segment:")) {
+
+			CheckPathTask cpt = new CheckPathTask(inputPath, paramsMap);
+			
+			cpt.acceptDirectories = true;
+			cpt.acceptFiles = true;
+			cpt.mustExist = true;
+			cpt.mustnotExist = false;
+			l.add(cpt);
+			
+			LoadDataSetTask loadDataSetTask = new LoadDataSetTask(paramsMap, inputPath, inputDatasetName);
+			l.add(loadDataSetTask);
+			
 		} else if(inputPath.endsWith(".vital") || inputPath.endsWith(".vital.gz")) {
 			
 			CheckPathTask cpt = new CheckPathTask(inputPath, paramsMap);

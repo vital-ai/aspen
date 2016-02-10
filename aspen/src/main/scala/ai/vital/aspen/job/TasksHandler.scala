@@ -57,6 +57,18 @@ import ai.vital.aspen.data.DowngradeUpgradeProcedureTask
 import ai.vital.aspen.data.impl.DowngradeUpgradeProcedureTaskImpl
 import ai.vital.aspen.data.DataProfileTask
 import ai.vital.aspen.data.impl.DataProfileTaskImpl
+import ai.vital.aspen.groovy.predict.tasks.PageRankValuesTask
+import ai.vital.aspen.analysis.pagerank.PageRankValuesTaskImpl
+import ai.vital.aspen.groovy.convert.tasks.ConvertSequenceToCsvTask
+import ai.vital.aspen.convert.impl.ConvertSequenceToCsvTaskImpl
+import ai.vital.aspen.groovy.convert.tasks.ConvertCsvToSequenceTask
+import ai.vital.aspen.convert.impl.ConvertCsvToSequenceTaskImpl
+import ai.vital.aspen.groovy.data.tasks.SegmentImportTask
+import ai.vital.aspen.data.impl.SegmentImportTaskImpl
+import ai.vital.aspen.groovy.data.tasks.SegmentExportTask
+import ai.vital.aspen.data.impl.SegmentExportTaskImpl
+import ai.vital.aspen.groovy.data.tasks.SegmentEmptyTask
+import ai.vital.aspen.data.impl.SegmentEmptyTaskImpl
 
 class TasksHandler {
 
@@ -121,9 +133,17 @@ class TasksHandler {
         
         taskImpl = new ConvertBlockToSequenceTaskImpl(job, task.asInstanceOf[ConvertBlockToSequenceTask])
         
+      } else if(task.isInstanceOf[ConvertCsvToSequenceTask]) {
+        
+        taskImpl = new ConvertCsvToSequenceTaskImpl(job, task.asInstanceOf[ConvertCsvToSequenceTask])
+        
       } else if(task.isInstanceOf[ConvertSequenceToBlockTask]) {
         
         taskImpl = new ConvertSequenceToBlockTaskImpl(job, task.asInstanceOf[ConvertSequenceToBlockTask])
+        
+      } else if(task.isInstanceOf[ConvertSequenceToCsvTask]) {
+        
+        taskImpl = new ConvertSequenceToCsvTaskImpl(job, task.asInstanceOf[ConvertSequenceToCsvTask])
         
       } else if(task.isInstanceOf[CountDatasetTask]) {
         
@@ -161,6 +181,10 @@ class TasksHandler {
         
         taskImpl = new ModelPredictTaskImpl(job, task.asInstanceOf[ModelPredictTask])
         
+      } else if(task.isInstanceOf[PageRankValuesTask]) {
+        
+        taskImpl = new PageRankValuesTaskImpl(job, task.asInstanceOf[PageRankValuesTask])
+        
       } else if(task.isInstanceOf[ResolveURIReferencesTask]) {
         
         taskImpl = new ResolveURIsTaskImpl(job, task.asInstanceOf[ResolveURIReferencesTask])
@@ -176,6 +200,18 @@ class TasksHandler {
         //model packaging is now implemented in the model itsefl
     
         taskImpl = new SaveModelTaskImpl(job, task.asInstanceOf[SaveModelTask])
+        
+      } else if(task.isInstanceOf[SegmentEmptyTask]) {
+        
+        taskImpl = new SegmentEmptyTaskImpl(job, task.asInstanceOf[SegmentEmptyTask])
+        
+      } else if(task.isInstanceOf[SegmentExportTask]) {
+        
+        taskImpl = new SegmentExportTaskImpl(job, task.asInstanceOf[SegmentExportTask])
+        
+      } else if(task.isInstanceOf[SegmentImportTask]) {
+    	  
+    	  taskImpl = new SegmentImportTaskImpl(job, task.asInstanceOf[SegmentImportTask])
         
       } else if(task.isInstanceOf[SelectDataSetTask]) {
         

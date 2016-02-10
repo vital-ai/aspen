@@ -19,6 +19,10 @@ class DeletePathTaskImpl(job: AbstractJob, task: DeletePathTask) extends TaskImp
       
       flag = handleRDDName(task.path.substring(5));
       
+    } else if(task.path.startsWith("spark-segment:")) {
+      
+      flag = true
+      
     } else {
       
       flag = handleFS();

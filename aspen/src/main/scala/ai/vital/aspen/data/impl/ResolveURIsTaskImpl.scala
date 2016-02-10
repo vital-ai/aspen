@@ -22,6 +22,7 @@ import ai.vital.aspen.groovy.modelmanager.AspenModel
 import ai.vital.aspen.groovy.predict.tasks.LoadModelTask
 import ai.vital.vitalsigns.meta.GraphContext
 import ai.vital.vitalsigns.model.property.URIProperty
+import ai.vital.vitalservice.VitalService
 
 class ResolveURIsTaskImpl(job: AbstractJob, task: ResolveURIReferencesTask) extends TaskImpl[ResolveURIReferencesTask](job.sparkContext, task) {
   
@@ -41,7 +42,9 @@ class ResolveURIsTaskImpl(job: AbstractJob, task: ResolveURIReferencesTask) exte
     
     if(inputBlockRDD == null) throw new RuntimeException("Dataset not found: " + datasetName)
 
-    val serviceProfile = job.serviceProfile
+    val serviceProfile_ = job.serviceProfile_
+    
+    val serviceConfig = job.serviceConfig
     
     val serviceKey = job.serviceKey
 
@@ -54,7 +57,12 @@ class ResolveURIsTaskImpl(job: AbstractJob, task: ResolveURIReferencesTask) exte
       if(vitalBlock.getMainObject.isInstanceOf[URIReference]) {
               
          if( VitalSigns.get.getVitalService == null ) {
-           val vitalService = VitalServiceFactory.openService(serviceKey, serviceProfile)
+        	 var vitalService : VitalService = null
+           if(serviceProfile_ != null) {
+        	   vitalService= VitalServiceFactory.openService(serviceKey, serviceProfile_)
+           } else {
+             vitalService = VitalServiceFactory.openService(serviceKey, serviceConfig)
+           }
            VitalSigns.get.setVitalService(vitalService)
          }
          

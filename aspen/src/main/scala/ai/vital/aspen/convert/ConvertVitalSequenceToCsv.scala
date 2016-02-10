@@ -5,41 +5,38 @@ import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
 import org.apache.spark.SparkContext
 import com.typesafe.config.Config
-import ai.vital.aspen.groovy.convert.ConvertSequenceToBlockProcedure
 import ai.vital.aspen.job.AbstractJob
 import ai.vital.aspen.task.TaskImpl
 import ai.vital.aspen.util.SetOnceHashMap
 import ai.vital.aspen.groovy.convert.tasks.CheckPathTask
 import ai.vital.aspen.convert.impl.CheckPathTaskImpl
 import org.apache.hadoop.conf.Configuration
-import ai.vital.aspen.groovy.convert.tasks.ConvertSequenceToBlockTask
-import ai.vital.aspen.convert.impl.ConvertSequenceToBlockTaskImpl
 import ai.vital.aspen.groovy.convert.tasks.DeletePathTask
 import ai.vital.aspen.convert.impl.DeletePathTaskImpl
 import com.typesafe.config.ConfigList
 import java.util.Arrays
-import ai.vital.aspen.groovy.convert.ConvertSequenceToBlockProcedure
+import ai.vital.aspen.groovy.convert.ConvertSequenceToCsvProcedure
 import ai.vital.aspen.job.TasksHandler
 
-class ConvertVitalSequenceToBlock {}
+class ConvertVitalSequenceToCsv {}
 
-object ConvertVitalSequenceToBlock extends AbstractJob {
+object ConvertVitalSequenceToCsv extends AbstractJob {
   
   val inputOption  = new Option("i", "input", true, "input <Text, VitalBytesWritable>  .vital.seq sequence file or <String, Array[Byte]> named RDD, if path starts with 'name:' prefix")
   inputOption.setRequired(true)
 
-  val outputOption = new Option("o", "output", true, "output .vital[.gz] file")
+  val outputOption = new Option("o", "output", true, "output .vital.csv[.gz] directory")
   outputOption.setRequired(true)
   
   val overwriteOption = new Option("ow", "overwrite", false, "overwrite output if exists")
   overwriteOption.setRequired(false)
 
   def getJobClassName(): String = {
-    classOf[ConvertVitalSequenceToBlock].getCanonicalName    
+    classOf[ConvertVitalSequenceToCsv].getCanonicalName    
   }
 
   def getJobName(): String = {
-    "convert-seq-to-block"
+    "convert-seq-to-csv"
   }
 
   def getOptions(): Options = {
@@ -73,9 +70,11 @@ object ConvertVitalSequenceToBlock extends AbstractJob {
     
     val outputPath = jobConfig.getString(outputOption.getLongOpt)
     
+    println("output path: " + outputPath)
+    
     val overwrite = getBooleanOption(jobConfig, overwriteOption)
     
-    val procedure = new ConvertSequenceToBlockProcedure(inputPaths, outputPath, overwrite, globalContext)
+    val procedure = new ConvertSequenceToCsvProcedure(inputPaths, outputPath, overwrite, globalContext)
     
     val tasks = procedure.generateTasks()
     

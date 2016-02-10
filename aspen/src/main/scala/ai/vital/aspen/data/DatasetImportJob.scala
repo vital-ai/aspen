@@ -51,6 +51,7 @@ object DatasetImportJob extends AbstractJob {
         addOption(inputOption).
         addOption(nameOption).
         addOption(profileOption).
+        addOption(profileConfigOption).
         addOption(overwriteOption)
     )
   }

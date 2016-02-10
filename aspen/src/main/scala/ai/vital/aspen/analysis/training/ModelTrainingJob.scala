@@ -2,7 +2,6 @@ package ai.vital.aspen.analysis.training
 
 import java.util.Arrays
 import java.util.Date
-
 import org.apache.commons.cli.Option
 import org.apache.commons.cli.Options
 import org.apache.commons.io.IOUtils
@@ -12,9 +11,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
-
 import com.typesafe.config.Config
-
 import ai.vital.aspen.groovy.modelmanager.AspenModel
 import ai.vital.aspen.groovy.modelmanager.ModelTaxonomySetter
 import ai.vital.aspen.groovy.predict.ModelTrainingProcedure
@@ -29,6 +26,7 @@ import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 import spark.jobserver.SparkJobInvalid
 import spark.jobserver.SparkJobValid
 import spark.jobserver.SparkJobValidation
+import org.apache.spark.sql.SaveMode
 
 class ModelTrainingJob {}
 
@@ -48,6 +46,8 @@ object ModelTrainingJob extends AbstractJob {
   val overwriteOption = new Option("ow", "overwrite", false, "overwrite model if exists")
   overwriteOption.setRequired(false)
   
+  val saveModeOption = new Option("sm", "save-mode", true, "save mode, one of: append (default), overwrite")
+  saveModeOption.setRequired(false)
   
   def getOptions(): Options = {
     addJobServerOptions(
@@ -58,7 +58,9 @@ object ModelTrainingJob extends AbstractJob {
       .addOption(outputOption)
       .addOption(overwriteOption)
       .addOption(profileOption)
+      .addOption(profileConfigOption)
       .addOption(serviceKeyOption)
+      .addOption(saveModeOption)
     )
   }
   
@@ -82,6 +84,22 @@ object ModelTrainingJob extends AbstractJob {
 		  
     var inputName = getOptionalString(jobConfig, inputOption)
     
+    val saveModeParam = getOptionalString(jobConfig, saveModeOption)
+    
+    var saveMode = SaveMode.Append
+    
+    if(saveModeParam == null) {
+    	saveMode = SaveMode.Append
+    } else {
+      if(saveModeParam.equals("append") ) {
+        saveMode = SaveMode.Append
+      } else if( saveModeParam.equals("overwrite") ) {
+        saveMode = SaveMode.Overwrite
+      } else {
+        throw new RuntimeException("Invalid " + saveModeOption.getLongOpt + " value: " + saveModeParam)
+      }
+    }
+    
     val modelPathParam = jobConfig.getString(outputOption.getLongOpt)
     
     val outputModelPath = new Path(modelPathParam)
@@ -93,7 +111,8 @@ object ModelTrainingJob extends AbstractJob {
     println("builder path: " + builderPath)
     println("output model path: " + outputModelPath)
     println("overwrite if exists: " + overwrite)
-    println("service profile: " + serviceProfile)
+    println("service config: " + serviceConfig)
+    println("service profile: " + serviceProfile_)
     
     if(isNamedRDDSupported()) {
     	println("named RDDs supported")
@@ -149,10 +168,7 @@ object ModelTrainingJob extends AbstractJob {
     
     
     //create training class instance, it will validate the algorithm params
-
-    val vitalService = VitalServiceFactory.openService(serviceKey, serviceProfile)
-    
-    VitalSigns.get.setVitalService(vitalService)
+    openVitalService()
     
     ModelTaxonomySetter.loadTaxonomies(aspenModel, null)
 
@@ -171,6 +187,8 @@ object ModelTrainingJob extends AbstractJob {
     
     
     var globalContext = new SetOnceHashMap()
+    
+    globalContext.put(saveModeOption.getLongOpt, saveMode)
     
     unloadDynamicDomains()
     

@@ -23,6 +23,7 @@ import ai.vital.aspen.groovy.predict.tasks.LoadModelTask
 import ai.vital.aspen.groovy.predict.tasks.FeatureQueryTask
 import java.util.ArrayList
 import ai.vital.vitalsigns.model.GraphObject
+import ai.vital.vitalservice.VitalService
 
 class FeatureQueryTaskImpl(job: AbstractJob, task: FeatureQueryTask) extends TaskImpl[FeatureQueryTask](job.sparkContext, task) {
   
@@ -63,8 +64,10 @@ class FeatureQueryTaskImpl(job: AbstractJob, task: FeatureQueryTask) extends Tas
       return
     }
     
-    val serviceProfile = job.serviceProfile
+    val serviceProfile_ = job.serviceProfile_
 
+    val serviceConfig = job.serviceConfig
+    
     val serviceKey = job.serviceKey
     
     inputBlockRDD = inputBlockRDD.map { pair =>
@@ -86,7 +89,12 @@ class FeatureQueryTaskImpl(job: AbstractJob, task: FeatureQueryTask) extends Tas
       if(vitalBlock.getMainObject.isInstanceOf[URIReference]) {
               
          if( VitalSigns.get.getVitalService == null ) {
-           val vitalService = VitalServiceFactory.openService(serviceKey, serviceProfile)
+           var vitalService : VitalService = null;
+           if(serviceProfile_ != null ) {
+        	   vitalService = VitalServiceFactory.openService(serviceKey, serviceProfile_)
+           } else {
+             vitalService = VitalServiceFactory.openService(serviceKey, serviceConfig)
+           }
            VitalSigns.get.setVitalService(vitalService)
          }
               

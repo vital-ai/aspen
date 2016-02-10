@@ -59,6 +59,12 @@ import ai.vital.vitalservice.factory.VitalServiceFactory
 import ai.vital.aspen.analysis.alchemyapi.AspenAlchemyAPISentimentModel
 import ai.vital.aspen.model.AspenBuilderFunctionModel
 import ai.vital.aspen.analysis.ibmwatson.AspenIBMWatsonPersonalityInsightsModel
+import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.hive.HiveContext
+import org.apache.spark.sql.hive.HiveContext
+import ai.vital.vitalservice.config.VitalServiceConfig
+import spark.jobserver.SparkJobInvalid
+import ai.vital.vitalservice.VitalService
 
 
 /* this is placeholder code */
@@ -69,8 +75,11 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
   //this flag is set when the job is about to be submitted to the jobserver - it skip the named rdd validation that would prevent posting it
   var skipNamedRDDValidation = false
   
-  val profileOption = new Option("prof", "profile", true, "optional vitalservice profile option")
+  val profileOption = new Option("prof", "profile", true, "optional vitalservice profile name option, mutually exclusive with --profile-config")
   profileOption.setRequired(false)
+  
+  val profileConfigOption = new Option("profcfg", "profile-config", true, "optional vitalservice profile config option, mutually exclusive with --profile" )
+  profileConfigOption.setRequired(false)
   
   val defaultServiceKey = "aaaa-aaaa-aaaa"
   
@@ -92,6 +101,9 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
   
   val syncOption = new Option("sync", "sync", false, "optional sync flag, only used in jobserver mode")
   syncOption.setRequired(false)
+
+  val datesetsLocationOption = new Option("dsl", "datesets-location", true, "overriddes default datesetsLocation from VITAL_HOME/vital-config/aspen/aspen.config")
+  datesetsLocationOption.setRequired(false)
   
   def getJobName() : String
     
@@ -99,11 +111,15 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
   
   var sparkContext : SparkContext = null
   
+  var hiveContext : HiveContext = null
+  
   var hadoopConfiguration : Configuration = null
   
   var datasetsMap : java.util.HashMap[String, RDD[(String, Array[Byte])]] = null;
   
-  var serviceProfile : String = null
+  var serviceProfile_ : String = null
+  
+  var serviceConfig : VitalServiceConfig = null
   
   var serviceKey : VitalServiceKey = null
   
@@ -201,12 +217,25 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
             return false
       }
       
-      //override default aspen-groovy-datasets location
-      val location = AspenConfig.get.getDatesetsLocation
-      if(location != null) {
-        println("Custom datasets location from config: " + location)
-        optionsMap.put("datesetsLocation", location)
+      
+      val datesetsLocation = optionsMap.get(datesetsLocationOption.getLongOpt)
+      
+      if( datesetsLocation != null ) {
+        
+        println("Forced datasets location: " + datesetsLocation)
+        
+      } else {
+        
+    	  //override default aspen-groovy-datasets location
+    	  val location = AspenConfig.get.getDatesetsLocation
+        if(location != null) {
+    		  println("Custom datasets location from aspen.config: " + location)
+          optionsMap.put("datesetsLocation", location)
+    	  }
+    	  
       }
+      
+      
       
       val config = ConfigFactory.parseMap(optionsMap)
       
@@ -395,13 +424,32 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       
       
       try {
-    	  serviceProfile = getOptionalString(config, profileOption)
+    	  serviceProfile_ = getOptionalString(config, profileOption)
       } catch { 
         case ex: Exception => {
         }
       }
       
-      if(serviceProfile == null) serviceProfile = "default"
+      var serviceCfgString = getOptionalString(config, profileConfigOption)
+      
+      if(serviceProfile_ != null && serviceCfgString != null) {
+        return new SparkJobInvalid(profileOption.getLongOpt + " and " + profileConfigOption.getLongOpt + " are mutually exclusive")
+      } else if(serviceCfgString != null) {
+        
+        try {
+        	serviceConfig = VitalServiceFactory.parseConfigString(serviceCfgString)
+        } catch {
+          case ex: Exception => {
+             return new SparkJobInvalid("Error when parsing service config string: " + ex.getLocalizedMessage + "; string: " + serviceCfgString)            
+          }
+        }
+        
+      } else {
+        
+    	  if(serviceProfile_ == null) serviceProfile_ = "default"
+    	  
+      }
+      
       
       try {
     	  var k = getOptionalString(config, serviceKeyOption)
@@ -471,7 +519,7 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
     }
     
     def addJobServerOptions(options: Options) : Options = {
-      options.addOption(jobServerOption).addOption(appNameOption).addOption(contextOption).addOption(syncOption)
+      options.addOption(jobServerOption).addOption(appNameOption).addOption(contextOption).addOption(syncOption).addOption(datesetsLocationOption)
     }
 
     def isNamedRDDSupported() : Boolean = {
@@ -655,5 +703,38 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
     }
       
   }
+  
+  def getHiveContext() : HiveContext = {
     
+    if(hiveContext == null) {
+      
+      hiveContext = new HiveContext(sparkContext)
+      
+    }
+    
+    hiveContext
+    
+  }
+    
+  def openVitalService() : VitalService = {
+ 
+    var vitalService : VitalService = null; 
+    
+    if(serviceConfig != null) {
+      
+    	vitalService = VitalServiceFactory.openService(serviceKey, serviceConfig)
+    	
+    } else {
+      
+      vitalService = VitalServiceFactory.openService(serviceKey, serviceProfile_)
+      
+    }
+    
+    VitalSigns.get.setVitalService(vitalService)
+    
+    vitalService
+    
+    
+    
+  }
 }

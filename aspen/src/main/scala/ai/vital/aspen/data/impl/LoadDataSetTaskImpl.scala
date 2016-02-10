@@ -16,6 +16,12 @@ import ai.vital.vitalservice.factory.VitalServiceFactory
 import ai.vital.aspen.job.AbstractJob
 import ai.vital.aspen.task.TaskImpl
 import ai.vital.aspen.data.LoaderSingleton
+import ai.vital.sql.service.VitalServiceSql
+import org.apache.spark.sql.DataFrame
+import ai.vital.sql.model.VitalSignsToSqlBridge
+import ai.vital.vitalsigns.model.GraphObject
+import java.util.ArrayList
+import java.util.HashMap
 
 class LoadDataSetTaskImpl(job: AbstractJob, task: LoadDataSetTask) extends TaskImpl[LoadDataSetTask](job.sparkContext, task) {
   
@@ -33,11 +39,32 @@ class LoadDataSetTaskImpl(job: AbstractJob, task: LoadDataSetTask) extends TaskI
     if(inputName.startsWith("name:")) {
       
       inputBlockRDD = job.getDataset(inputName.substring(5))
+      
       try {
-      task.getParamsMap.put( task.datasetName, inputBlockRDD )
+        task.getParamsMap.put( task.datasetName, inputBlockRDD )
       } catch {
         case ex: Exception => {}
       }
+      return
+      
+    } else if(inputName.startsWith("spark-segment:")) {
+      
+      val segmentID = inputName.substring("spark-segment:".length())
+      
+      inputBlockRDD = handleSparkSegment(segmentID)
+      
+      try {
+        task.getParamsMap.put(task.datasetName, inputBlockRDD)
+      } catch {
+        case ex: Exception => {}
+      }
+      
+      if(job.isNamedRDDSupported()) {
+    	  job.namedRdds.update(task.datasetName, inputBlockRDD);
+      } else {
+    	  job.datasetsMap.put(task.datasetName, inputBlockRDD)
+      }
+      
       return
       
     }
@@ -76,6 +103,77 @@ class LoadDataSetTaskImpl(job: AbstractJob, task: LoadDataSetTask) extends TaskI
     }
     
     task.getParamsMap.put( task.datasetName, inputBlockRDD )
+    
+  }
+  
+  def handleSparkSegment(segmentID : String) : RDD[(String, Array[Byte])] = {
+    
+    val vitalService = VitalSigns.get.getVitalService
+    
+    if(vitalService == null) throw new RuntimeException("No vitalservice instance set in VitalSigns")
+    
+    if(!vitalService.isInstanceOf[VitalServiceSql]) throw new RuntimeException("Expected instance of " + classOf[VitalServiceSql].getCanonicalName)
+    
+    val vitalServiceSql = vitalService.asInstanceOf[VitalServiceSql]
+    
+    val segment = vitalServiceSql.getSegment(segmentID)
+    
+    if(segment == null) throw new RuntimeException("Segment with ID: " + segmentID + " not found")
+    
+    val hiveContext = job.getHiveContext()
+    
+    
+    val tableName = vitalServiceSql.getSegmentTableName(segment)
+    
+    val df = hiveContext.table(tableName)
+    
+    if(df == null) throw new RuntimeException("DataFrame for table: " + tableName + " not found")
+    
+    
+    val grouped = df.map { row =>
+      
+      val uri = row.getAs[String](VitalSignsToSqlBridge.COLUMN_URI)
+      
+      (uri, row)
+      
+    }.groupByKey()
+    
+    val blockRDD : RDD[(String, Array[Byte])] = grouped.map { group =>
+      
+      val rowsList = new ArrayList[java.util.Map[String, Object]]()
+      
+      for(r <- group._2.seq ) {
+        
+        var i = 0;
+        
+        val row = new HashMap[String, Object]()
+        
+        while( i < r.size ) {
+
+        	val f = r.schema.fields(i)
+        	
+          val v = r.get(i);
+        	
+        	if(v != null ) {
+        		row.put(f.name, v.asInstanceOf[Object])
+        	}
+          
+          i = i + 1
+          
+        }
+        
+        rowsList.add(row)
+        
+      }
+      
+      val results = VitalSignsToSqlBridge.fromSql(null, null, rowsList, null, null)
+      
+      (group._1, VitalSigns.get.encodeBlock(results))
+      
+      
+    }
+    
+    blockRDD
     
   }
   

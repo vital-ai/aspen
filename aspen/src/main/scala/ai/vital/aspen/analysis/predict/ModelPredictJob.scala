@@ -61,6 +61,7 @@ object ModelPredictJob extends AbstractJob {
       .addOption(outputOption)
       .addOption(modelOption)
       .addOption(profileOption)
+      .addOption(profileConfigOption)
       .addOption(serviceKeyOption)
     )
   }
@@ -81,12 +82,10 @@ object ModelPredictJob extends AbstractJob {
     println("Input  name/path: " + inputPath)
     println("Output name/path: " + outputPath)
     println("Overwrite output ? " + overwrite)
-    println("service profile: " + serviceProfile)
+    println("service config: " + serviceConfig)
+    println("service profile: " + serviceProfile_)
 
-    
-    val vitalService = VitalServiceFactory.openService(serviceKey, serviceProfile)
-    
-    VitalSigns.get.setVitalService(vitalService)
+    openVitalService()
     
     val procedure = new ModelPredictProcedure(inputPath, modelPath, outputPath, overwrite, globalContext)
     

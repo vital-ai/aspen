@@ -52,6 +52,7 @@ object ModelTestingJob extends AbstractJob {
       .addOption(inputOption)
       .addOption(modelOption)
       .addOption(profileOption)
+      .addOption(profileConfigOption)
       .addOption(serviceKeyOption)
     )
   }
@@ -66,7 +67,8 @@ object ModelTestingJob extends AbstractJob {
     
     println("Input name/path: " + inputName)
     println("Model path: " + modelPath)
-    println("service profile: " + serviceProfile)
+    println("service config: " + serviceConfig)
+    println("service profile: " + serviceProfile_)
 
     
 //    val mt2c = AspenGroovyConfig.get.modelType2Class
@@ -79,9 +81,7 @@ object ModelTestingJob extends AbstractJob {
 //    println("Model loaded successfully")
 
     
-    val vitalService = VitalServiceFactory.openService(serviceKey, serviceProfile)
-    
-    VitalSigns.get.setVitalService(vitalService)
+    openVitalService()
     
     val procedure = new ModelTestingProcedure(inputName, modelPath, globalContext)
     

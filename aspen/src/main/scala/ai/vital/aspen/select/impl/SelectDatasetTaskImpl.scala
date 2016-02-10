@@ -21,6 +21,7 @@ import ai.vital.hadoop.writable.VitalBytesWritable
 import org.apache.hadoop.io.Text
 import java.util.Arrays
 import ai.vital.vitalsigns.model.property.URIProperty
+import ai.vital.vitalservice.VitalService
 
 class SelectDatasetTaskImpl(job: AbstractJob, task: SelectDataSetTask) extends TaskImpl[SelectDataSetTask](job.sparkContext, task) {
   def checkDependencies(): Unit = {
@@ -105,7 +106,9 @@ class SelectDatasetTaskImpl(job: AbstractJob, task: SelectDataSetTask) extends T
     
     
     
-    val profile = job.serviceProfile 
+    val serviceProfile = job.serviceProfile_
+    
+    val serviceConfig = job.serviceConfig
     
     val serviceKey = job.serviceKey
     
@@ -291,7 +294,13 @@ class SelectDatasetTaskImpl(job: AbstractJob, task: SelectDataSetTask) extends T
         
         if(VitalSigns.get.getVitalService() == null) {
           
-          val vitalService = VitalServiceFactory.openService(serviceKey, profile)
+          var vitalService : VitalService = null;
+          
+          if(serviceProfile != null ) {
+            vitalService = VitalServiceFactory.openService(serviceKey, serviceProfile)
+          } else {
+            vitalService = VitalServiceFactory.openService(serviceKey, serviceConfig)
+          }
     
           VitalSigns.get.setVitalService( vitalService )
           

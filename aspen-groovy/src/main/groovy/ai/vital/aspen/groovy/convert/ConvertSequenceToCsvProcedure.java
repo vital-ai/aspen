@@ -5,18 +5,18 @@ import java.util.List;
 import java.util.Map;
 
 import ai.vital.aspen.groovy.convert.tasks.CheckPathTask;
-import ai.vital.aspen.groovy.convert.tasks.ConvertBlockToSequenceTask;
+import ai.vital.aspen.groovy.convert.tasks.ConvertSequenceToCsvTask;
 import ai.vital.aspen.groovy.convert.tasks.DeletePathTask;
 import ai.vital.aspen.groovy.task.AbstractTask;
 
-public class ConvertBlockToSequenceProcedure {
+public class ConvertSequenceToCsvProcedure {
 
 	public List<String> inputPaths;
 	public String outputPath;
 	public boolean overwrite;
 	public Map<String, Object> paramsMap;
 
-	public ConvertBlockToSequenceProcedure(List<String> inputPaths, String outputPath, boolean overwrite, Map<String, Object> globalParamsMap) {
+	public ConvertSequenceToCsvProcedure(List<String> inputPaths, String outputPath, boolean overwrite, Map<String, Object> globalParamsMap) {
 		this.inputPaths = inputPaths;
 		this.outputPath = outputPath;
 		this.overwrite = overwrite;
@@ -35,9 +35,8 @@ public class ConvertBlockToSequenceProcedure {
 			cpt.acceptFiles = true;
 			cpt.mustExist = true;
 			cpt.mustnotExist = false;
-			cpt.validFileExtensions = new String[]{".vital", ".vital.gz"};
-				
-			
+			cpt.validFileExtensions = new String[]{".vital.seq"};
+			cpt.singleDirectory = true;
 			l.add(cpt);
 			
 		}
@@ -46,7 +45,8 @@ public class ConvertBlockToSequenceProcedure {
 		cpt.mustExist = false;
 		cpt.mustnotExist = !overwrite;
 		cpt.acceptDirectories = true;
-		cpt.validFileExtensions = new String[]{".vital.seq"};
+		cpt.validFileExtensions = new String[]{".vital.csv", ".vital.csv.gz"};
+		cpt.singleDirectory = true;
 		
 		l.add(cpt);
 		
@@ -56,7 +56,7 @@ public class ConvertBlockToSequenceProcedure {
 			
 		}
 		
-		l.add(new ConvertBlockToSequenceTask(inputPaths, outputPath, paramsMap));
+		l.add(new ConvertSequenceToCsvTask(inputPaths, outputPath, paramsMap));
 		
 		return l;
 		
