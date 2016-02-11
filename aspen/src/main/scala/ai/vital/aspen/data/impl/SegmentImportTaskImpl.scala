@@ -96,9 +96,18 @@ class SegmentImportTaskImpl(job: AbstractJob, task: SegmentImportTask) extends T
     }
     
 
-    val saveMode = SaveMode.Overwrite
+
+    //table name is escaped
+    val tempTableName = "temp_" + System.currentTimeMillis(); 
     
-    outputDF.write.mode(saveMode).saveAsTable(tableName)
+    outputDF.registerTempTable(tempTableName)
+    
+    hiveContext.sql("INSERT OVERWRITE TABLE " + tableName + " SELECT * FROM " + tempTableName).collect();
+    
+    hiveContext.dropTempTable(tempTableName)
+
+//    val saveMode = SaveMode.Overwrite
+//    outputDF.write.mode(saveMode).saveAsTable(tableName)
 
   }
   

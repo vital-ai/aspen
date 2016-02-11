@@ -121,7 +121,18 @@ class SaveDataSetTaskImpl(job: AbstractJob, task: SaveDataSetTask) extends TaskI
     }
     
     
-    outputDF.write.mode(SaveMode.Overwrite).saveAsTable(tableName)
+        //table name is escaped
+    val tempTableName = "temp_" + System.currentTimeMillis(); 
+    
+    outputDF.registerTempTable(tempTableName)
+    
+    hiveContext.sql("INSERT OVERWRITE TABLE " + tableName + " SELECT * FROM " + tempTableName).collect();
+    
+    hiveContext.dropTempTable(tempTableName)
+    
+//    val writer = outputDF.write
+//    
+//    outputDF.write.mode(SaveMode.Overwrite).saveAsTable(tableName)
 
   }
   
