@@ -1,8 +1,20 @@
 package ai.vital.aspen.segment;
 
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.spark.sql.DataFrame;
+import org.apache.spark.sql.hive.HiveContext;
+
+import ai.vital.sql.schemas.apachesparksql.SparkSQLCustomImplementation;
+import ai.vital.sql.service.config.VitalServiceSqlConfig;
 import ai.vital.vitalservice.config.VitalServiceConfig;
-import ai.vital.vitalservice.factory.VitalServiceFactory;
 import ai.vital.vitalsigns.meta.GraphContext;
 import ai.vital.vitalsigns.model.VITAL_Container;
 import ai.vital.vitalsigns.model.VITAL_Node;
@@ -10,21 +22,6 @@ import ai.vital.vitalsigns.model.VitalApp;
 import ai.vital.vitalsigns.model.properties.Property_hasAppID;
 import ai.vital.vitalsigns.model.properties.Property_hasSegmentID;
 import ai.vital.vitalsigns.utils.StringUtils;
-import scala.actors.threadpool.Arrays;
-import ai.vital.sql.schemas.apachesparksql.SparkSQLCustomImplementation;
-import ai.vital.sql.service.config.VitalServiceSqlConfig;
-
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Iterator;
-
-import org.apache.spark.sql.DataFrame;
-import org.apache.spark.sql.hive.HiveContext;
 
 /**
  * Provides access to vital-sql endpoint's spark system segment via service configuration only
