@@ -1,22 +1,24 @@
 package ai.vital.aspen.data.impl
 
-import ai.vital.aspen.groovy.data.tasks.SaveDataSetTask
-import ai.vital.aspen.task.TaskImpl
-import ai.vital.aspen.job.AbstractJob
-import ai.vital.hadoop.writable.VitalBytesWritable
-import org.apache.hadoop.io.Text
-import ai.vital.vitalsigns.VitalSigns
-import org.apache.spark.rdd.RDD
-import ai.vital.sql.service.VitalServiceSql
-import org.apache.spark.sql.hive.HiveContext
-import ai.vital.aspen.analysis.training.ModelTrainingJob
-import org.apache.spark.sql.SaveMode
-import ai.vital.aspen.data.SegmentImportJob
-import org.apache.spark.sql.DataFrame
-import ai.vital.sql.model.VitalSignsToSqlBridge
 import java.util.ArrayList
+
+import scala.collection.JavaConversions.asScalaBuffer
+
+import org.apache.hadoop.io.Text
+import org.apache.spark.rdd.RDD
+import org.apache.spark.rdd.RDD.rddToPairRDDFunctions
+import org.apache.spark.rdd.RDD.rddToSequenceFileRDDFunctions
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.Row
-import scala.collection.JavaConversions._
+import org.apache.spark.sql.SaveMode
+
+import ai.vital.aspen.analysis.training.ModelTrainingJob
+import ai.vital.aspen.data.SegmentImportJob
+import ai.vital.aspen.groovy.data.tasks.SaveDataSetTask
+import ai.vital.aspen.job.AbstractJob
+import ai.vital.aspen.task.TaskImpl
+import ai.vital.hadoop.writable.VitalBytesWritable
+import ai.vital.sql.model.VitalSignsToSqlBridge
 
 class SaveDataSetTaskImpl(job: AbstractJob, task: SaveDataSetTask) extends TaskImpl[SaveDataSetTask](job.sparkContext, task) {
   
@@ -59,21 +61,10 @@ class SaveDataSetTaskImpl(job: AbstractJob, task: SaveDataSetTask) extends TaskI
       saveMode = SaveMode.Append
     }
     
-    val vitalService = VitalSigns.get.getVitalService
-    
-    if(vitalService == null) throw new RuntimeException("No vitalservice instance set in VitalSigns")
-    
-    if(!vitalService.isInstanceOf[VitalServiceSql]) throw new RuntimeException("Expected instance of " + classOf[VitalServiceSql].getCanonicalName)
-    
-    val vitalServiceSql = vitalService.asInstanceOf[VitalServiceSql]
-    
-    val segment = vitalServiceSql.getSegment(segmentID)
-    
-    if(segment == null) throw new RuntimeException("Segment with ID: " + segmentID + " not found")
-    
+    val tableName = job.getSystemSegment().getSegmentTableName(segmentID)
+  
     val hiveContext = job.getHiveContext()
     
-    val tableName = vitalServiceSql.getSegmentTableName(segment)
     
     
     val initDF = hiveContext.table(tableName)

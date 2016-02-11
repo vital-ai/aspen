@@ -194,6 +194,10 @@
   			<artifactId>hive-jdbc</artifactId>
   		</exclusion>
   		<exclusion>
+  			<groupId>com.amazon.hive</groupId>
+  			<artifactId>hive-jdbc41</artifactId>
+  		</exclusion>
+  		<exclusion>
   			<groupId>log4j</groupId>
   			<artifactId>log4j</artifactId>
   		</exclusion>
@@ -280,13 +284,6 @@
 	  <artifactId>spark-hive_2.10</artifactId>
 	  <version>1.6.0</version>
   	</dependency>
-  	
-  	<dependency>
-	  <groupId>org.apache.spark</groupId>
-	  <artifactId>spark-hive-thriftserver_2.10</artifactId>
-	  <version>1.6.0</version>
-	</dependency>
-	
   	
   	
   	<dependency>

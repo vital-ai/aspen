@@ -168,8 +168,6 @@ object ModelTrainingJob extends AbstractJob {
     
     
     //create training class instance, it will validate the algorithm params
-    openVitalService()
-    
     ModelTaxonomySetter.loadTaxonomies(aspenModel, null)
 
       //use full set

@@ -1,42 +1,69 @@
 package ai.vital.aspen.data
 
-import ai.vital.aspen.job.AbstractJob
-import org.apache.commons.cli.Options
-import org.apache.commons.cli.Option
-import com.typesafe.config.Config
-import org.apache.spark.SparkContext
-import ai.vital.aspen.util.SetOnceHashMap
-import com.typesafe.config.ConfigList
+import java.io.StringReader
+import java.util.ArrayList
 import java.util.Arrays
-import spark.jobserver.SparkJobValidation
-import spark.jobserver.SparkJobValid
-import ai.vital.vitalservice.factory.VitalServiceFactory
-import ai.vital.sql.service.VitalServiceSql
+import java.util.HashMap
+
+import scala.collection.JavaConversions.asScalaBuffer
+import scala.collection.JavaConversions.iterableAsScalaIterable
+
+import org.apache.commons.cli.Option
+import org.apache.commons.cli.Options
+import org.apache.commons.csv.CSVFormat
+import org.apache.spark.SparkContext
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.Row
 import org.apache.spark.sql.hive.HiveContext
-import org.apache.spark.sql.types.StructType
-import org.apache.spark.sql.types.StructField
-import ai.vital.sql.model.VitalSignsToSqlBridge
-import ai.vital.sql.model.VitalSignsToSqlBridge._
-import org.apache.spark.sql.types.LongType
-import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.types.BooleanType
 import org.apache.spark.sql.types.DoubleType
 import org.apache.spark.sql.types.FloatType
 import org.apache.spark.sql.types.IntegerType
+import org.apache.spark.sql.types.LongType
 import org.apache.spark.sql.types.ShortType
-import org.apache.spark.sql.DataFrame
-import java.util.ArrayList
-import org.apache.spark.sql.Row
-import scala.collection.JavaConversions._
-import org.apache.spark.sql.SaveMode
-import org.apache.spark.rdd.RDD
-import ai.vital.vitalsigns.VitalSigns
-import org.apache.commons.csv.CSVFormat
-import java.io.StringReader
-import ai.vital.sql.services.ToCSVProviderImpl
-import java.util.HashMap
+import org.apache.spark.sql.types.StringType
+import org.apache.spark.sql.types.StructField
+import org.apache.spark.sql.types.StructType
+
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigList
+
 import ai.vital.aspen.groovy.data.SegmentImportProcedure
+import ai.vital.aspen.job.AbstractJob
 import ai.vital.aspen.job.TasksHandler
+import ai.vital.aspen.util.SetOnceHashMap
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_EXTERNAL
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_ID
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_NAME
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_URI
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_BOOLEAN
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_BOOLEAN_MULTIVALUE
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_DATE
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_DATE_MULTIVALUE
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_DOUBLE
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_DOUBLE_MULTIVALUE
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_FLOAT
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_FLOAT_MULTIVALUE
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_FULL_TEXT
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_GEOLOCATION
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_GEOLOCATION_MULTIVALUE
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_INTEGER
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_INTEGER_MULTIVALUE
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_LONG
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_LONG_MULTIVALUE
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_OTHER
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_OTHER_MULTIVALUE
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_STRING
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_STRING_MULTIVALUE
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_TRUTH
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_TRUTH_MULTIVALUE
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_URI
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VALUE_URI_MULTIVALUE
+import ai.vital.sql.model.VitalSignsToSqlBridge.COLUMN_VITALTYPE
+import ai.vital.vitalsigns.VitalSigns
+import spark.jobserver.SparkJobValid
+import spark.jobserver.SparkJobValidation
 
 class SegmentImportJob {}
 
@@ -124,9 +151,6 @@ object SegmentImportJob extends AbstractJob {
       
     }
     
-    val service = openVitalService()
-    
-    
     val segmentID = jobConfig.getString(segmentIDOption.getLongOpt)
     
     println("Input: " + inputPaths)
@@ -144,8 +168,6 @@ object SegmentImportJob extends AbstractJob {
     
     handler.handleTasksList(this, tasks)
 
-    service.close()
-    
     println("DONE")
     
   }

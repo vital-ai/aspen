@@ -81,8 +81,6 @@ object ModelTestingJob extends AbstractJob {
 //    println("Model loaded successfully")
 
     
-    openVitalService()
-    
     val procedure = new ModelTestingProcedure(inputName, modelPath, globalContext)
     
     val tasks = procedure.generateTasks()

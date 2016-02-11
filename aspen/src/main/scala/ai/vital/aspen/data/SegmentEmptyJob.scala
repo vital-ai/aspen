@@ -1,18 +1,17 @@
 package ai.vital.aspen.data
 
-import org.apache.commons.cli.Options
 import org.apache.commons.cli.Option
-import ai.vital.aspen.job.AbstractJob
+import org.apache.commons.cli.Options
 import org.apache.spark.SparkContext
+
 import com.typesafe.config.Config
-import ai.vital.aspen.util.SetOnceHashMap
-import com.typesafe.config.ConfigList
-import ai.vital.aspen.groovy.data.SegmentImportProcedure
-import ai.vital.aspen.groovy.data.SegmentExportProcedure
-import ai.vital.aspen.job.TasksHandler
-import spark.jobserver.SparkJobValidation
-import spark.jobserver.SparkJobValid
+
 import ai.vital.aspen.groovy.data.SegmentEmptyProcedure
+import ai.vital.aspen.job.AbstractJob
+import ai.vital.aspen.job.TasksHandler
+import ai.vital.aspen.util.SetOnceHashMap
+import spark.jobserver.SparkJobValid
+import spark.jobserver.SparkJobValidation
 
 class SegmentEmptyJob {}
 
@@ -50,8 +49,6 @@ object SegmentEmptyJob extends AbstractJob {
     
     println("SegmentID: " + segmentID)
     
-    val service = openVitalService()
-    
     val segmentEmptyProcedure = new SegmentEmptyProcedure(segmentID, globalContext)
  
     val tasks  = segmentEmptyProcedure.generateTasks();
@@ -60,8 +57,6 @@ object SegmentEmptyJob extends AbstractJob {
     
     handler.handleTasksList(this, tasks)
 
-    service.close()
-    
     println("DONE")
     
   }

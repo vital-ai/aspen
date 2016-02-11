@@ -85,8 +85,6 @@ object ModelPredictJob extends AbstractJob {
     println("service config: " + serviceConfig)
     println("service profile: " + serviceProfile_)
 
-    openVitalService()
-    
     val procedure = new ModelPredictProcedure(inputPath, modelPath, outputPath, overwrite, globalContext)
     
     val tasks = procedure.generateTasks()

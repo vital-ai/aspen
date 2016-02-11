@@ -1,17 +1,17 @@
 package ai.vital.aspen.data
 
-import org.apache.commons.cli.Options
 import org.apache.commons.cli.Option
-import ai.vital.aspen.job.AbstractJob
+import org.apache.commons.cli.Options
 import org.apache.spark.SparkContext
+
 import com.typesafe.config.Config
-import ai.vital.aspen.util.SetOnceHashMap
-import com.typesafe.config.ConfigList
-import ai.vital.aspen.groovy.data.SegmentImportProcedure
+
 import ai.vital.aspen.groovy.data.SegmentExportProcedure
+import ai.vital.aspen.job.AbstractJob
 import ai.vital.aspen.job.TasksHandler
-import spark.jobserver.SparkJobValidation
+import ai.vital.aspen.util.SetOnceHashMap
 import spark.jobserver.SparkJobValid
+import spark.jobserver.SparkJobValidation
 
 class SegmentExportJob {}
 
@@ -63,8 +63,6 @@ object SegmentExportJob extends AbstractJob {
     
     println("Overwrite ? " + overwrite)
     
-    val service = openVitalService()
-    
     val segmentExportProcedure = new SegmentExportProcedure(segmentID, outputPath, overwrite, globalContext)
  
     val tasks  = segmentExportProcedure.generateTasks();
@@ -73,8 +71,6 @@ object SegmentExportJob extends AbstractJob {
     
     handler.handleTasksList(this, tasks)
 
-    service.close()
-    
     println("DONE")
     
   }

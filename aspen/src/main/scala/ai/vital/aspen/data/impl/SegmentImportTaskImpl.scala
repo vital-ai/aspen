@@ -1,17 +1,19 @@
 package ai.vital.aspen.data.impl
 
-import ai.vital.aspen.job.AbstractJob
-import ai.vital.aspen.groovy.data.tasks.SegmentImportTask
-import ai.vital.aspen.task.TaskImpl
-import ai.vital.sql.service.VitalServiceSql
-import ai.vital.vitalsigns.VitalSigns
-import ai.vital.aspen.data.SegmentImportJob
-import org.apache.spark.sql.DataFrame
-import scala.collection.JavaConversions._
-import ai.vital.sql.model.VitalSignsToSqlBridge
 import java.util.ArrayList
+
+import scala.collection.JavaConversions.asScalaBuffer
+
+import org.apache.spark.rdd.RDD.rddToPairRDDFunctions
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.SaveMode
+
+import ai.vital.aspen.data.SegmentImportJob
+import ai.vital.aspen.groovy.data.tasks.SegmentImportTask
+import ai.vital.aspen.job.AbstractJob
+import ai.vital.aspen.task.TaskImpl
+import ai.vital.sql.model.VitalSignsToSqlBridge
 
 class SegmentImportTaskImpl(job: AbstractJob, task: SegmentImportTask) extends TaskImpl[SegmentImportTask](job.sparkContext, task) {
   
@@ -21,19 +23,7 @@ class SegmentImportTaskImpl(job: AbstractJob, task: SegmentImportTask) extends T
   
   def execute(): Unit = {
     
-    val vitalService = VitalSigns.get.getVitalService
-    
-    if(vitalService == null) throw new RuntimeException("No vitalservice instance set in VitalSigns")
-    
-    if(!vitalService.isInstanceOf[VitalServiceSql]) throw new RuntimeException("Expected instance of " + classOf[VitalServiceSql].getCanonicalName)
-    
-    val vitalServiceSql = vitalService.asInstanceOf[VitalServiceSql]
-    
-    val segment = vitalServiceSql.getSegment(task.segmentID)
-    
-    if(segment == null) throw new RuntimeException("Segment not found: " + segment)
-
-    val tableName = vitalService.asInstanceOf[VitalServiceSql].getSegmentTableName(segment)
+    val tableName = job.getSystemSegment().getSegmentTableName(task.segmentID)
     
     println("Table Name: " + tableName)
     

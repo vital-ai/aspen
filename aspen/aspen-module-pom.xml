@@ -246,6 +246,7 @@
                   <exclude>vital-ai:vital-domain</exclude>
                   <exclude>vital-ai:vitalsigns</exclude>
                   <exclude>vital-ai:vital-lucene</exclude>
+                  <exclude>vital-ai:vital-sql</exclude>
                   <exclude>vital-ai:vital-sparql</exclude>
                   <exclude>vital-ai:vitalservice</exclude>
                   <exclude>vital-ai:twentynews</exclude>
@@ -263,7 +264,6 @@
                   <exclude>commons-logging:*</exclude>
                   <exclude>log4j:*</exclude>
                   <exclude>org.apache.commons:commons-lang3:*</exclude>
-                  <exclude>org.apache.commons:commons-lang3:*</exclude>
                   <exclude>org.apache.lucene:*</exclude>
                   <exclude>org.apache.lucene:*</exclude>
                   <exclude>org.apache.jena:*</exclude>
@@ -280,6 +280,11 @@
                   <exclude>vital-ai:owl2vcs-vital</exclude>
                   <exclude>com.google.code.externalsortinginjava:*</exclude>
                   <exclude>org.openrdf.sesame:*</exclude>
+                  
+                  <!-- vital-sql dependencies -->
+                  <exclude>
+                  </exclude>
+                  
                 </excludes>
               </artifactSet>
               <filters>
@@ -365,6 +370,10 @@
   		<exclusion>
   			<groupId>org.apache.hive</groupId>
   			<artifactId>hive-jdbc</artifactId>
+  		</exclusion>
+  		<exclusion>
+  			<groupId>com.amazon.hive</groupId>
+  			<artifactId>hive-jdbc41</artifactId>
   		</exclusion>
   		<exclusion>
   			<groupId>log4j</groupId>

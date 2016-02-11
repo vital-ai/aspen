@@ -65,6 +65,7 @@ import org.apache.spark.sql.hive.HiveContext
 import ai.vital.vitalservice.config.VitalServiceConfig
 import spark.jobserver.SparkJobInvalid
 import ai.vital.vitalservice.VitalService
+import ai.vital.aspen.segment.SystemSegment
 
 
 /* this is placeholder code */
@@ -122,6 +123,8 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
   var serviceConfig : VitalServiceConfig = null
   
   var serviceKey : VitalServiceKey = null
+  
+  var systemSegment : SystemSegment = null;
   
   def _mainImpl(args: Array[String]) : Unit = {
    
@@ -734,7 +737,21 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
     
     vitalService
     
+  }
+  
+  //
+  def getSystemSegment() : SystemSegment = {
     
+    if(systemSegment != null) return systemSegment
+    
+    if(serviceConfig == null) {
+      throw new RuntimeException("Cannot access system segment, serviceConfig is missing")
+    }
+    
+    systemSegment = new SystemSegment(serviceConfig, getHiveContext())
+    
+    systemSegment
     
   }
+  
 }

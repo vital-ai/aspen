@@ -1,16 +1,14 @@
 package ai.vital.aspen.convert.impl
 
-import ai.vital.aspen.task.TaskImpl
-import ai.vital.aspen.groovy.convert.tasks.CheckPathTask
-import org.apache.spark.SparkContext
-import org.apache.hadoop.fs.Path
-import org.apache.hadoop.fs.FileSystem
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.FileStatus
 import java.io.FileNotFoundException
+
+import org.apache.hadoop.fs.FileStatus
+import org.apache.hadoop.fs.FileSystem
+import org.apache.hadoop.fs.Path
+
+import ai.vital.aspen.groovy.convert.tasks.CheckPathTask
 import ai.vital.aspen.job.AbstractJob
-import ai.vital.vitalsigns.VitalSigns
-import ai.vital.sql.service.VitalServiceSql
+import ai.vital.aspen.task.TaskImpl
 
 class CheckPathTaskImpl(job: AbstractJob, task: CheckPathTask) extends TaskImpl[CheckPathTask](job.sparkContext, task) {
   
@@ -42,24 +40,7 @@ class CheckPathTaskImpl(job: AbstractJob, task: CheckPathTask) extends TaskImpl[
   
   def handleSparkSegment(segmentID : String) : java.lang.Boolean = {
     
-    val vitalService = VitalSigns.get.getVitalService
-    
-    if(vitalService == null) throw new RuntimeException("No vitalservice instance set in VitalSigns")
-    
-    if(!vitalService.isInstanceOf[VitalServiceSql]) throw new RuntimeException("Expected instance of " + classOf[VitalServiceSql].getCanonicalName)
-    
-    val vitalServiceSql = vitalService.asInstanceOf[VitalServiceSql]
-    
-    val segment = vitalServiceSql.getSegment(segmentID)
-    
-    if(segment == null) return false
-    
-    return true
-    
-//    .getSegmentTableName(segment)
-    
-//    task.getParamsMap.
-    
+    return job.getSystemSegment().segmentExists(segmentID)
     
   }
   
