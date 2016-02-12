@@ -13,6 +13,7 @@ import ai.vital.vitalsigns.VitalSigns
 import org.apache.spark.rdd.RDD
 import org.apache.hadoop.io.compress.GzipCodec
 import ai.vital.aspen.groovy.convert.tasks.ConvertCsvToSequenceTask
+import ai.vital.aspen.data.SegmentImportJob
 
 class ConvertSequenceToCsvTaskImpl(job: AbstractJob, task: ConvertSequenceToCsvTask) extends TaskImpl[ConvertSequenceToCsvTask](job.sparkContext, task) {
   
@@ -82,6 +83,28 @@ class ConvertSequenceToCsvTaskImpl(job: AbstractJob, task: ConvertSequenceToCsvT
 
     }
     
+    
+    val df = SegmentImportJob.convertBlockRDDToDataFrame(job.getHiveContext(), SegmentImportJob.customSchema, inputBlockRDD)
+    
+    val writer = df.write
+    .format("com.databricks.spark.csv")
+    .option("header", "true") // Use first line of all files as header
+    .option("nullValue", "")
+//    .option("treatEmptyValuesAsNulls", "true")
+////    .schema(SegmentImportJob.customSchema)
+//    .option("inferSchema", "false") // Automatically infer data types
+//    .save(path);
+  
+    
+    if(task.outputPath.endsWith(".gz")) {
+      writer.option("codec", "org.apache.hadoop.io.compress.GzipCodec")
+    }
+    
+    writer.save(task.outputPath)
+      
+    //.save("newcars.csv")
+    
+    /*
     var csvRDD = inputBlockRDD.flatMap { encoded =>
     
         val l = new ArrayList[String]
@@ -104,6 +127,7 @@ class ConvertSequenceToCsvTaskImpl(job: AbstractJob, task: ConvertSequenceToCsvT
     	csvRDD.saveAsTextFile(task.outputPath)
     	
     }
+    */
     
     task.getParamsMap.put(ConvertSequenceToCsvTask.VITAL_SEQUENCE_TO_CSV_PREFIX + task.outputPath, new java.lang.Boolean(true));
     

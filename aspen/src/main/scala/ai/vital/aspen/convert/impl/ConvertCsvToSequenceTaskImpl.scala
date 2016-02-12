@@ -18,6 +18,8 @@ import java.io.StringReader
 import ai.vital.sql.services.ToCSVProviderImpl
 import ai.vital.aspen.data.SegmentImportJob
 import ai.vital.aspen.groovy.convert.tasks.ConvertCsvToSequenceTask
+import ai.vital.aspen.groovy.data.tasks.LoadDataSetTask
+import ai.vital.aspen.data.impl.LoadDataSetTaskImpl
 
 class ConvertCsvToSequenceTaskImpl(job: AbstractJob, task: ConvertCsvToSequenceTask) extends TaskImpl[ConvertCsvToSequenceTask](job.sparkContext, task) {
   
@@ -45,8 +47,29 @@ class ConvertCsvToSequenceTaskImpl(job: AbstractJob, task: ConvertCsvToSequenceT
 
   def execute(): Unit = {
     
+    val hiveContext = job.getHiveContext()
+    
+    var inputBlockRDD : RDD[(String, Array[Byte])] = null
+    
+    for(inputPath <- task.inputPaths) {
+      
+    	val df = SegmentImportJob.readDataFrame(hiveContext, SegmentImportJob.customSchema, inputPath)
+    	
+    	val blockRDD = LoadDataSetTaskImpl.dataFrameToVitalBlockRDD(df)
+    	
+    	if(inputBlockRDD == null) {
+    	  inputBlockRDD = blockRDD
+    	} else {
+    	  inputBlockRDD = inputBlockRDD.union(blockRDD)
+    	}
+      
+    }
+    
+    
+    
 //    task.inputPaths
     
+    /*
     var inputBlockRDD : RDD[(String, Array[Byte])] = null
     
     val headers = new ToCSVProviderImpl().getHeaders;
@@ -122,6 +145,8 @@ class ConvertCsvToSequenceTaskImpl(job: AbstractJob, task: ConvertCsvToSequenceT
       }
       
     }
+    
+    */
     
     if(task.outputPath.startsWith("name:")) {
       

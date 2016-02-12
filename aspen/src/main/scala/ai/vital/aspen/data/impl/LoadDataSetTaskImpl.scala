@@ -2,11 +2,14 @@ package ai.vital.aspen.data.impl
 
 import java.util.ArrayList
 import java.util.HashMap
+
 import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.io.Text
 import org.apache.spark.rdd.RDD
 import org.apache.spark.rdd.RDD.rddToPairRDDFunctions
+import org.apache.spark.sql.DataFrame
+
 import ai.vital.aspen.data.LoaderSingleton
 import ai.vital.aspen.groovy.data.tasks.LoadDataSetTask
 import ai.vital.aspen.job.AbstractJob
@@ -14,7 +17,6 @@ import ai.vital.aspen.task.TaskImpl
 import ai.vital.hadoop.writable.VitalBytesWritable
 import ai.vital.sql.model.VitalSignsToSqlBridge
 import ai.vital.vitalsigns.VitalSigns
-import org.apache.spark.sql.DataFrame
 
 object LoadDataSetTaskImpl {
   
@@ -57,9 +59,8 @@ object LoadDataSetTaskImpl {
       }
       
       val results = VitalSignsToSqlBridge.fromSql(null, null, rowsList, null, null)
-      
+    	  
       (group._1, VitalSigns.get.encodeBlock(results))
-      
       
     }
     
