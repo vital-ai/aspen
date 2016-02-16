@@ -19,6 +19,9 @@ object VitalThriftServer extends AbstractJob {
   val databaseOption = new Option("db", "database", true, "database to cache, required with cache tables")
   databaseOption.setRequired(false)
   
+  val keepRunningOption = new Option("kr", "keep-running", false, "keep running the process")
+  keepRunningOption.setRequired(false)
+  
   def getJobClassName(): String = {
     classOf[VitalThriftServer].getCanonicalName    
   }
@@ -33,6 +36,7 @@ object VitalThriftServer extends AbstractJob {
         .addOption(masterOption)
         .addOption(cacheTablesOption)
         .addOption(databaseOption)
+        .addOption(keepRunningOption)
     )
   }
   
@@ -42,7 +46,10 @@ object VitalThriftServer extends AbstractJob {
     //precache s1 table
     val cacheTables = getBooleanOption(jobConfig, cacheTablesOption)
     
+    val keepRunning = getBooleanOption(jobConfig, keepRunningOption)
+    
     println("Cache Tables: " + cacheTables)
+    println("Keep running: " + keepRunning)
     
     val databaseName = getOptionalString(jobConfig, databaseOption)
     
@@ -89,8 +96,16 @@ object VitalThriftServer extends AbstractJob {
     } else {
       
       println ("Tables caching disabled")
+      
     }
     
+    val _10years = 10L * 365L * 24L * 3600L * 1000L
+    if(keepRunning) {
+      println ( "Main thread will sleep now" )
+      Thread.sleep(_10years)
+    } else {
+      println ("Exiting immediately")
+    }
     
     
   }
