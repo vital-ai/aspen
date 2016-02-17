@@ -1,10 +1,15 @@
 package ai.vital.aspen.groovy.data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.convert.tasks.CheckPathTask;
+import ai.vital.aspen.groovy.convert.tasks.ConvertBlockToSequenceTask;
+import ai.vital.aspen.groovy.convert.tasks.DeletePathTask;
+import ai.vital.aspen.groovy.data.tasks.LoadDataSetTask;
 import ai.vital.aspen.groovy.data.tasks.SegmentImportTask;
 import ai.vital.aspen.groovy.task.AbstractTask;
 
@@ -29,7 +34,7 @@ public class SegmentImportProcedure {
 
     public List<AbstractTask> generateTasks() {
         
-        List<AbstractTask> l = new ArrayList<AbstractTask>();
+        List<AbstractTask> tasks = new ArrayList<AbstractTask>();
         
         for(String inputPath : inputPaths) {
             
@@ -47,10 +52,56 @@ public class SegmentImportProcedure {
             cpt.acceptFiles = true;
             cpt.mustExist = true;
             cpt.mustnotExist = false;
-            cpt.validFileExtensions = new String[]{".vital.csv", ".vital.csv.gz"};
-            cpt.singleDirectory = true;
+//            cpt.validFileExtensions = new String[]{".vital.csv", ".vital.csv.gz"};
+//            cpt.singleDirectory = true;
             
-            l.add(cpt);
+            tasks.add(cpt);
+            
+        }
+        
+        int i = 0;
+        
+        for(String inputPath : inputPaths) {
+            
+            i++;
+            
+            String inputDatasetName = inputPath;
+            
+            if(inputPath.startsWith("name:")) {
+
+                inputDatasetName = inputPath.substring(5);
+                
+                paramsMap.put(inputDatasetName, true);
+                
+                tasks.add(new LoadDataSetTask(paramsMap, inputPath, inputDatasetName));
+                
+            } else if(inputPath.startsWith("spark-segment:")) {
+                
+                tasks.add(new LoadDataSetTask(paramsMap, inputPath, inputDatasetName));
+                
+            } else if(inputPath.endsWith(".vital.seq")) {
+                
+                tasks.add(new LoadDataSetTask(paramsMap, inputPath, inputDatasetName));
+                
+            } else if(inputPath.endsWith(".vital") || inputPath.endsWith(".vital.gz")) {
+                
+                throw new RuntimeException("vital block files direct import not supported yet"); 
+                //convert it into sequence file first
+//                String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
+//                
+//                tasks.add(new DeletePathTask(datasetSequencePath, paramsMap));
+//
+//                tasks.add(new ConvertBlockToSequenceTask(Arrays.asList(inputPath), datasetSequencePath, paramsMap));
+//                
+//                tasks.add(new LoadDataSetTask(paramsMap, datasetSequencePath, inputDatasetName));
+                
+            } else if(inputPath.endsWith(".vital.csv") || inputPath.endsWith(".vital.csv.gz")) {
+                
+                // vital csv are loaded directly 
+                
+            } else {
+                throw new RuntimeException("Unhandled input path URI: " + inputPath);
+            }
             
         }
         
@@ -64,12 +115,12 @@ public class SegmentImportProcedure {
         cpt.validFileExtensions = new String[]{};
         cpt.singleDirectory = true;
         
-        l.add(cpt);
+        tasks.add(cpt);
             
         
-        l.add(new SegmentImportTask(inputPaths, segmentID, overwrite, paramsMap));
+        tasks.add(new SegmentImportTask(inputPaths, segmentID, overwrite, paramsMap));
         
-        return l;
+        return tasks;
 
     }
     

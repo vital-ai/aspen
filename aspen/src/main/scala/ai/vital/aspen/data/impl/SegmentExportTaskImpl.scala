@@ -3,6 +3,8 @@ package ai.vital.aspen.data.impl
 import ai.vital.aspen.groovy.data.tasks.SegmentExportTask
 import ai.vital.aspen.job.AbstractJob
 import ai.vital.aspen.task.TaskImpl
+import org.apache.hadoop.io.Text
+import ai.vital.hadoop.writable.VitalBytesWritable
 
 class SegmentExportTaskImpl(job: AbstractJob, task: SegmentExportTask) extends TaskImpl[SegmentExportTask](job.sparkContext, task) {
 
@@ -23,21 +25,31 @@ class SegmentExportTaskImpl(job: AbstractJob, task: SegmentExportTask) extends T
 
     val initDF = hiveContext.table(tableName)
     
-    val writer = initDF.write
-    .format("com.databricks.spark.csv")
-    .option("header", "true") // Use first line of all files as header
-    .option("nullValue", "")
-//    .option("treatEmptyValuesAsNulls", "true")
-////    .schema(SegmentImportJob.customSchema)
-//    .option("inferSchema", "false") // Automatically infer data types
-//    .save(path);
-  
-    
-    if(task.outputPath.endsWith(".gz")) {
-      writer.option("codec", "org.apache.hadoop.io.compress.GzipCodec")
+    if(task.outputPath.endsWith(".vital.seq")) {
+      
+      val blockRDD = LoadDataSetTaskImpl.dataFrameToVitalBlockRDD(initDF)
+      
+      val hadoopOutput = blockRDD.map( pair =>
+      	 (new Text(pair._1), new VitalBytesWritable(pair._2))
+  		 )
+    			 
+       hadoopOutput.saveAsSequenceFile(task.outputPath)
+      
+    } else {
+      
+    	val writer = initDF.write
+    			.format("com.databricks.spark.csv")
+    			.option("header", "true") // Use first line of all files as header
+    			.option("nullValue", "")
+    			
+			if(task.outputPath.endsWith(".gz")) {
+				writer.option("codec", "org.apache.hadoop.io.compress.GzipCodec")
+			}
+    	
+    	writer.save(task.outputPath)
+    	
     }
     
-    writer.save(task.outputPath)
 
   }
   

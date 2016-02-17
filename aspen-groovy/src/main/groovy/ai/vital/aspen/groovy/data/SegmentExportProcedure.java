@@ -58,7 +58,9 @@ public class SegmentExportProcedure {
         c2.acceptFiles = true;
         c2.mustExist = false;
         c2.mustnotExist = !overwrite;
-        c2.validFileExtensions = new String[]{".vital.csv", ".vital.csv.gz"};
+        c2.validFileExtensions = new String[]{
+                ".vital.csv", ".vital.csv.gz",
+                ".vital.seq"};
         c2.singleDirectory = true;
             
         l.add(c2);

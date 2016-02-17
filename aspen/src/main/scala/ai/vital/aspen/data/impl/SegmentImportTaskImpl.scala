@@ -1,19 +1,17 @@
 package ai.vital.aspen.data.impl
 
 import java.util.ArrayList
-
 import scala.collection.JavaConversions.asScalaBuffer
-
 import org.apache.spark.rdd.RDD.rddToPairRDDFunctions
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.SaveMode
-
 import ai.vital.aspen.data.SegmentImportJob
 import ai.vital.aspen.groovy.data.tasks.SegmentImportTask
 import ai.vital.aspen.job.AbstractJob
 import ai.vital.aspen.task.TaskImpl
 import ai.vital.sql.model.VitalSignsToSqlBridge
+import org.apache.spark.sql.DataFrame
 
 class SegmentImportTaskImpl(job: AbstractJob, task: SegmentImportTask) extends TaskImpl[SegmentImportTask](job.sparkContext, task) {
   
@@ -38,16 +36,54 @@ class SegmentImportTaskImpl(job: AbstractJob, task: SegmentImportTask) extends T
     var outputDF : DataFrame = null
     
     var inPath = "";
+
+    var newDF : DataFrame = null;
     
     for( path <- task.inputPaths ) {
 
-      if(inPath.length() > 0 ) inPath += ","
+      if(inPath.endsWith(".vital.csv") || inPath.endsWith(".vital.csv.gz")) {
+        
+    	  if(inPath.length() > 0 ) inPath += ","
+    			  
+        inPath += path;
+        
+      } else {
+        
+        var p = path
+        
+        if(p.startsWith("name:")) p = p.substring("name:".length())
+        
+        //everything else should be a named dataset
+        val inputBlockRDD = job.getDataset(p)
+        
+        //convert that into dataframe
+        
+        val _df = SegmentImportJob.convertBlockRDDToDataFrame(hiveContext, SegmentImportJob.customSchema, inputBlockRDD)
+        
+        if(newDF == null) {
+          newDF = _df
+        } else {
+          newDF = newDF.unionAll(_df)
+        }
+        
+        
+        
+      }
       
-      inPath += path;
         
     }
 
-    val newDF = SegmentImportJob.readDataFrame(hiveContext, SegmentImportJob.customSchema, inPath)
+    if(inPath.length() > 0 ) {
+      
+    	val _newDF = SegmentImportJob.readDataFrame(hiveContext, SegmentImportJob.customSchema, inPath)
+    	
+    	if(newDF == null) {
+    	  newDF = _newDF
+    	} else {
+    	  newDF = newDF.unionAll(_newDF)
+    	}
+    }
+    
     
     if(task.overwrite) {
       

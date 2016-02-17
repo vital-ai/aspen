@@ -20,7 +20,7 @@ object SegmentExportJob extends AbstractJob {
   val segmentIDOption   = new Option("sid", "segmentID", true, "segmentID option")
   segmentIDOption.setRequired(true)
   
-  val outputOption  = new Option("o", "output", true, "output vital sql .vital.csv[.gz] location")
+  val outputOption  = new Option("o", "output", true, "output vital sql .vital.csv[.gz] or .vital.seq")
   outputOption.setRequired(true)
   
   val overwriteOption = new Option("ow", "overwrite", false, "overwrite output if exists")

@@ -69,7 +69,7 @@ class SegmentImportJob {}
 
 object SegmentImportJob extends AbstractJob {
   
-  val inputOption  = new Option("i", "input", true, "input vital sql .csv[.gz] location")
+  val inputOption  = new Option("i", "input", true, "input vital sql .csv[.gz] | .vital.seq | name:<dataset> | segment:<segment>")
   inputOption.setRequired(true)
   
   val segmentIDOption   = new Option("sid", "segmentID", true, "segmentID option")
