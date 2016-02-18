@@ -36,7 +36,7 @@ public class ConvertSequenceToBlockProcedure {
 			cpt.mustExist = true;
 			cpt.mustnotExist = false;
 			cpt.validFileExtensions = new String[]{".vital.seq"};
-				
+            cpt.singleDirectory = true;
 			
 			l.add(cpt);
 			
