@@ -41,15 +41,15 @@ class SegmentImportTaskImpl(job: AbstractJob, task: SegmentImportTask) extends T
     
     for( path <- task.inputPaths ) {
 
-      if(inPath.endsWith(".vital.csv") || inPath.endsWith(".vital.csv.gz")) {
+      var p = path
+      
+      if(p.endsWith(".vital.csv") || p.endsWith(".vital.csv.gz")) {
         
     	  if(inPath.length() > 0 ) inPath += ","
     			  
-        inPath += path;
+        inPath += p;
         
       } else {
-        
-        var p = path
         
         if(p.startsWith("name:")) p = p.substring("name:".length())
         
