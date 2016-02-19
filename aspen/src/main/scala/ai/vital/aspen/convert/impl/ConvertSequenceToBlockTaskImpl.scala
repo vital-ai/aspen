@@ -27,6 +27,7 @@ import java.io.OutputStreamWriter
 import java.io.BufferedWriter
 import ai.vital.aspen.data.LoaderSingleton
 import ai.vital.vitalsigns.binary.VitalSignsBinaryFormat
+import java.util.zip.GZIPOutputStream
 
 class ConvertSequenceToBlockTaskImpl(job: AbstractJob, task: ConvertSequenceToBlockTask) extends TaskImpl[ConvertSequenceToBlockTask](job.sparkContext, task) {
   
@@ -60,7 +61,11 @@ class ConvertSequenceToBlockTaskImpl(job: AbstractJob, task: ConvertSequenceToBl
     
     val outputFS = FileSystem.get(outputPath.toUri(), job.hadoopConfiguration)
     
-    val outputStream : java.io.OutputStream = outputFS.create(outputPath, true)
+    var outputStream : java.io.OutputStream = outputFS.create(outputPath, true)
+    
+    if(task.outputPath.endsWith(".gz")) {
+      outputStream = new GZIPOutputStream(outputStream)
+    }
     
     val bw = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))
     
