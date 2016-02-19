@@ -221,10 +221,12 @@
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-graphx_2.10</artifactId>
   		  </exclusion>
+  		  <!-- job server may not have it
 		  <exclusion>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-hive-thriftserver_2.10</artifactId>
   		  </exclusion>
+  		  -->
   		  <!-- use custom groovy jar -->
 		  <exclusion>
       	    <artifactId>org.codehaus.groovy</artifactId>
@@ -294,6 +296,15 @@
 		<version>1.6.0</version>
 		<scope>provided</scope>
 	</dependency>
+	
+	<!-- 
+	<dependency>
+        <groupId>org.apache.spark</groupId>
+        <artifactId>spark-hive-thriftserver_2.10</artifactId>
+		<version>1.6.0</version>
+		<scope>provided</scope>
+	</dependency>
+	 -->
 	
 	  	<dependency>
 		<groupId>org.apache.spark</groupId>
