@@ -198,21 +198,24 @@ MODEL {
             //the resource bytes            
             byte[] resourceBytes = getResourceBytes("csv/some.csv");
             
-            InputStream resourceStream = getResource("/csvsome.csv");
+            InputStream resourceStream = getResource("csv/some.csv");
             
             //process it, cache results etc
             
             resourceStream.close()
             
-            Integer x = get("x")
+            //local variable, not cached
+            def y = 10
+
+            //x is a cached variable            
             
             if(x == null) {
                 x = 1
                 // cache the x if not set
-                put("x", 1)
             } else {
                 // x already cached
             }
+            
             
 			def target = new TargetNode()
 			target.generateURI()

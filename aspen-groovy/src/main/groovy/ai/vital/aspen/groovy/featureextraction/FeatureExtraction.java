@@ -2,6 +2,8 @@ package ai.vital.aspen.groovy.featureextraction;
 
 import groovy.lang.Closure;
 import groovy.lang.GString;
+import groovy.lang.GroovyObjectSupport;
+import groovy.util.Expando;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,6 +13,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,9 +69,7 @@ import ai.vital.vitalsigns.model.property.NumberProperty;
 import ai.vital.vitalsigns.model.property.StringProperty;
 import ai.vital.vitalsigns.model.property.URIProperty;
 
-public class FeatureExtraction extends HashMap<String, Object> {
-
-    private static final long serialVersionUID = 1L;
+public class FeatureExtraction extends Expando {
 
     private PredictionModel model;
 	
@@ -670,5 +671,14 @@ public class FeatureExtraction extends HashMap<String, Object> {
     public byte[] getResourceBytes(String name) throws IOException {
         return modelRef.getResourceBytes(name);
     }
+    
+    //impossible in expando - stackoverflow
+//    public Object get(String k) {
+//        return this.getProperty(k);
+//    }
+//    
+//    public void set(String k, Object v) {
+//        this.setProperty(k, v);
+//    }
 }
  
