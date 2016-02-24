@@ -3,19 +3,21 @@ package ai.vital.aspen.groovy.featureextraction;
 import groovy.lang.Closure;
 import groovy.lang.GString;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.vitalai.domain.nlp.Image;
 
+import ai.vital.aspen.groovy.modelmanager.AspenModel;
 import ai.vital.predictmodel.BinaryFeature;
 import ai.vital.predictmodel.CategoricalFeature;
 import ai.vital.predictmodel.DateFeature;
@@ -64,9 +66,11 @@ import ai.vital.vitalsigns.model.property.NumberProperty;
 import ai.vital.vitalsigns.model.property.StringProperty;
 import ai.vital.vitalsigns.model.property.URIProperty;
 
-public class FeatureExtraction {
+public class FeatureExtraction extends HashMap<String, Object> {
 
-	private PredictionModel model;
+    private static final long serialVersionUID = 1L;
+
+    private PredictionModel model;
 	
 	private final static Logger log = LoggerFactory.getLogger(FeatureExtraction.class);
 	
@@ -74,7 +78,10 @@ public class FeatureExtraction {
 	
 	Map<String, Taxonomy> TAXONOMY;
 
-	public FeatureExtraction(PredictionModel model, Map<String, Double> aggregationValues) {
+    private AspenModel modelRef;
+
+	public FeatureExtraction(AspenModel modelRef, PredictionModel model, Map<String, Double> aggregationValues) {
+	    this.modelRef = modelRef;
 		this.model = model;
 		this.AGGREGATE = aggregationValues;
 		this.TAXONOMY = new HashMap<String, Taxonomy>();
@@ -651,6 +658,17 @@ public class FeatureExtraction {
 		
 		return null;
 	}
-	
+
+    public InputStream getResource(String name) throws IOException {
+        return modelRef.getResource(name);
+    }
+
+    public List<String> getResources() {
+        return modelRef.getResources();
+    }
+
+    public byte[] getResourceBytes(String name) throws IOException {
+        return modelRef.getResourceBytes(name);
+    }
 }
  

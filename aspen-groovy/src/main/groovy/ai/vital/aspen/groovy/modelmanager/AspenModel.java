@@ -1,5 +1,7 @@
 package ai.vital.aspen.groovy.modelmanager;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -21,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -34,6 +37,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RawLocalFileSystem;
+
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 import ai.vital.aspen.groovy.featureextraction.BinaryFeatureData;
 import ai.vital.aspen.groovy.featureextraction.CategoricalFeatureData;
@@ -79,9 +85,6 @@ import ai.vital.vitalsigns.model.GraphObject;
 import ai.vital.vitalsigns.model.VITAL_Category;
 import ai.vital.vitalsigns.model.VITAL_Container;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-
 public abstract class AspenModel implements Serializable {
 
 //	protected static ObjectMapp
@@ -117,6 +120,9 @@ public abstract class AspenModel implements Serializable {
 	
 	//this map contains taxonomies source file content
 	protected Map<String, String> taxonomy2FileContent = new HashMap<String, String>();
+	
+	//compress internally ?
+	transient protected Map<String, byte[]> resources = new HashMap<String, byte[]>();
 	
 	//non-supervised
 	public abstract boolean isTestedWithTrainData();
@@ -512,8 +518,21 @@ public abstract class AspenModel implements Serializable {
 			taxonomy.setRootCategory(root);
 			taxonomy.setContainer(container);
 			
+		} else if(uri.startsWith(ModelManager.MODEL_RESOURCES_DIR + "/")) {
+		    
+		    String fname = uri.substring(ModelManager.MODEL_RESOURCES_DIR.length() + 1);
+		    
+		    byte[] resource = IOUtils.toByteArray(inS);
+		    
+		    resourcesMap().put(fname, resource);
+			
 		} else throw new IOException("Unhandled inner model resource: " + uri);
 		
+	}
+	
+	private Map<String, byte[]> resourcesMap() {
+	    if(resources == null) resources = new HashMap<String, byte[]>();
+	    return resources;
 	}
 
 	/**
@@ -527,9 +546,10 @@ public abstract class AspenModel implements Serializable {
 		PredictionModel modelEl = new ToModelImpl().toModel(modelString.toModel());
 		//we need to copy closures from builder file
 		
-		this.modelConfig.setPredict(modelEl.getPredict());
+        this.modelConfig.setPredict(modelEl.getPredict());
 		this.modelConfig.setFunctions(modelEl.getFunctions());
-		this.modelConfig.setTarget(modelEl.getTarget());
+		Target target = modelEl.getTarget();
+        this.modelConfig.setTarget(target);
 		this.modelConfig.setTrainFeature(modelEl.getTrainFeature());
 		
 		PredictionModelAnalyzer.fixFunctionsAggregatesOrder(this.modelConfig);
@@ -542,6 +562,7 @@ public abstract class AspenModel implements Serializable {
 				|| uri.equals(ModelManager.MODEL_AGGREGATION_RESULTS_FILE)
 				|| uri.startsWith(ModelManager.MODEL_FEATURES_DIR + "/")
 				|| uri.startsWith(ModelManager.MODEL_TAXONOMIES_DIR + "/")
+				|| uri.startsWith(ModelManager.MODEL_RESOURCES_DIR + "/")
 		) {
 			return true;
 		}
@@ -721,6 +742,25 @@ public abstract class AspenModel implements Serializable {
 			}
 			
 			
+			//put resources
+			if(resourcesMap().size() > 0) {
+			    
+			    File resourcesDir = new File(tempDir, ModelManager.MODEL_RESOURCES_DIR);
+			    resourcesDir.mkdirs();
+			    
+			    for( Entry<String, byte[]> entry : resourcesMap().entrySet() ) {
+			        
+			        File rFile = new File(resourcesDir, entry.getKey());
+			        
+			        rFile.getParentFile().mkdirs();
+			        
+			        FileUtils.writeByteArrayToFile(rFile, entry.getValue());
+			        
+			    }
+			    
+			}
+			
+			
 			persistFiles(tempDir);
 			
 			//persist object file as first
@@ -885,7 +925,7 @@ public abstract class AspenModel implements Serializable {
 
 	public FeatureExtraction getFeatureExtraction() {
 		if(_featureExtraction == null) {
-			_featureExtraction = new FeatureExtraction(modelConfig, aggregationResults);
+			_featureExtraction = new FeatureExtraction(this, modelConfig, aggregationResults);
 			
 			//rehydrate
 			Target target = this.modelConfig.getTarget();
@@ -930,6 +970,39 @@ public abstract class AspenModel implements Serializable {
 
 	public Map<String, String> getTaxonomy2FileContent() {
 		return taxonomy2FileContent;
+	}
+
+    public List<String> getResources() {
+        return new ArrayList<String>(resourcesMap().keySet());
+    }
+
+    public boolean putResourceBytes(String name, byte[] resource) {
+        return resourcesMap().put(name, resource) != null;
+    }
+    
+    /**
+     * NOTE: input stream is not closed
+     * @param name
+     * @param resource
+     * @return
+     * @throws IOException 
+     */
+    public boolean putResource(String name, InputStream resource) throws IOException {
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        IOUtils.copy(resource, os);
+        return resourcesMap().put(name, os.toByteArray()) != null;
+    }
+    
+	public InputStream getResource(String name) throws IOException {
+	    byte[] bs = resourcesMap().get(name);
+	    if(bs == null) throw new IOException("Resource not found: " + name);
+	    return new ByteArrayInputStream(bs);
+	}
+	
+	public byte[] getResourceBytes(String name) throws IOException {
+        byte[] bs = resourcesMap().get(name);
+        if(bs == null) throw new IOException("Resource not found: " + name);
+        return bs;
 	}
 	
 }

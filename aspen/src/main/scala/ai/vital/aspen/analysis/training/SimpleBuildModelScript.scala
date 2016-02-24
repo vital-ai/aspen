@@ -46,6 +46,10 @@ import ai.vital.aspen.groovy.featureextraction.ImageFeatureData
 import ai.vital.vitalsigns.model.VitalServiceKey
 import ai.vital.vitalsigns.model.VitalApp
 import ai.vital.vitalsigns.model.properties.Property_hasKey
+import java.io.File
+import org.apache.commons.io.FileUtils
+import org.apache.hadoop.fs.FileStatus
+import java.util.ArrayList
 
 /**
  * A script that generates simple models - models that do not require training
@@ -63,7 +67,10 @@ object SimpleBuildModelScript {
   
   val profileOption = new Option("prof", "profile", true, "optional vitalservice profile option")
   profileOption.setRequired(false)
-    
+  
+  val resourcesDirOption = new Option("rd", "resources-dir", true, "optional directory to be copied into model resources")
+  resourcesDirOption.setRequired(false)
+  
   val defaultServiceKey = "aaaa-aaaa-aaaa"
   
   val serviceKeyOption = new Option("sk", "service-key", true, "service key, xxxx-xxxx-xxxx format, '" + defaultServiceKey + "' if not set")
@@ -79,6 +86,7 @@ object SimpleBuildModelScript {
       .addOption(overwriteOption)
       .addOption(profileOption)
       .addOption(serviceKeyOption)
+      .addOption(resourcesDirOption)
 
     if (args.length == 0) {
       val hf = new HelpFormatter()
@@ -109,19 +117,60 @@ object SimpleBuildModelScript {
     var serviceKey = cmd.getOptionValue(serviceKeyOption.getLongOpt)
     if(serviceKey == null) serviceKey = defaultServiceKey
     
-    val sk = new VitalServiceKey()
-    sk.generateURI(null.asInstanceOf[VitalApp])
-    sk.set(classOf[Property_hasKey], serviceKey)
-     
+    val resourcesDir = cmd.getOptionValue(resourcesDirOption.getLongOpt)
+    
+    var resourcesDirPath : Path = null
+        
     println("builder path: " + builderPath)
     println("output model path: " + outputModelPath)
     println("overwrite if exists: " + overwrite)
-    
+    println("Service key: " + serviceKey)
     println("service profile: " + serviceProfile)
+    println("resources directory: " + resourcesDir)
+    
+    val hConf = new Configuration()
+    
+    val resourcesList = new ArrayList[FileStatus]()
+    
+    var resourcesFS : FileSystem = null
+    
+    if(resourcesDir != null && resourcesDir.length() > 0) {
+      
+      resourcesDirPath = new Path(resourcesDir)
+      
+      resourcesFS = FileSystem.get(resourcesDirPath.toUri(), hConf)
+      
+      val fs = resourcesFS.getFileStatus(resourcesDirPath)
+      
+      resourcesDirPath = fs.getPath()
+      
+      if( ! resourcesFS.exists(resourcesDirPath) ) {
+        System.err.println("resources-dir does not exist: " + resourcesDir)
+        return
+      }
+      
+      if( ! resourcesFS.isDirectory(resourcesDirPath) ) {
+        System.err.println("resources-dir path is not a directory: " + resourcesDir)
+        return
+      }
+
+      listRecursively(resourcesFS, resourcesList, fs)
+     
+//        return
+//      }
+//      if( ! resourcesDirF.isDirectory() ) {
+//        return
+//      }
+      
+    }
+    
+    val sk = new VitalServiceKey()
+    sk.generateURI(null.asInstanceOf[VitalApp])
+    sk.set(classOf[Property_hasKey], serviceKey)
     
     val creator = ModelTrainingJob.getModelCreator()
     
-    val builderFS = FileSystem.get(builderPath.toUri(), new Configuration())
+    val builderFS = FileSystem.get(builderPath.toUri(), hConf)
     if(!builderFS.exists(builderPath)) {
       throw new RuntimeException("Builder file not found: " + builderPath.toString())
     }
@@ -136,7 +185,7 @@ object SimpleBuildModelScript {
     buildInputStream.close()
     
     
-    val modelFS = FileSystem.get(outputModelPath.toUri(), new Configuration())
+    val modelFS = FileSystem.get(outputModelPath.toUri(), hConf)
     
     if( modelFS.exists(outputModelPath)) {
       if(!overwrite) throw new RuntimeException("Output model path already exists: " + outputModelPath)
@@ -186,16 +235,64 @@ object SimpleBuildModelScript {
     
     aspenModel.setFeaturesData(fd)
     
+    if(resourcesList.size() > 0) {
+      
+      println("Appending " + resourcesList.size() + " resource file(s) from " + resourcesDirPath.toString() + " ...")
+       
+      val baseURI = resourcesDirPath.toUri().toString();
+    	
+      for(f <- resourcesList) {
+      
+        var thisURI = f.getPath().toUri().toString()
+        
+        var localURI = thisURI.substring(baseURI.length())
+        
+        if(localURI.startsWith("/")) localURI = localURI.substring(1);
+        
+        val inputStream = resourcesFS.open(f.getPath)
+        
+        val bytes = IOUtils.toByteArray(inputStream)
+        
+        inputStream.close()
+        
+        println(localURI + "   " + bytes.length + " bytes")
+        
+        aspenModel.putResourceBytes(localURI, bytes);
+        
+      }
+       
+    }
+    
     var asJar = false
     
     if(outputModelPath.toString().endsWith(".jar") || outputModelPath.toString().endsWith(".zip")) {
       asJar = true
     }
-    
+
     aspenModel.persist(modelFS, outputModelPath, asJar)
     
     println("Model persisted " + outputModelPath)
 
   }
+  
+  def listRecursively(fileSystem : FileSystem, target: ArrayList[FileStatus], parentDir : FileStatus) : Unit = {
+		
+//		target.add(parentDir);
+		
+		for(ch <- fileSystem.listStatus(parentDir.getPath()) ) {
+			
+			if(ch.isDirectory()) {
+				
+				listRecursively(fileSystem, target, ch);
+				
+			} else {
+				
+				target.add(ch);
+				
+			}
+			
+		}
+		
+	}
 
 }
