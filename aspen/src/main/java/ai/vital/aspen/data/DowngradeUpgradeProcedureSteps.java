@@ -73,7 +73,7 @@ public class DowngradeUpgradeProcedureSteps {
 		} else if(inputPath.endsWith(".vital") || inputPath.endsWith(".vital.gz")) {
 			
 			//convert it into sequence file first
-			String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
+			String datasetSequencePath = AspenGroovyConfig.get().datasetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
 			
 			tasks.add(new DeletePathTask(datasetSequencePath, paramsMap));
 
@@ -95,7 +95,7 @@ public class DowngradeUpgradeProcedureSteps {
 			
 		} else if(outputPath.endsWith(".vital") || outputPath.endsWith(".vital.gz")) {
 			
-			String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + outputDatasetName + "/" + outputDatasetName + ".vital.seq";
+			String datasetSequencePath = AspenGroovyConfig.get().datasetsLocation + "/" + outputDatasetName + "/" + outputDatasetName + ".vital.seq";
 			
 			//don't checkout output, always overwrite
 			DeletePathTask deleteTask = new DeletePathTask(datasetSequencePath, paramsMap);

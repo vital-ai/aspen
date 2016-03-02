@@ -68,7 +68,7 @@ public class DataProfileProcedureSteps {
 		} else if(inputPath.endsWith(".vital") || inputPath.endsWith(".vital.gz")) {
 			
 			//convert it into sequence file first
-			String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
+			String datasetSequencePath = AspenGroovyConfig.get().datasetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
 			
 			tasks.add(new DeletePathTask(datasetSequencePath, paramsMap));
 
