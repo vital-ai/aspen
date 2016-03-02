@@ -95,7 +95,7 @@ public class FilterDatasetProcedure {
 			inputCheckTask.acceptFiles = true;
 
 			
-			String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
+			String datasetSequencePath = AspenGroovyConfig.get().datasetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
 			
 			//don't checkout output, always overwrite
 			DeletePathTask deleteTask = new DeletePathTask(datasetSequencePath, paramsMap);
@@ -133,7 +133,7 @@ public class FilterDatasetProcedure {
 
 			//save and convert
 			//dump to sequence file first
-			String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + outputDatasetName + "/" + outputDatasetName + ".vital.seq";
+			String datasetSequencePath = AspenGroovyConfig.get().datasetsLocation + "/" + outputDatasetName + "/" + outputDatasetName + ".vital.seq";
 			
 			//delete saved dataset and dump and convert
 			l.add(new DeletePathTask(datasetSequencePath, paramsMap));

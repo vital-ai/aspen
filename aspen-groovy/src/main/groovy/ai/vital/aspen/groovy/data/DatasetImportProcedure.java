@@ -75,7 +75,7 @@ public class DatasetImportProcedure {
 			l.add(removeDataset);
 		}
 		
-		String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + outputDatasetName + "/" + outputDatasetName + ".vital.seq";
+		String datasetSequencePath = AspenGroovyConfig.get().datasetsLocation + "/" + outputDatasetName + "/" + outputDatasetName + ".vital.seq";
 		
 		//don't checkout output, always overwrite
 		DeletePathTask deleteTask = new DeletePathTask(datasetSequencePath, paramsMap);

@@ -116,7 +116,7 @@ public class ModelPredictProcedure {
 			cpt.validFileExtensions = new String[]{".vital", ".vital.gz"};
 			l.add(cpt);
 			
-			String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
+			String datasetSequencePath = AspenGroovyConfig.get().datasetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
 			
 			//don't checkout output, always overwrite
 			DeletePathTask deleteTask = new DeletePathTask(datasetSequencePath, paramsMap);
@@ -166,7 +166,7 @@ public class ModelPredictProcedure {
 			
 		} else if(outputPath.endsWith(".vital") || outputPath.endsWith(".vital.gz")) {
 			
-			String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + outputDatesetName + "/" + outputDatesetName + ".vital.seq";
+			String datasetSequencePath = AspenGroovyConfig.get().datasetsLocation + "/" + outputDatesetName + "/" + outputDatesetName + ".vital.seq";
 			
 			//don't checkout output, always overwrite
 			DeletePathTask deleteTask = new DeletePathTask(datasetSequencePath, paramsMap);

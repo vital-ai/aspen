@@ -103,8 +103,8 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
   val syncOption = new Option("sync", "sync", false, "optional sync flag, only used in jobserver mode")
   syncOption.setRequired(false)
 
-  val datesetsLocationOption = new Option("dsl", "datesets-location", true, "overriddes default datesetsLocation from VITAL_HOME/vital-config/aspen/aspen.config")
-  datesetsLocationOption.setRequired(false)
+  val datasetsLocationOption = new Option("dsl", "datasetsLocation", true, "overriddes default datasetsLocation from VITAL_HOME/vital-config/aspen/aspen.config")
+  datasetsLocationOption.setRequired(false)
   
   def getJobName() : String
     
@@ -221,19 +221,19 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       }
       
       
-      val datesetsLocation = optionsMap.get(datesetsLocationOption.getLongOpt)
+      val datasetsLocation = optionsMap.get(datasetsLocationOption.getLongOpt)
       
-      if( datesetsLocation != null ) {
+      if( datasetsLocation != null ) {
         
-        println("Forced datasets location: " + datesetsLocation)
+        println("Forced datasets location: " + datasetsLocation)
         
       } else {
         
     	  //override default aspen-groovy-datasets location
-    	  val location = AspenConfig.get.getDatesetsLocation
+    	  val location = AspenConfig.get.getDatasetsLocation
         if(location != null) {
     		  println("Custom datasets location from aspen.config: " + location)
-          optionsMap.put("datesetsLocation", location)
+          optionsMap.put(datasetsLocationOption.getLongOpt, location)
     	  }
     	  
       }
@@ -467,9 +467,9 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       }
       
       
-      val datesetsLocation = getOptionalString(config, "datesetsLocation")
-      if(datesetsLocation != null) {
-        AspenGroovyConfig.get.datesetsLocation = datesetsLocation
+      val datasetsLocation = getOptionalString(config, datasetsLocationOption.getLongOpt)
+      if(datasetsLocation != null) {
+        AspenGroovyConfig.get.datasetsLocation = datasetsLocation
       }
       
       return subvalidate(sc, config)
@@ -522,7 +522,7 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
     }
     
     def addJobServerOptions(options: Options) : Options = {
-      options.addOption(jobServerOption).addOption(appNameOption).addOption(contextOption).addOption(syncOption).addOption(datesetsLocationOption)
+      options.addOption(jobServerOption).addOption(appNameOption).addOption(contextOption).addOption(syncOption).addOption(datasetsLocationOption)
     }
 
     def isNamedRDDSupported() : Boolean = {

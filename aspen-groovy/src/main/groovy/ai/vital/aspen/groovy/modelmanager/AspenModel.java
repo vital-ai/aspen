@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -122,7 +121,7 @@ public abstract class AspenModel implements Serializable {
 	protected Map<String, String> taxonomy2FileContent = new HashMap<String, String>();
 	
 	//compress internally ?
-	transient protected Map<String, byte[]> resources = new HashMap<String, byte[]>();
+	protected Map<String, byte[]> resources = new HashMap<String, byte[]>();
 	
 	//non-supervised
 	public abstract boolean isTestedWithTrainData();
@@ -524,17 +523,12 @@ public abstract class AspenModel implements Serializable {
 		    
 		    byte[] resource = IOUtils.toByteArray(inS);
 		    
-		    resourcesMap().put(fname, resource);
+		    resources.put(fname, resource);
 			
 		} else throw new IOException("Unhandled inner model resource: " + uri);
 		
 	}
 	
-	private Map<String, byte[]> resourcesMap() {
-	    if(resources == null) resources = new HashMap<String, byte[]>();
-	    return resources;
-	}
-
 	/**
 	 * restores closures from builder file, closures are not serializable
 	 */
@@ -680,7 +674,32 @@ public abstract class AspenModel implements Serializable {
 			
 			tempDir = Files.createTempDirectory("aspenmodel").toFile();
 			
+			
+			//mute resources that can be deserialized back
+			Map<String, Double> _aggregationResults = this.aggregationResults;
+			this.aggregationResults = null;
+			
+//			String _builderContent = this.builderContent;
+//			this.builderContent = null;
+			
+			Map<String, FeatureData> _featuresData = this.featuresData;
+			this.featuresData = null;
+
+//			Map<String, String> _taxonomy2FileContent = this.taxonomy2FileContent;
+//			this.taxonomy2FileContent = null;
+			
+			Map<String, byte[]> _resources = new HashMap<String, byte[]>(this.resources);
+			this.resources = new HashMap<String, byte[]>();
+
+			
 			FileUtils.writeByteArrayToFile(new File(tempDir, ModelManager.MODEL_OBJECT_FILE), SerializationUtils.serialize(this));
+			
+			//restore
+			this.aggregationResults = _aggregationResults;
+//			this.builderContent = _builderContent;
+			this.featuresData = _featuresData;
+//			this.taxonomy2FileContent = _taxonomy2FileContent;
+			this.resources = _resources;
 
 			if(builderContent != null) {
 				FileUtils.writeStringToFile(new File(tempDir, ModelManager.MODEL_BUILDER_FILE), builderContent, StandardCharsets.UTF_8.name());
@@ -743,12 +762,12 @@ public abstract class AspenModel implements Serializable {
 			
 			
 			//put resources
-			if(resourcesMap().size() > 0) {
+			if(resources.size() > 0) {
 			    
 			    File resourcesDir = new File(tempDir, ModelManager.MODEL_RESOURCES_DIR);
 			    resourcesDir.mkdirs();
 			    
-			    for( Entry<String, byte[]> entry : resourcesMap().entrySet() ) {
+			    for( Entry<String, byte[]> entry : resources.entrySet() ) {
 			        
 			        File rFile = new File(resourcesDir, entry.getKey());
 			        
@@ -973,11 +992,11 @@ public abstract class AspenModel implements Serializable {
 	}
 
     public List<String> getResources() {
-        return new ArrayList<String>(resourcesMap().keySet());
+        return new ArrayList<String>(resources.keySet());
     }
 
     public boolean putResourceBytes(String name, byte[] resource) {
-        return resourcesMap().put(name, resource) != null;
+        return resources.put(name, resource) != null;
     }
     
     /**
@@ -990,17 +1009,17 @@ public abstract class AspenModel implements Serializable {
     public boolean putResource(String name, InputStream resource) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         IOUtils.copy(resource, os);
-        return resourcesMap().put(name, os.toByteArray()) != null;
+        return resources.put(name, os.toByteArray()) != null;
     }
     
 	public InputStream getResource(String name) throws IOException {
-	    byte[] bs = resourcesMap().get(name);
+	    byte[] bs = resources.get(name);
 	    if(bs == null) throw new IOException("Resource not found: " + name);
 	    return new ByteArrayInputStream(bs);
 	}
 	
 	public byte[] getResourceBytes(String name) throws IOException {
-        byte[] bs = resourcesMap().get(name);
+        byte[] bs = resources.get(name);
         if(bs == null) throw new IOException("Resource not found: " + name);
         return bs;
 	}

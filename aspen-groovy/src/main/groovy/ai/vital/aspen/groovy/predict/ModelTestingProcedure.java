@@ -92,7 +92,7 @@ public class ModelTestingProcedure {
 			
 			l.add(new LoadModelTask(paramsMap, modelPath));
 			
-			String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
+			String datasetSequencePath = AspenGroovyConfig.get().datasetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
 			
 			//don't checkout output, always overwrite
 			DeletePathTask deleteTask = new DeletePathTask(datasetSequencePath, paramsMap);

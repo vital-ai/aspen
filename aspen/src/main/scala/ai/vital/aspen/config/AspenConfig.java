@@ -24,7 +24,7 @@ public class AspenConfig {
 	
 	private String jobServerURL;
 	
-	private String datesetsLocation;
+	private String datasetsLocation;
 	
 	//location for temp remote files, such as when using local files and processing them remotely seamlessly
 	private String tempRemoteLocation;
@@ -37,12 +37,12 @@ public class AspenConfig {
 		this.jobServerURL = jobServerURL;
 	}
 	
-	public String getDatesetsLocation() {
-		return datesetsLocation;
+	public String getDatasetsLocation() {
+		return datasetsLocation;
 	}
 
-	public void setDatesetsLocation(String datesetsLocation) {
-		this.datesetsLocation = datesetsLocation;
+	public void setDatasetsLocation(String datasetsLocation) {
+		this.datasetsLocation = datasetsLocation;
 	}
 
 	public String getTempRemoteLocation() {
@@ -105,9 +105,9 @@ public class AspenConfig {
 		}
 		
 		try {
-			a.datesetsLocation = cfg.getString("datesetsLocation");
+			a.datasetsLocation = cfg.getString("datasetsLocation");
 		} catch(ConfigException.Missing ex) {
-			log.warn("No datesetsLocation config param");
+			log.warn("No datasetsLocation config param");
 		}
 		
 		try {

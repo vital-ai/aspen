@@ -98,7 +98,7 @@ class AspenGroovyConfig {
 	
 	
 	//hdfs:///datasets/--name--/--name--.seq
-	public String datesetsLocation = "hdfs://127.0.0.1:8020/datasets/"
+	public String datasetsLocation = "hdfs://127.0.0.1:8020/datasets/"
 	
 	
 	//by default 

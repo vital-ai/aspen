@@ -170,7 +170,7 @@ public class ModelTrainingProcedure {
 		} else if(inputPath.endsWith(".vital") || inputPath.endsWith(".vital.gz")) {
 			
 			//convert it into sequence file first
-			String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
+			String datasetSequencePath = AspenGroovyConfig.get().datasetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
 			
 			tasks.add(new DeletePathTask(datasetSequencePath, paramsMap));
 
@@ -434,7 +434,7 @@ public class ModelTrainingProcedure {
 			} else if(outputPath.endsWith(".vital") || outputPath.endsWith(".vital.gz")) {
 				
 				//dump it first
-				String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + outputDatasetName+ "/" + outputDatasetName + ".vital.seq";
+				String datasetSequencePath = AspenGroovyConfig.get().datasetsLocation + "/" + outputDatasetName+ "/" + outputDatasetName + ".vital.seq";
 				
 				tasks.add(new DeletePathTask(datasetSequencePath, paramsMap));
 				tasks.add(new SaveDataSetTask(paramsMap, outputDatasetName, datasetSequencePath));

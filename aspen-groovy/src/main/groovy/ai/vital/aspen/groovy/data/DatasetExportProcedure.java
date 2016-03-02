@@ -53,7 +53,7 @@ public class DatasetExportProcedure {
 			
 		
 		//dump to sequence file first
-		String datasetSequencePath = AspenGroovyConfig.get().datesetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
+		String datasetSequencePath = AspenGroovyConfig.get().datasetsLocation + "/" + inputDatasetName + "/" + inputDatasetName + ".vital.seq";
 
 		
 		//check output dataset name
