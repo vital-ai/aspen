@@ -1,0 +1,141 @@
+.header-1 .navbar a {
+  transition: color 0s, background 0s;
+  
+}
+
+.loaded .header-1 .navbar.navbar-fixed-top {
+    transition: all 0s;
+}
+
+.loaded .page-wrapper, .loaded .header-antiflicker, .loaded body > header .header-background {
+    transition: all 0s;
+}
+
+.header-1-sub .pt-page-1 .background {
+  background-image: url("../img/greenstones.jpg");
+  opacity: 75;
+  filter: alpha(opacity=7500);
+  opacity: 0.75;
+  filter: alpha(opacity=75);
+  background-position: 50% 30%;
+}
+
+.header-1-sub .pt-page-2 .background {
+  background-image: url("../img/stones6.jpg");
+  opacity: 75;
+  filter: alpha(opacity=7500);
+  opacity: 0.75;
+  filter: alpha(opacity=75);
+  background-position: 50% 30%;
+}
+
+.header-1-sub .pt-page-3 .background {
+  background-image: url("../img/vital-ai-postcard-back-graph.jpg");
+  opacity: 75;
+  filter: alpha(opacity=7500);
+  opacity: 0.75;
+  filter: alpha(opacity=75);
+  background-position: 50% 30%;
+}
+
+.header-1-sub .pt-page-3 h3 {
+    text-align: center;
+
+  color: #EEEEEE;
+  }
+
+  .header-1-sub .pt-page-3 .lead {
+  color: #EEEEEE;
+  }
+
+  .header-1-sub .pt-page-2 h3 {
+      text-align: center;
+
+  color: #EEEEEE;
+  }
+
+  .header-1-sub .pt-page-2 .lead {
+  color: #EEEEEE;
+  }
+
+.header-1-sub .pt-page-1 h3 {
+  text-align: center;
+  color: #EEEEEE;
+  }
+
+  .header-1-sub .pt-page-1 .lead {
+  color: #EEEEEE;
+  }
+
+.hero-unit {
+  color: #EEEEEE;
+  background-color: #FF0000;
+}
+
+/* for team memebrs */
+
+.member-wrapper {
+
+  vertical-align: top;
+}
+
+
+/* experiment for bottom aligning content */
+
+
+/*
+.row-fluid .span6 {
+width: 66.6%;
+display: table-cell;
+vertical-align: bottom;
+    float: none;
+}
+
+.row-fluid .span3 {
+width: 33.3%;
+display: table-cell;
+vertical-align: bottom;
+    float: none;
+}
+*/
+
+
+
+
+
+
+.content-11.subscribe-form input[type="text"], .content-11.subscribe-form input[type="email"] {
+    background: none repeat scroll 0 0 rgba(0, 0, 0, 0);
+    border: 0 none;
+    color: #34495E;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 24px;
+    font-weight: 300;
+    height: auto;
+    letter-spacing: -1px;
+    line-height: 30px;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+@media (max-width: 767px) {
+ .content-11.subscribe-form .row {
+    height: 180px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+ .content-11.subscribe-form .row {
+    height: 120px;
+  }
+}
+
+
+@media (min-width: 1200px) {
+  .content-11.subscribe-form .row {
+    height: 60px;
+  }
+}
+
+
