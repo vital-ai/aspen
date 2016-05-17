@@ -66,6 +66,7 @@ import ai.vital.vitalservice.config.VitalServiceConfig
 import spark.jobserver.SparkJobInvalid
 import ai.vital.vitalservice.VitalService
 import ai.vital.aspen.segment.SystemSegment
+import ai.vital.aspen.analysis.clarifai.AspenClarifaiImageCategorizationModel
 
 
 /* this is placeholder code */
@@ -565,6 +566,7 @@ trait AbstractJob extends SparkJob with NamedRddSupport {
       creatorMap.put(AspenSVMWithSGDPredictionModel.spark_svm_w_sgd_prediction, classOf[AspenSVMWithSGDPredictionModel])
       
       creatorMap.put(AspenMetaMindImageCategorizationModel.metamind_image_categorization, classOf[AspenMetaMindImageCategorizationModel])
+      creatorMap.put(AspenClarifaiImageCategorizationModel.clarifai_image_categorization, classOf[AspenClarifaiImageCategorizationModel])
       creatorMap.put(AspenAlchemyAPICategorizationModel.alchemy_api_categorization, classOf[AspenAlchemyAPICategorizationModel])
       creatorMap.put(AspenAlchemyAPISentimentModel.alchemy_api_sentiment, classOf[AspenAlchemyAPISentimentModel])
       
