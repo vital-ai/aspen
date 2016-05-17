@@ -2,13 +2,13 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>vital-ai</groupId>
   <artifactId>aspen</artifactId>
-  <version>0.2.303-module</version>
+  <version>0.2.304-module</version>
   <packaging>jar</packaging>
   
   
   <properties>
   
-	<vital.version>0.2.303</vital.version>
+	<vital.version>0.2.304</vital.version>
 	
 	<!-- github server corresponds to entry in ~/.m2/settings.xml -->
     <github.global.server>github</github.global.server>
