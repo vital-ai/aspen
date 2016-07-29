@@ -41,7 +41,7 @@ class AspenNaiveBayesPredictionModel extends PredictionModel {
 
   def deserializeModel(stream: InputStream): Unit = {
     
-      val deserializedModel : NaiveBayesModel = SerializationUtils.deserialize(IOUtils.toByteArray(stream))
+      val deserializedModel : NaiveBayesModel = PredictionModelUtils.deserialize(IOUtils.toByteArray(stream))//SerializationUtils.deserialize(IOUtils.toByteArray(stream))
     
       model = deserializedModel match {
         case x: NaiveBayesModel => x

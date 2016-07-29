@@ -26,7 +26,7 @@ class AspenSVMWithSGDPredictionModel extends PredictionModel {
   
   def deserializeModel(stream: InputStream): Unit = {
     
-      val deserializedModel : SVMModel = SerializationUtils.deserialize(IOUtils.toByteArray(stream))
+      val deserializedModel : SVMModel = PredictionModelUtils.deserialize(IOUtils.toByteArray(stream))//SerializationUtils.deserialize(IOUtils.toByteArray(stream))
     
       model = deserializedModel match {
         case x: SVMModel => x

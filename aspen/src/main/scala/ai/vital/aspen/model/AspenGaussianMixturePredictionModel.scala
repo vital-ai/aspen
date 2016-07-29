@@ -42,7 +42,7 @@ class AspenGaussianMixturePredictionModel extends PredictionModel {
 
   def deserializeModel(stream: InputStream): Unit = {
     
-      val deserializedModel : GaussianMixtureModel = SerializationUtils.deserialize(IOUtils.toByteArray(stream))
+      val deserializedModel : GaussianMixtureModel = PredictionModelUtils.deserialize(IOUtils.toByteArray(stream))//SerializationUtils.deserialize(IOUtils.toByteArray(stream))
     
       model = deserializedModel match {
         case x: GaussianMixtureModel => x

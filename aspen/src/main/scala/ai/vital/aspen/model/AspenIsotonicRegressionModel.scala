@@ -28,7 +28,7 @@ class AspenIsotonicRegressionModel extends PredictionModel {
   
   def deserializeModel(stream: InputStream): Unit = {
     
-    val deserializedModel : IsotonicRegressionModel = SerializationUtils.deserialize(IOUtils.toByteArray(stream))
+    val deserializedModel : IsotonicRegressionModel = PredictionModelUtils.deserialize(IOUtils.toByteArray(stream))//SerializationUtils.deserialize(IOUtils.toByteArray(stream))
     
     model = deserializedModel match {
       case x: IsotonicRegressionModel => x

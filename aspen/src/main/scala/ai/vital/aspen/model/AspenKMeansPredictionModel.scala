@@ -56,7 +56,7 @@ class AspenKMeansPredictionModel extends PredictionModel {
 
   def deserializeModel(stream: InputStream): Unit = {
     
-      val deserializedModel : KMeansModel = SerializationUtils.deserialize(IOUtils.toByteArray(stream))
+      val deserializedModel : KMeansModel = PredictionModelUtils.deserialize(IOUtils.toByteArray(stream))//SerializationUtils.deserialize(IOUtils.toByteArray(stream))
     
       model = deserializedModel match {
         case x: KMeansModel => x

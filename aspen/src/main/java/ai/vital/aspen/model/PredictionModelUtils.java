@@ -1,5 +1,10 @@
 package ai.vital.aspen.model;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectStreamClass;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -8,11 +13,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.io.IOUtils;
+
 import ai.vital.aspen.groovy.featureextraction.CategoricalFeatureData;
 import ai.vital.aspen.groovy.featureextraction.FeatureData;
 import ai.vital.aspen.groovy.featureextraction.NumericalFeatureData;
 import ai.vital.aspen.groovy.featureextraction.TextFeatureData;
 import ai.vital.aspen.groovy.featureextraction.WordFeatureData;
+import ai.vital.vitalsigns.VitalSigns;
+import ai.vital.vitalsigns.VitalSignsDomainClassLoader;
+import groovy.lang.GroovyClassLoader;
 
 public class PredictionModelUtils {
 
@@ -22,6 +32,75 @@ public class PredictionModelUtils {
 		NumericalFeatureData.class,
 		TextFeatureData.class
 	);
+	
+	/**
+	 * Deserializes an object from bytes array.
+	 * @param bytes
+	 * @return
+	 */
+	public static <T> T deserialize(byte[] bytes) {
+		
+		ByteArrayInputStream is = new ByteArrayInputStream(bytes);
+		
+		return deserialize(is);
+	
+	}
+	
+	static class SpecialInputStream extends ObjectInputStream {
+		
+		public SpecialInputStream(InputStream arg0) throws IOException {
+			super(arg0);
+		}
+
+		@Override
+		protected Class<?> resolveClass(ObjectStreamClass arg0) throws IOException,
+				ClassNotFoundException {
+
+			Class<?> clz = null;
+					
+			try {
+				return super.resolveClass(arg0);
+			} catch(ClassNotFoundException e) {
+			}
+			
+			try {
+				return Thread.currentThread().getContextClassLoader().loadClass(arg0.getName());
+			} catch(ClassNotFoundException e) {
+			}
+
+			try {
+				return VitalSignsDomainClassLoader.get().loadClass(arg0.getName());
+			} catch(ClassNotFoundException e) {
+			}
+			
+			throw new ClassNotFoundException(arg0.getName());
+			
+		}
+
+	}
+	
+	/**
+	 * Deserializes a java object from input stream
+	 * The stream will be closed once the object is written. This avoids the need for a finally clause, and maybe also exception handling, in the application code.
+	 * @param inputStream
+	 * @return
+	 */
+	public static <T> T deserialize(InputStream inputStream) {
+		
+		
+		
+		SpecialInputStream vois = null;
+		try {
+			vois = new SpecialInputStream(inputStream);
+			return (T) vois.readObject();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		} finally {
+			IOUtils.closeQuietly(vois);
+		}
+	}
 	
 	public static List<Entry<String, FeatureData>> getOrderedFeatureData(Map<String, FeatureData> features) {
 		

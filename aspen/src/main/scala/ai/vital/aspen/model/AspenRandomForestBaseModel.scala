@@ -36,7 +36,7 @@ abstract class AspenRandomForestBaseModel extends PredictionModel {
   
   def deserializeModel(stream: InputStream): Unit = {
     
-      val deserializedModel : RandomForestModel = SerializationUtils.deserialize(IOUtils.toByteArray(stream))
+      val deserializedModel : RandomForestModel = PredictionModelUtils.deserialize(IOUtils.toByteArray(stream))//SerializationUtils.deserialize(IOUtils.toByteArray(stream))
     
       model = deserializedModel match {
         case x: RandomForestModel => x

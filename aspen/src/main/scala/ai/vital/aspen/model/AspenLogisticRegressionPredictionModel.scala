@@ -22,7 +22,7 @@ class AspenLogisticRegressionPredictionModel extends PredictionModel {
   
   def deserializeModel(stream: InputStream): Unit = {
     
-    val deserializedModel : LogisticRegressionModel= SerializationUtils.deserialize(IOUtils.toByteArray(stream))
+    val deserializedModel : LogisticRegressionModel= PredictionModelUtils.deserialize(IOUtils.toByteArray(stream))//SerializationUtils.deserialize(IOUtils.toByteArray(stream))
     
     model = deserializedModel match {
       case x: LogisticRegressionModel => x

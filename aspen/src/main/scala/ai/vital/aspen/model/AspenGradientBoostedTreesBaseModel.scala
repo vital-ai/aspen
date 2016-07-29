@@ -22,7 +22,7 @@ abstract class AspenGradientBoostedTreesBaseModel extends PredictionModel {
   
   def deserializeModel(stream: InputStream): Unit = {
     
-      val deserializedModel : GradientBoostedTreesModel = SerializationUtils.deserialize(IOUtils.toByteArray(stream))
+      val deserializedModel : GradientBoostedTreesModel = PredictionModelUtils.deserialize(IOUtils.toByteArray(stream))//SerializationUtils.deserialize(IOUtils.toByteArray(stream))
     
       model = deserializedModel match {
         case x: GradientBoostedTreesModel => x
