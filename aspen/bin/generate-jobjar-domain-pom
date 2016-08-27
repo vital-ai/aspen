@@ -1,0 +1,152 @@
+#!/usr/bin/env groovy
+
+if(args.length != 1) {
+	System.err.println("usage: generate-jobjar-domain-pom <output_pom_file>")
+	return
+}
+
+def outFile = new File(args[0])
+
+def homeDir = new File(getClass().protectionDomain.codeSource.location.path).parentFile.parentFile.getAbsolutePath() + '/';
+
+def patternFile = new File(homeDir, "aspen-jobs-pom.xml")
+
+if(!patternFile.isFile()) {
+	System.err.println("pom patternfile not found or not a file: ${patternFile.absolutePath}")
+	return
+}
+
+
+def vitalhome = System.getenv('VITAL_HOME')
+
+if ( ! vitalhome ) {
+	System.err.println("No VITAL_HOME environment variable set!");
+	return
+}
+
+println "Output file: ${outFile.absolutePath}"
+
+if(outFile.absolutePath.equals(patternFile.absolutePath)) {
+	System.err.println("Cannot override source pattern file: ${patternFile.absolutePath}")
+	return
+}
+
+if(outFile.exists()) {
+	System.out.println("Output file already exists")
+	return
+}
+
+def content = patternFile.text
+
+def patternString = "<!-- insert any domain jars here -->"
+
+def indexOfPattern = content.indexOf(patternString)
+
+if(indexOfPattern < 0) {
+	System.err.println("pattern ${patternString} not found in file: ${patternFile.absolutePath}")
+	return
+}
+
+
+def domainGroovyJarsDir = new File(vitalhome, "domain-groovy-jar")
+
+def pattern = java.util.regex.Pattern.compile("(.+)\\-groovy\\-(\\d+.\\d+.\\d+)\\.jar")
+
+
+
+def mavenUpdate = new StringBuilder()
+
+int c = 0
+
+for( File jf : domainGroovyJarsDir.listFiles() ) {
+	
+	def matcher = pattern.matcher(jf.name)
+	
+	if( ! matcher.matches() ) continue
+	
+	c++
+	
+	def groupID = 'vital-ai'
+	
+	def artifactID = matcher.group(1)
+	
+	def version = matcher.group(2)
+	
+	//install domain jar into maven repository
+	println "Installing domain jar: ${jf.absolutePath}, groupID: ${groupID}, artifactID: ${artifactID}, version: ${version}"
+	
+	File processHome = new File(homeDir)
+	
+	boolean isWindows = System.getProperty("os.name").toLowerCase().indexOf("win") >= 0
+	
+	String mvnCmd = 'mvn'
+	if(isWindows) mvnCmd = 'mvn.cmd'
+	
+	
+	List cmd = [mvnCmd, 'install:install-file', (String)"-Dfile=${jf.absolutePath}",
+		(String)"-DgroupId=${groupID}", (String)"-DartifactId=${artifactID}", (String)"-Dversion=${version}",
+		(String)"-Dpackaging=jar", (String) "-Dfile=${jf.absolutePath}"
+		]
+	
+	
+	StringBuilder buffer = null
+	
+	boolean exitOnError = true
+	
+	Process process = new ProcessBuilder(cmd).directory(processHome).redirectErrorStream(true).start()
+	
+	InputStream is = process.getInputStream();
+	InputStreamReader isr = new InputStreamReader(is);
+	BufferedReader br = new BufferedReader(isr);
+	
+	String line;
+	int exit = -1;
+	
+	while ((line = br.readLine()) != null) {
+		// Outputs your process execution
+		println line
+		if(buffer != null) {
+			buffer.append(line).append((String)"\n")
+		}
+	}
+	
+	br.close()
+	
+	Integer v = null
+	
+	try {
+		v = process.exitValue();
+		println "Process returned immediatey, code: ${v}"
+	} catch (IllegalThreadStateException t) {
+	}
+
+	if(v == null) {
+		println "Still waiting for the process..."
+		v = process.waitFor()
+		println "finally returned code: ${v}"
+	}
+			
+	if(v != null && v.intValue() != 0 && exitOnError) {
+		System.err.println "Process return code: ${v} - exiting..."
+		return
+	}
+
+	mavenUpdate.append("""\
+  	
+    <dependency>
+      <groupId>${groupID}</groupId>
+      <artifactId>${artifactID}</artifactId>
+      <version>${version}</version>
+    </dependency>
+
+""")
+}
+
+
+content = content.substring(0, indexOfPattern) + mavenUpdate.toString() + content.substring(indexOfPattern + patternString.length())
+
+outFile.delete()
+
+outFile << content
+
+println "Installed ${c} domain jar(s), pom file generated: ${outFile.absolutePath}"

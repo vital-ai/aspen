@@ -1,7 +1,8 @@
 package ai.vital.aspen.groovy.nlp.model
 
-import ai.vital.domain.PosTag;
-import ai.vital.domain.Sentence
+import com.vitalai.domain.nlp.PosTag
+import com.vitalai.domain.nlp.Sentence
+
 
 class PosTagsUtils {
 

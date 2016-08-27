@@ -2,7 +2,6 @@ package ai.vital.aspen.examples;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -19,17 +18,17 @@ import ai.vital.aspen.groovy.nlp.steps.NamedPersonStep;
 import ai.vital.aspen.groovy.nlp.steps.SentenceDetectorStep;
 import ai.vital.aspen.groovy.nlp.steps.TextExtractStep;
 import ai.vital.aspen.groovy.nlp.steps.WhiteSpaceTokenizerStep;
-import ai.vital.common.uri.URIGenerator;
-import ai.vital.domain.Document;
-import ai.vital.domain.Edge_hasEntityInstance;
-import ai.vital.domain.Entity;
-import ai.vital.domain.EntityInstance;
-import ai.vital.vitalservice.model.App;
+import ai.vital.vitalsigns.uri.URIGenerator;
+
+import com.vitalai.domain.nlp.Document;
+import com.vitalai.domain.nlp.Edge_hasEntityInstance;
+import com.vitalai.domain.nlp.Entity;
+import com.vitalai.domain.nlp.EntityInstance;
+
 import ai.vital.vitalsigns.VitalSigns;
-import ai.vital.vitalsigns.meta.GraphContext;
 import ai.vital.vitalsigns.model.GraphObject;
-import ai.vital.vitalsigns.model.VITAL_Container;
 import ai.vital.vitalsigns.model.VITAL_Node;
+import ai.vital.vitalsigns.model.VitalApp;
 
 public class TwentyNewsNLP {
 
@@ -124,11 +123,7 @@ public class TwentyNewsNLP {
 		
 	}
 	
-	static App app = new App();
-	static {
-		app.setID("app");
-		app.setOrganizationID("customer");
-	}
+	static VitalApp app = VitalApp.withId("app");
 	
 	public synchronized List<GraphObject> process(List<GraphObject> input) throws Exception {
 		

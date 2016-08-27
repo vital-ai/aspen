@@ -3,13 +3,13 @@ package ai.vital.aspen.groovy.nlp.m3rd;
 import java.util.ArrayList;
 import java.util.List;
 
-import ai.vital.domain.Document;
-import ai.vital.domain.PosTag;
-import ai.vital.domain.Sentence;
-import ai.vital.domain.TextBlock;
-import ai.vital.domain.Token;
 import ai.vital.aspen.groovy.nlp.model.PosTagsUtils;
 import ai.vital.aspen.groovy.nlp.model.TokenUtils;
+import com.vitalai.domain.nlp.Document
+import com.vitalai.domain.nlp.PosTag
+import com.vitalai.domain.nlp.Sentence
+import com.vitalai.domain.nlp.TextBlock
+import com.vitalai.domain.nlp.Token
 import edu.cmu.minorthird.text.AbstractAnnotator;
 import edu.cmu.minorthird.text.CharAnnotation;
 import edu.cmu.minorthird.text.MonotonicTextLabels;

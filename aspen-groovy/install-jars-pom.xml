@@ -5,6 +5,9 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>Install Vital AI Jars into Local Repo</name>
   
+  <properties>
+  	<vital.version>0.2.304</vital.version>
+  </properties>
   
   <repositories>
   
@@ -27,11 +30,39 @@
   <build>
     <plugins>
 
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>1.4.1</version>
+        <executions>
+          <execution>
+            <id>enforce-property</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireEnvironmentVariable>
+                  <variableName>VITAL_HOME</variableName>
+                  <message>You must set VITAL_HOME property which is the source of jars</message>
+                </requireEnvironmentVariable>
+                <requireProperty>
+                  <property>vital.release.repo</property>
+                  <message>You must set vital.release.repo property which is the path to cloned releases branch of https://github.com/vital-ai/vital-public-mvn-repo/</message>
+                </requireProperty>
+              </rules>
+              <fail>true</fail>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-install-plugin</artifactId>
             <executions>
             
+	    <!--
                 <execution>
                   <id>vitalai-demoapp-groovy-0.2.0.jar</id>
                   <phase>validate</phase>
@@ -46,84 +77,153 @@
                     <file>${VITAL_HOME}/domain-groovy-jar/vitalai-demoapp-groovy-0.2.0.jar</file>
                   </configuration>
                 </execution>
+	     -->
+			     
+			     <!-- taken from public repo
+		          <execution>
+		            <id>vital-nlp-${vital.version}.jar</id>
+		            <phase>validate</phase>
+		            <goals>
+		              <goal>install-file</goal>
+		            </goals>
+		            <configuration>
+		              <groupId>vitalai-com</groupId>
+		              <artifactId>vital-nlp</artifactId>
+		              <version>${vital.version}</version>
+		              <packaging>jar</packaging>
+		              <file>${VITAL_HOME}/domain-groovy-jar/vital-nlp-groovy-${vital.version}.jar</file>
+		            </configuration>
+		          </execution>
+		          
+              <execution>
+		            <id>vital-ibm-watson-${vital.version}.jar</id>
+		            <phase>validate</phase>
+		            <goals>
+		              <goal>install-file</goal>
+		            </goals>
+		            <configuration>
+		              <groupId>vitalai-com</groupId>
+		              <artifactId>vital-ibm-watson</artifactId>
+		              <version>${vital.version}</version>
+		              <packaging>jar</packaging>
+		              <file>${VITAL_HOME}/domain-groovy-jar/vital-ibm-watson-groovy-${vital.version}.jar</file>
+		            </configuration>
+		          </execution>
+			       -->
+
 
                 <execution>
-                    <id>VitalDomain-groovy-0.2.350.jar</id>
+                    <id>VitalDomain-groovy-${vital.version}.jar</id>
                     <phase>validate</phase>
                     <goals>
                         <goal>install-file</goal>
                     </goals>
                     <configuration>
-				      <groupId>vital-ai</groupId>
-				      <artifactId>vital-domain</artifactId>
-				      <version>0.2.250</version>
-				      <packaging>jar</packaging>
-					  <file>${VITAL_HOME}/vital-domain/VitalDomain-groovy-0.2.250.jar</file>
+                      <packaging>jar</packaging>
+                      <file>${VITAL_HOME}/vital-domain/VitalDomain-groovy-${vital.version}.jar</file>
+                      <pomFile>${vital.release.repo}/vital-ai/vital-domain/${vital.version}/vital-domain-${vital.version}.pom</pomFile>
                     </configuration>
                     
                 </execution>
-
+                
 
                 <execution>
-                  <id>VitalSigns-0.2.250.jar</id>
+                  <id>VitalSigns-${vital.version}.jar</id>
                   <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
                   <configuration>
-                    <groupId>vital-ai</groupId>
-                    <artifactId>vitalsigns</artifactId>
-                    <version>0.2.250</version>
                     <packaging>jar</packaging>
-                    <file>${VITAL_HOME}/vitalsigns/command/VitalSigns-0.2.250.jar</file>
+                    <file>${VITAL_HOME}/vitalsigns/command/VitalSigns-${vital.version}.jar</file>
+                    <pomFile>${vital.release.repo}/vital-ai/vitalsigns/${vital.version}/vitalsigns-${vital.version}.pom</pomFile>
                   </configuration>
                 </execution>
                 
                 
                 <execution>
-                  <id>vital-lucene-0.2.250.jar</id>
+                  <id>vital-lucene-${vital.version}.jar</id>
                   <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
                   <configuration>
-                    <groupId>vital-ai</groupId>
-                    <artifactId>vital-lucene</artifactId>
-                    <version>0.2.250</version>
                     <packaging>jar</packaging>
-                    <file>${VITAL_HOME}/vital-lucene/vital-lucene-0.2.250.jar</file>
+                    <file>${VITAL_HOME}/vital-lucene/vital-lucene-${vital.version}.jar</file>
+                    <pomFile>${vital.release.repo}/vital-ai/vital-lucene/${vital.version}/vital-lucene-${vital.version}.pom</pomFile>
                   </configuration>
                 </execution>
 
 
                 <execution>
-                  <id>vital-triplestore-0.2.250.jar</id>
+                  <id>vital-sparql-${vital.version}.jar</id>
                   <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
                   <configuration>
-                    <groupId>vital-ai</groupId>
-                    <artifactId>vital-triplestore</artifactId>
-                    <version>0.2.250</version>
                     <packaging>jar</packaging>
-                    <file>${VITAL_HOME}/vital-triplestore/vital-triplestore-0.2.250.jar</file>
+                    <file>${VITAL_HOME}/vital-sparql/vital-sparql-${vital.version}.jar</file>
+                    <pomFile>${vital.release.repo}/vital-ai/vital-sparql/${vital.version}/vital-sparql-${vital.version}.pom</pomFile>
                   </configuration>
                 </execution>
 
 
                 <execution>
-                  <id>VitalService-0.2.250.jar</id>
+                  <id>VitalService-${vital.version}.jar</id>
+                  <phase>validate</phase>
+                  <goals>
+                    <goal>install-file</goal>
+                  </goals>
+                  <configuration>
+                    <packaging>jar</packaging>
+                    <file>${VITAL_HOME}/vitalservice/VitalService-${vital.version}.jar</file>
+                    <pomFile>${vital.release.repo}/vital-ai/vitalservice/${vital.version}/vitalservice-${vital.version}.pom</pomFile>
+                  </configuration>
+                </execution>
+
+
+                <execution>
+                  <id>vital-sql-${vital.version}.jar</id>
+                  <phase>validate</phase>
+                  <goals>
+                    <goal>install-file</goal>
+                  </goals>
+                  <configuration>
+                    <packaging>jar</packaging>
+                    <file>${VITAL_HOME}/vital-sql/vital-sql-${vital.version}.jar</file>
+                    <pomFile>${vital.release.repo}/vital-ai/vital-sql/${vital.version}/vital-sql-${vital.version}.pom</pomFile>
+                  </configuration>
+                </execution>
+
+
+                <execution>
+                  <id>vital-dynamodb-${vital.version}.jar</id>
+                  <phase>validate</phase>
+                  <goals>
+                    <goal>install-file</goal>
+                  </goals>
+                  <configuration>
+                    <packaging>jar</packaging>
+                    <file>${VITAL_HOME}/vital-dynamodb/vital-dynamodb-${vital.version}.jar</file>
+                    <pomFile>${vital.release.repo}/vital-ai/vital-dynamodb/${vital.version}/vital-dynamodb-${vital.version}.pom</pomFile>
+                  </configuration>
+                </execution>
+
+
+
+                <execution>
+                  <id>owl2vcs-vital-0.0.1.jar</id>
                   <phase>validate</phase>
                   <goals>
                     <goal>install-file</goal>
                   </goals>
                   <configuration>
                     <groupId>vital-ai</groupId>
-                    <artifactId>vitalservice</artifactId>
-                    <version>0.2.250</version>
+                    <artifactId>owl2vcs-vital</artifactId>
+                    <version>0.0.1</version>
                     <packaging>jar</packaging>
-                    <file>${VITAL_HOME}/vitalservice/VitalService-0.2.250.jar</file>
+                    <file>${VITAL_HOME}/vitalsigns/lib/owl2vcs-vital.jar</file>
                   </configuration>
                 </execution>
 

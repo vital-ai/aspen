@@ -1,7 +1,7 @@
 package ai.vital.aspen.groovy.nlp.model
 
-import ai.vital.domain.Sentence
-import ai.vital.domain.Token
+import com.vitalai.domain.nlp.Sentence
+import com.vitalai.domain.nlp.Token
 
 class TokenUtils {
 

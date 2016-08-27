@@ -24,7 +24,6 @@ object MatrixFactorizationModelWrapper {
     
 		val ris = FileSystem.get(outputDir.toUri(), new Configuration()).open(r)
 		val rank = ris.readInt()
-		ris.close()
     
     val ufRDD = sc.objectFile(uf.toString()).asInstanceOf[RDD[(Int, Array[Double])]]
     val pfRDD = sc.objectFile(pf.toString()).asInstanceOf[RDD[(Int, Array[Double])]]
@@ -44,7 +43,6 @@ object MatrixFactorizationModelWrapper {
     
 		val ros = FileSystem.get(outputDir.toUri(), new Configuration()).create(r, true)
 		ros.writeInt(model.rank)
-		ros.close()
 		model.userFeatures.saveAsObjectFile(uf.toString())
     model.productFeatures.saveAsObjectFile(pf.toString())
     

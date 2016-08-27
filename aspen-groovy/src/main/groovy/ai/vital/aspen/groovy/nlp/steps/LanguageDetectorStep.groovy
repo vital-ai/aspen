@@ -11,16 +11,21 @@ import com.cybozu.labs.langdetect.util.LangProfile
 
 import net.arnx.jsonic.JSON;
 import net.arnx.jsonic.JSONException;
-
-
-import ai.vital.domain.Annotation
-import ai.vital.domain.Document
-import ai.vital.domain.Edge_hasAnnotation;
+import ai.vital.vitalsigns.uri.URIGenerator;
+import com.vitalai.domain.nlp.Annotation
+import com.vitalai.domain.nlp.Document
+import com.vitalai.domain.nlp.Edge_hasAnnotation;
+import ai.vital.vitalsigns.VitalSigns;
+import ai.vital.vitalsigns.classes.ClassMetadata
+import ai.vital.vitalsigns.model.GraphObject;
+import ai.vital.vitalsigns.model.VitalApp
+import ai.vital.vitalsigns.properties.PropertiesRegistry;
+import ai.vital.vitalsigns.properties.PropertyMetadata;
 import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.nlp.model.DocumentUtils;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.ontology.VitalOntology
-
+import ai.vital.vitalsigns.VitalSigns
 
 class LanguageDetectorStep {
 
@@ -217,7 +222,75 @@ zh-tw
 			list.addAll(EdgeUtils.createEdges(doc, Arrays.asList(a), Edge_hasAnnotation, VitalOntology.Edge_hasAnnotationURIBase));
 				
 		
+	}
+	
+	
+	public List<GraphObject> processDocument(Document doc) {
 		
+		String docUri = doc.getURI();
+		
+		log.info("Processing document {} ...", docUri);
+
+		//get body or subproperties
+		
+		PropertiesRegistry pr = VitalSigns.get().getPropertiesRegistry()
+		PropertyMetadata pm = pr.getPropertyByShortName(Document.class, "body")
+		
+		List<PropertyMetadata> bodyProperties = pr.getSubProperties(pm, true)
+		
+		StringBuilder sb = new StringBuilder()
+		
+		for( int i = bodyProperties.size() -1 ; i>=0; i-- ) {
+			
+			PropertyMetadata x = bodyProperties.get(i)
+			
+			for(ClassMetadata d : x.getDomains() ) {
+				
+				if(d.getClazz().isAssignableFrom(doc.getClass()) ) {
+					
+					def val = doc[x.shortName]
+					
+					if(val != null) {
+						
+						if(sb.length() > 0) sb.append("\n\n\n")
+						sb.append(val.toString())
+						
+					}
+					
+				}
+				
+			}
+			
+		}
+
+		
+		String text = sb.toString()		
+		
+
+		Detector detector = DetectorFactory.create();
+
+		detector.append(text);
+
+		String langID = "unknown";
+
+		try {
+			langID = detector.detect();
+		} catch(Exception e) {
+			log.error(e.getLocalizedMessage(), e);
+		}
+
+		log.info("Detected language: {}", langID);
+
+		Annotation a = new Annotation();
+		a.generateURI((VitalApp) null);
+		a.annotationName = 'language-id';
+		a.annotationValue = langID;
+
+		List<GraphObject> list = new ArrayList<GraphObject>()
+		list.addAll(Arrays.asList(a));
+		list.addAll(EdgeUtils.createEdges(doc, Arrays.asList(a), Edge_hasAnnotation, VitalOntology.Edge_hasAnnotationURIBase));
+		
+		return list
 	}
 
 	

@@ -117,6 +117,8 @@ public class VitalOntology {
 	public static final Resource Edge_hasCategory = ResourceFactory.createResource(NS + "Edge_hasCategory");
 	public static final String Edge_hasCategoryURIBase = EDGE_NS + "hasCategory/";
 	
+	public static final String Edge_hasTargetNodeURIBase = EDGE_NS + "TargetNode/";
+	
 	//PROPERTIES
 
 	public final static Property hasName = ResourceFactory.createProperty(NS + "hasName");

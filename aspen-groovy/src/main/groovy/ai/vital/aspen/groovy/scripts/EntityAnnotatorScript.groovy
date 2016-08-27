@@ -8,14 +8,14 @@ import ai.vital.aspen.groovy.nlp.steps.PosTaggerStep
 import ai.vital.aspen.groovy.nlp.steps.SentenceDetectorStep
 import ai.vital.aspen.groovy.nlp.steps.TextExtractStep
 import ai.vital.aspen.groovy.nlp.steps.WhiteSpaceTokenizerStep
-import ai.vital.common.uri.URIGenerator;
-import ai.vital.domain.Document
-import ai.vital.domain.Edge_hasEntityInstance;
-import ai.vital.domain.Entity
-import ai.vital.domain.EntityInstance;
-import ai.vital.property.IProperty;
-import ai.vital.property.StringProperty;
-import ai.vital.property.URIProperty;
+import ai.vital.vitalsigns.uri.URIGenerator;
+import com.vitalai.domain.nlp.Document
+import com.vitalai.domain.nlp.Edge_hasEntityInstance;
+import com.vitalai.domain.nlp.Entity
+import com.vitalai.domain.nlp.EntityInstance;
+import ai.vital.vitalsigns.model.property.IProperty;
+import ai.vital.vitalsigns.model.property.StringProperty;
+import ai.vital.vitalsigns.model.property.URIProperty;
 import ai.vital.vitalservice.VitalService;
 import ai.vital.vitalsigns.VitalSigns;
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer;
@@ -23,6 +23,7 @@ import ai.vital.vitalsigns.block.BlockCompactStringSerializer.BlockIterator;
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 import ai.vital.vitalsigns.meta.GraphContext;
 import ai.vital.vitalsigns.model.GraphObject;
+import ai.vital.vitalsigns.model.VitalApp
 
 
 import java.util.Map.Entry
@@ -44,6 +45,8 @@ class EntityAnnotatorScript {
 		System.exit(1)
 	}
 
+	static VitalApp app = VitalApp.withId('annotator')
+	
 	static main(args) {
 
 		def cli = new CliBuilder(usage: 'process-documents [options]')
@@ -115,8 +118,6 @@ class EntityAnnotatorScript {
 				IOUtils.closeQuietly(stream)
 			}
 		}
-		
-		VitalService service = ai.vital.vitalservice.factory.VitalServiceFactory.getVitalService()
 		
 		VitalSigns vs = VitalSigns.get()
 
@@ -211,8 +212,7 @@ class EntityAnnotatorScript {
 				Document originalDocument = g				
 				
 				//empty
-				Document d = new Document()
-				d.generateURI(service.getApp())
+				Document d = new Document().generateURI((VitalApp) null)
 				d.body = text
 				
 				def list = []
@@ -264,10 +264,10 @@ class EntityAnnotatorScript {
 						
 						String localPart = "T" + entityCounter++
 						
-						ei.URI = URIGenerator.generateURI(service.getApp(), EntityInstance.class, dID + '_' + localPart)
+						ei.URI = URIGenerator.generateURI(app, EntityInstance.class, dID + '_' + localPart)
 						
 						Edge_hasEntityInstance edge = new Edge_hasEntityInstance()
-						edge.URI = URIGenerator.generateURI(service.getApp(), Edge_hasEntityInstance.class, dID + '_to_' + localPart)
+						edge.URI = URIGenerator.generateURI(app, Edge_hasEntityInstance.class, dID + '_to_' + localPart)
 						edge.addSource(originalDocument).addDestination(ei)
 						
 						writer.writeGraphObject(ei)

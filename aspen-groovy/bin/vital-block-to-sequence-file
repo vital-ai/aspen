@@ -1,0 +1,77 @@
+#!/usr/bin/env groovy
+
+import static groovy.io.FileType.FILES
+
+def homeDir = new File(getClass().protectionDomain.codeSource.location.path).parentFile.parentFile.getAbsolutePath() + '/';
+
+if ( ! System.getenv('VITAL_HOME') ) {
+	System.err.println("No VITAL_HOME environment variable set!");
+	return
+}
+
+def vitalhome = System.getenv('VITAL_HOME')
+
+def mainClass = 'ai.vital.aspen.groovy.scripts.VitalBlock2VitalSeqScript'
+
+List jars = []
+
+
+new File(homeDir, "target").eachFile(FILES) {
+  if(it.name.endsWith("-with-dependencies.jar")) {
+    jars.add(it.absolutePath)
+  }
+}
+
+new File(vitalhome, "vitalsigns").eachFileRecurse(FILES) {
+  if(it.name.endsWith(".jar")) {
+    jars.add(it.absolutePath)
+  }
+}
+
+new File(vitalhome, 'vital-domain').eachFile(FILES){
+  if(it.name.endsWith(".jar")) {
+      jars.add(it.absolutePath)
+  }
+}
+
+new File(vitalhome, 'vital-lucene').eachFile(FILES){
+  if(it.name.endsWith(".jar")) {
+      jars.add(it.absolutePath)
+  }
+}
+
+new File(vitalhome, "vitalservice").eachFileRecurse(FILES) {
+  if(it.name.endsWith(".jar")) {
+    jars.add(it.absolutePath)
+  }
+}
+
+
+
+new File(vitalhome, "domain-groovy-jar").eachFile(FILES) {
+  if(it.name.endsWith(".jar")) {
+    jars.add(it.absolutePath)
+  }
+}
+
+
+/*
+new File(homeDir, "mods").eachFileRecurse(FILES) {
+  if(it.name.endsWith(".jar")) {
+    jars.add(it.absolutePath)
+  }
+}
+*/
+
+
+
+List cmd = ['java', '-cp', (String)jars.join(File.pathSeparator), mainClass];
+
+for(String a : args) {
+	cmd.add(a);
+}
+
+//println(cmd);
+
+def process = new ProcessBuilder(cmd).redirectErrorStream(true).start()
+process.inputStream.eachLine {println it}

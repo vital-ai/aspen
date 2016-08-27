@@ -2,14 +2,20 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>vital-ai</groupId>
   <artifactId>aspen-groovy</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.2.304</version>
   <name>Aspen Groovy Modules</name>
   
   
+  <properties>
+    <!-- github server corresponds to entry in ~/.m2/settings.xml -->
+    <github.global.server>github</github.global.server>
+    <vital.version>0.2.304</vital.version>
+  </properties>
+  
   <repositories>
   
-  <!-- vital repositories disconnected -->
-  <!-- <repository>
+  <!-- vital repositories -->
+  <repository>
     <id>vital-public-mvn-repo-releases</id>
     <name>Vital AI Public Maven Repo Releases</name>
     <url>https://github.com/vital-ai/vital-public-mvn-repo/raw/releases/</url>
@@ -20,7 +26,7 @@
     <name>Vital AI Public Maven Repo Snapshots</name>
     <url>https://github.com/vital-ai/vital-public-mvn-repo/raw/snapshots/</url>
 </repository>
-  -->
+
   </repositories>
   
   
@@ -30,6 +36,7 @@
     
       <!-- assembly -->      
       <!-- no longer assembling a fat jar, aspen-groovy is a normal maven library -->
+      <!--
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -42,7 +49,7 @@
             </goals>
             <configuration>
 			  <shadedArtifactAttached>true</shadedArtifactAttached>
-              <shadedClassifierName>with-dependencies</shadedClassifierName> <!-- Any name that makes sense -->
+              <shadedClassifierName>with-dependencies</shadedClassifierName> 
               <artifactSet>
                 <excludes>
                   <exclude>*:groovy-all</exclude>
@@ -50,15 +57,41 @@
                   <exclude>vital-ai:vital-domain</exclude>
                   <exclude>vital-ai:vitalsigns</exclude>
                   <exclude>vital-ai:vital-lucene</exclude>
-                  <exclude>vital-ai:vital-triplestore</exclude>
+                  <exclude>vital-ai:vital-sparql</exclude>
                   <exclude>vital-ai:vitalservice</exclude>
                   <exclude>junit:*</exclude>
+                  <exclude>commons-cli:*</exclude>
+                  <exclude>commons-codec:*</exclude>
+                  <exclude>commons-collections:*</exclude>
+                  <exclude>commons-httpclient:*</exclude>
+                  <exclude>commons-io:*</exclude>
+                  <exclude>commons-logging:*</exclude>
+                  <exclude>log4j:*</exclude>
+                  <exclude>org.apache.commons:commons-lang3:*</exclude>
+                  <exclude>org.apache.commons:commons-lang3:*</exclude>
+                  <exclude>org.apache.lucene:*</exclude>
+                  <exclude>org.apache.lucene:*</exclude>
+                  <exclude>org.apache.jena:*</exclude>
+                  <exclude>com.googlecode.concurrentlinkedhashmap:*</exclude>
+                  <exclude>net.sourceforge.owlapi:*</exclude>
+                  <exclude>com.typesafe:*</exclude>
+                  <exclude>org.slf4j:*</exclude>
+                  <exclude>com.google.guava:*</exclude>
+                  <exclude>net.sf.trove4j:*</exclude>
+                  <exclude>com.ibm.icu:*</exclude>
+                  <exclude>xerces:xercesImpl:*</exclude>
+                  <exclude>xml-apis:xml-apis:*</exclude>
+                  <exclude>org.codehaus.jackson:*</exclude>
+                  <exclude>vital-ai:owl2vcs-vital</exclude>
+                  <exclude>com.google.code.externalsortinginjava:*</exclude>
+                  <exclude>org.openrdf.sesame:*</exclude>
                 </excludes>
               </artifactSet>
             </configuration>
           </execution>
         </executions>
       </plugin>
+      -->
     
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -131,10 +164,7 @@
   </build>
   
   
-  <properties>
-    <!-- github server corresponds to entry in ~/.m2/settings.xml -->
-    <github.global.server>github</github.global.server>
-</properties>
+
   
   
   <distributionManagement>
@@ -175,6 +205,12 @@
 	<groupId>mx.bigdata.jcalais</groupId>
 	<artifactId>j-calais</artifactId>
 	<version>1.0</version>
+	<exclusions>
+		<exclusion>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+		</exclusion>
+	</exclusions>
 </dependency>
  
  <dependency>
@@ -238,216 +274,30 @@
 
    
  
-<!-- vital components 3rd party depdendencies -->  
-   
-    <dependency>
-      <groupId>org.codehaus.groovy</groupId>
-      <artifactId>groovy-all</artifactId>
-      <version>2.4.0</version>
-      <scope>compile</scope>
-    </dependency>
-    
-	<dependency>
-      <groupId>commons-cli</groupId>
-      <artifactId>commons-cli</artifactId>
-      <version>1.2</version>
-      <scope>compile</scope>
-    </dependency>
-  	
-  	<dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>1.5</version>
-      <scope>compile</scope>
-    </dependency>
-    
-    <dependency>
-      <groupId>commons-collections</groupId>
-      <artifactId>commons-collections</artifactId>
-      <version>3.2.1</version>
-      <scope>compile</scope>
-    </dependency>	
-    
-    
-    <dependency>
-      <groupId>commons-httpclient</groupId>
-      <artifactId>commons-httpclient</artifactId>
-      <version>3.1</version>
-      <scope>compile</scope>
-    </dependency>	
-		
-
-	<dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.16</version>
-      <scope>compile</scope>
-    </dependency>	
-
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>2.1</version>
-      <scope>compile</scope>
-    </dependency>	
-    
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>3.3.1</version>
-      <scope>compile</scope>
-    </dependency>   
-    
-    <dependency>
-      <groupId>commons-logging</groupId>
-      <artifactId>commons-logging</artifactId>
-      <version>1.1.1</version>
-      <scope>compile</scope>
-    </dependency> 
-    
-    <dependency>
-      <groupId>org.apache.lucene</groupId>
-      <artifactId>lucene-analyzers-common</artifactId>
-      <version>4.7.0</version>
-      <scope>compile</scope>
-    </dependency>   		
-		
-			
-    <dependency>
-      <groupId>org.apache.lucene</groupId>
-      <artifactId>lucene-core</artifactId>
-      <version>4.7.0</version>
-      <scope>compile</scope>
-    </dependency> 
-			
-    
-    
-	<dependency>
-      <groupId>org.apache.jena</groupId>
-      <artifactId>jena-arq</artifactId>
-      <version>2.9.0-incubating</version>
-      <scope>compile</scope>
-    </dependency>
-  	
-  	
-  	<dependency>
-      <groupId>org.apache.jena</groupId>
-      <artifactId>jena-core</artifactId>
-      <version>2.7.0-incubating</version>
-      <scope>compile</scope>
-    </dependency>
-  				
-
-    <dependency>
-      <groupId>org.apache.jena</groupId>
-      <artifactId>jena-iri</artifactId>
-      <version>0.9.0-incubating</version>
-      <scope>compile</scope>
-    </dependency>
-    
-      	
-    <dependency>
-      <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
-      <artifactId>concurrentlinkedhashmap-lru</artifactId>
-      <version>1.3.2</version>
-      <scope>compile</scope>
-    </dependency> 	
-
-
-    <dependency>
-      <groupId>net.sourceforge.owlapi</groupId>
-      <artifactId>owlapi-api</artifactId>
-      <version>3.4.2</version>
-      <scope>compile</scope>
-    </dependency> 	
-	
-
-    <dependency>
-      <groupId>com.typesafe</groupId>
-      <artifactId>config</artifactId>
-      <version>1.2.1</version>
-      <scope>compile</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.7.5</version>
-      <scope>compile</scope>
-    </dependency>	
-	
-			
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <version>1.7.5</version>
-      <scope>compile</scope>
-    </dependency>	
-	
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>18.0</version>
-      <scope>compile</scope>
-    </dependency>	
-		
-	<dependency>
-      <groupId>net.sf.trove4j</groupId>
-      <artifactId>trove4j</artifactId>
-      <version>3.0.3</version>
-      <scope>compile</scope>
-    </dependency>			
-
-	<dependency>
-      <groupId>com.ibm.icu</groupId>
-      <artifactId>icu4j</artifactId>
-      <version>3.4.4</version>
-      <scope>compile</scope>
-    </dependency>
-				
-    <dependency>
-      <groupId>xerces</groupId>
-      <artifactId>xercesImpl</artifactId>
-      <version>2.10.0</version>
-      <scope>compile</scope>
-    </dependency>
-				
-    <dependency>
-      <groupId>xml-apis</groupId>
-      <artifactId>xml-apis</artifactId>
-      <version>1.4.01</version>
-      <scope>compile</scope>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-core-lgpl</artifactId>
-      <version>1.9.6</version>
-      <scope>compile</scope>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-lgpl</artifactId>
-      <version>1.9.6</version>
-      <scope>compile</scope>
-    </dependency>
-
-
-
-    <!-- dependencies installed into local repo from vital software --> 
+    <!-- dependencies installed into local repo from vital software -->
+    <!-- 
   	<dependency>
        <groupId>vital-ai</groupId>
        <artifactId>vitalai-demoapp-groovy</artifactId>
        <version>0.2.0</version>
       <scope>compile</scope>
    	</dependency>
+     --> 
+     
+         
+  
+	<!-- nlp domain -->
+  <dependency>
+    <groupId>vitalai-com</groupId>
+    <artifactId>vital-nlp</artifactId>
+    <version>${vital.version}</version>
+  </dependency>
    
     
   <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vital-domain</artifactId>
-      <version>0.2.250</version>
+      <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
   
@@ -455,7 +305,7 @@
   <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vitalsigns</artifactId>
-      <version>0.2.250</version>
+      <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
   	
@@ -465,7 +315,7 @@
     <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vitalservice</artifactId>
-      <version>0.2.250</version>
+      <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
      
@@ -474,42 +324,19 @@
     <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vital-lucene</artifactId>
-      <version>0.2.250</version>
+      <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
   
     
     <dependency>
 	  <groupId>vital-ai</groupId>
-      <artifactId>vital-triplestore</artifactId>
-      <version>0.2.250</version>
+      <artifactId>vital-sparql</artifactId>
+      <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
-    
   
  
- 	<!-- dependencies from vital public releases repo -->     
-    <dependency>
-      <groupId>vital-ai</groupId>
-      <artifactId>owl2vcs-vital</artifactId>
-      <version>0.0.1</version>
-      <scope>compile</scope>
-    </dependency> 
- 
- 
-    <dependency>
-      <groupId>com.google.code.externalsortinginjava</groupId>
-      <artifactId>externalsortinginjava</artifactId>
-      <version>0.1.9</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.openrdf.sesame</groupId>
-      <artifactId>sesame-runtime</artifactId>
-      <version>2.8.1</version>
-    </dependency>
- 
-    
     <dependency>
 		<groupId>junit</groupId>
 		<artifactId>junit</artifactId>

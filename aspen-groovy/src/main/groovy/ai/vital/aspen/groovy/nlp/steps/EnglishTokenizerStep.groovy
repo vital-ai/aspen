@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import ai.vital.domain.Category;
+
 
 
 
@@ -25,10 +25,13 @@ import opennlp.tools.util.Span;
 
 import com.hp.hpl.jena.rdf.model.Model;
 
-import ai.vital.domain.Document;
-import ai.vital.domain.Sentence;
-import ai.vital.domain.TextBlock;
-import ai.vital.domain.Token;
+import com.vitalai.domain.nlp.Document;
+import com.vitalai.domain.nlp.Edge_hasTargetNode;
+import com.vitalai.domain.nlp.Sentence;
+import com.vitalai.domain.nlp.TargetNode;
+import com.vitalai.domain.nlp.TextBlock;
+import com.vitalai.domain.nlp.Token;
+import ai.vital.flow.server.utils.EdgeUtils;
 import ai.vital.opennlp.classifier.Classification
 import ai.vital.opennlp.classifier.Classifier;
 import ai.vital.aspen.groovy.AspenGroovyConfig;
@@ -36,6 +39,7 @@ import ai.vital.vitalsigns.model.VITAL_Container;
 import ai.vital.aspen.groovy.nlp.models.EnglishTokenizerModel
 import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.ontology.VitalOntology
+
 
 
 
@@ -168,14 +172,13 @@ class EnglishTokenizerStep {
 			
 			if(bestCategory != null) {
 
-				Category c = new Category();
-				c.name = "sentiment/" + bestCategory.toLowerCase();
-				c.score = (float) ( bestScore.floatValue() / (float)sentencesCount );
+				TargetNode c= new TargetNode()
 				c.setURI(uri + "#SentimentCategory");
-//				doc.getCategories().add(c);
-		
+				c.name = "sentiment/" + bestCategory.toLowerCase();
+				c.targetScore = (double) ( bestScore.doubleValue() / (double)sentencesCount );
+				
 				payload.putGraphObjects(Arrays.asList(c));
-				payload.putGraphObjects(EdgeUtils.createEdges(doc, Arrays.asList(c), Edge_hasCategory.class, VitalOntology.Edge_hasCategoryURIBase));
+				payload.putGraphObjects(EdgeUtils.createEdges(doc, Arrays.asList(c), Edge_hasTargetNode.class, VitalOntology.Edge_hasTargetNodeURIBase));
 						
 			}
 			

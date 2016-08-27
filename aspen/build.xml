@@ -1,0 +1,83 @@
+<project name="aspen-distribution" default="dist">
+	
+    <fail unless="dist.version" message="dist.version property not set!" />
+	
+	<property name="dist.dir" value="${basedir}/dist" />
+	
+	<property name="prefix" value="aspen" />
+	
+	<property name="product.zip" value="aspen-${dist.version}.zip" />
+	
+	<property name="product.tar.gz" value="aspen-${dist.version}.tar.gz" />
+	
+	<property name="scaladocs.zip" value="aspen-${dist.version}-javadocs.zip" />
+	
+	<property name="module.jar" value="target/aspen-${dist.version}-module-assembly.jar" />
+	
+	<!-- generate distribution -->
+	<target name="dist">
+		
+		<copy file="${basedir}/README.md" tofile="${basedir}/aspen-${dist.version}-readme.txt" />
+		
+		<delete file="${product.zip}" />
+		<delete file="${product.tar.gz}" />
+		<delete file="${scaladocs.zip}" />
+		
+		<delete dir="${dist.dir}" />
+		<mkdir dir="${dist.dir}"/>
+		
+		<exec command="mvn" dir="${basedir}">
+			<arg value="-f" />
+			<arg value="aspen-module-pom.xml" />
+			<arg value="clean" />
+			<arg value="package" />
+			<arg value="scala:doc" />
+		</exec>
+		
+		<copy file="${module.jar}" todir="${dist.dir}" />
+		
+		<zip destfile="${scaladocs.zip}" basedir="${basedir}/target/site/scaladocs" compress="yes" />
+		
+		<zip destfile="${product.zip}" compress="yes">
+    		<zipfileset dir="${basedir}" filemode="755" defaultexcludes="true" prefix="${prefix}">
+                <include name="bin/**"/>
+    		</zipfileset>
+			<zipfileset dir="${basedir}" defaultexcludes="true" prefix="${prefix}">
+				<include name="aspen-jobs-pom.xml" />
+				<include name="aspen-module-pom.xml" />
+				<include name="conf/**" />
+				<include name="dist/**" />
+				<include name="domain-ontology/**" />
+				<include name="src/**" />
+				<include name=".classpath" />
+				<include name=".project" />
+				<include name="install-jars-pom.xml" />
+				<include name="LICENSE" />
+				<include name="pom.xml" />
+				<include name="README.md" />
+			</zipfileset>
+		</zip>
+		
+		<tar destfile="${product.tar.gz}" compression="gzip">
+			<tarfileset dir="${basedir}" filemode="755" defaultexcludes="true" prefix="${prefix}">
+				<include name="bin/**" />
+			</tarfileset>
+			<tarfileset dir="${basedir}" defaultexcludes="true" prefix="${prefix}">
+				<include name="aspen-jobs-pom.xml" />
+				<include name="aspen-module-pom.xml" />
+				<include name="conf/**" />
+				<include name="dist/**" />
+				<include name="domain-ontology/**" />
+				<include name="src/**" />
+				<include name=".classpath" />
+				<include name=".project" />
+				<include name="install-jars-pom.xml" />
+				<include name="LICENSE" />
+				<include name="pom.xml" />
+				<include name="README.md" />
+			</tarfileset>
+		</tar>
+		
+	</target>
+	
+</project>

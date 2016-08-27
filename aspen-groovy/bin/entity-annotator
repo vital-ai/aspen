@@ -13,10 +13,13 @@ def vitalhome = System.getenv('VITAL_HOME')
 
 def mainClass = 'ai.vital.aspen.groovy.scripts.EntityAnnotatorScript'
 
-List jars = [
-	homeDir + 'target/aspen-groovy-0.0.1-SNAPSHOT-with-dependencies.jar'
-]
+List jars = []
 
+new File(homeDir, "target").eachFile(FILES) {
+  if(it.name.endsWith("-with-dependencies.jar")) {
+    jars.add(it.absolutePath)
+  }
+}
 
 new File(vitalhome, "vitalsigns").eachFileRecurse(FILES) {
   if(it.name.endsWith(".jar")) {

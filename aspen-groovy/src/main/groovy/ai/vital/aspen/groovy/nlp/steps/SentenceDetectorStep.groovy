@@ -6,8 +6,6 @@ import org.slf4j.Logger;
 
 import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.step.AbstractStep
-import ai.vital.domain.Document;
-import ai.vital.domain.TextBlock;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,10 +21,10 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ai.vital.domain.Document;
-import ai.vital.domain.Edge_hasSentence;
-import ai.vital.domain.Sentence;
-import ai.vital.domain.TextBlock;
+import com.vitalai.domain.nlp.Document;
+import com.vitalai.domain.nlp.Edge_hasSentence;
+import com.vitalai.domain.nlp.Sentence;
+import com.vitalai.domain.nlp.TextBlock;
 import ai.vital.aspen.groovy.nlp.model.EdgeUtils;
 import ai.vital.aspen.groovy.nlp.models.SentenceDetectorModel;
 

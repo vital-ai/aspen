@@ -1,29 +1,29 @@
 package ai.vital.aspen.groovy.test
 
 
-import ai.vital.domain.*
-import ai.vital.vitalservice.model.App
+import ai.vital.domain.Person
 import ai.vital.vitalsigns.*
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer
 
-import ai.vital.common.uri.URIGenerator
+import ai.vital.vitalsigns.model.VitalApp
+import ai.vital.vitalsigns.uri.URIGenerator
 
 
 
 class VitalBlockWriteTest {
 
 	
-	static App app
+	static VitalApp app
 	
 	static {
-		app = new App(ID: 'vital-test', customerID: 'vital-ai')
+		app = VitalApp.withId('vital-test')
 	}
 	
 	static main(args) {
 	
 		Person p = new Person()
 		
-		p.URI = URIGenerator.generateURI(app, Person)
+		p.generateURI(app)
 		
 		p.name = "Marc"
 		

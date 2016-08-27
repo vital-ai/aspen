@@ -1,0 +1,341 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>vital-ai</groupId>
+  <artifactId>aspen-jobs</artifactId>
+  <version>0.2.304</version>
+  <packaging>jar</packaging>
+  
+  
+  <properties>
+  
+	<vital.version>0.2.304</vital.version>
+	
+	<!-- github server corresponds to entry in ~/.m2/settings.xml -->
+    <github.global.server>github</github.global.server>
+  </properties>
+  
+  <repositories>
+  
+ <repository>
+    <id>vital-public-mvn-repo-releases</id>
+    <name>Vital AI Public Maven Repo Releases</name>
+    <url>https://github.com/vital-ai/vital-public-mvn-repo/raw/releases/</url>
+</repository>
+
+<repository>
+    <id>vital-public-mvn-repo-snapshots</id>
+    <name>Vital AI Public Maven Repo Snapshots</name>
+    <url>https://github.com/vital-ai/vital-public-mvn-repo/raw/snapshots/</url>
+</repository>
+
+
+  <repository>
+  	<id>bintray-jcenter-repo</id>
+  	<name>BinTray JCenter Repo</name>
+  	<url>https://dl.bintray.com/spark-jobserver/maven</url>
+  </repository>
+
+  </repositories>
+  
+  
+  
+  
+  <build>
+    <!-- maven plugin -->
+    <!-- http://davidb.github.io/scala-maven-plugin/usage.html -->
+    <pluginManagement>
+      <plugins>
+		<plugin>
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <version>3.2.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.2</version>
+          <configuration>
+            <source>1.7</source>
+            <target>1.7</target>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  
+    <plugins>
+    
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>scala-compile-first</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>add-source</goal>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>scala-test-compile</id>
+            <phase>process-test-resources</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+      
+      <plugin>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>2.8.1</version>
+        <configuration>
+            <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/snapshots</altDeploymentRepository>
+        </configuration>
+    </plugin>
+      
+      
+      <plugin>
+            <groupId>com.github.github</groupId>
+            <artifactId>site-maven-plugin</artifactId>
+            <version>0.10</version>
+            <configuration>
+                <message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
+                <noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
+                <outputDirectory>${project.build.directory}/snapshots</outputDirectory> <!-- matches distribution management repository url above -->
+                <branch>refs/heads/snapshots</branch>                       <!-- remote branch name -->
+                <includes><include>**/*</include></includes>
+                <merge>true</merge>                                        <!-- don't delete old artifacts -->
+                <repositoryName>vital-public-mvn-repo</repositoryName>      <!-- github repo name -->
+                <repositoryOwner>vital-ai</repositoryOwner>    <!-- github username  -->
+            </configuration>
+            <executions>
+              <!-- run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase -->
+              <execution>
+                <goals>
+                  <goal>site</goal>
+                </goals>
+                <phase>deploy</phase>
+              </execution>
+            </executions>
+        </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.3</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+            
+            <configuration>
+		      <transformers>
+                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+                
+                <!-- for environemnt without VITAL_HOME -->
+				<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                    <file>${VITAL_HOME}/vital-ontology/vital-core-${vital.version}.owl</file>
+					<resource>resources/vital-ontology/vital-core-${vital.version}.owl</resource>
+                </transformer>
+                
+				<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                    <file>${VITAL_HOME}/vital-license/vital-license.lic</file>
+					<resource>resources/vital-license/vital-license.lic</resource>
+                </transformer>
+                
+                <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                    <file>${VITAL_HOME}/vital-config/vitalservice/vitalservice.config</file>
+					<resource>resources/vital-config/vitalservice/vitalservice.config</resource>
+                </transformer>
+                
+                <transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+                    <file>${VITAL_HOME}/vital-config/vitalsigns/vitalsigns.config</file>
+                    <resource>resources/vital-config/vitalsigns/vitalsigns.config</resource>
+                </transformer>
+                
+              </transformers>
+              <artifactSet>
+                <excludes>
+                	<exclude>vital-ai:vitalai-demoapp-groovy</exclude>
+                </excludes>
+              </artifactSet>
+              <filters>
+              <filter>
+                  <artifact>*:*</artifact>
+                  <excludes>
+                    <exclude>META-INF/*.SF</exclude>
+                    <exclude>META-INF/*.DSA</exclude>
+                    <exclude>META-INF/*.RSA</exclude>
+                  </excludes>
+                </filter>
+                </filters>
+              
+            </configuration>
+           
+          </execution>
+        </executions>
+      </plugin>
+      
+    </plugins>
+  </build>
+  
+  
+  <distributionManagement>
+    <repository>
+        <id>internal.repo</id>
+        <name>Temporary Staging Repository</name>
+        <url>file://${project.build.directory}/snaphots</url>
+    </repository>
+</distributionManagement>
+ 
+  
+  
+  <dependencies>
+  
+    <dependency>
+      <groupId>vital-ai</groupId>
+      <artifactId>aspen</artifactId>
+      <version>${vital.version}</version>
+  		<exclusions>
+  		  <exclusion>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.10</artifactId>
+  		  </exclusion>
+  		  <exclusion>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-mllib_2.10</artifactId>
+  		  </exclusion>
+  		  <exclusion>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-graphx_2.10</artifactId>
+  		  </exclusion>
+  		  <!-- job server may not have it
+		  <exclusion>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-hive-thriftserver_2.10</artifactId>
+  		  </exclusion>
+  		  -->
+  		  <!-- use custom groovy jar -->
+		  <exclusion>
+      	    <artifactId>org.codehaus.groovy</artifactId>
+      		<groupId>groovy-all</groupId>
+      	  </exclusion>
+      	  <exclusion>
+			<groupId>org.apache.spark</groupId>
+			<artifactId>spark-sql_2.10</artifactId>
+		  </exclusion>
+  		  <exclusion>
+			<groupId>org.apache.spark</groupId>
+			<artifactId>spark-hive_2.10</artifactId>
+  		  </exclusion>
+  		</exclusions>
+    </dependency>
+    
+    <!-- guava for dynamic ontologies -->
+	<dependency>
+		<groupId>com.google.guava</groupId>
+		<artifactId>guava</artifactId>
+		<version>18.0</version>
+	</dependency>
+    
+    <dependency>
+	  <groupId>vitalai-com</groupId>
+	  <artifactId>vital-ibm-watson</artifactId>
+	  <version>${vital.version}</version>
+    </dependency>
+    
+	<!-- overridden groovy dependency -->
+		
+	<dependency>
+		<groupId>org.codehaus.groovy</groupId>
+		<artifactId>groovy-all</artifactId>
+		<version>2.5.0-SNAPSHOT</version>
+	</dependency>
+    
+    
+      <dependency>
+  		<groupId>org.apache.spark</groupId>
+  		<artifactId>spark-core_2.10</artifactId>
+  		<version>1.6.0</version>
+  		<exclusions>
+  			<exclusion>
+  				<artifactId>commons-codec</artifactId>
+  				<groupId>commons-codec</groupId>
+  			</exclusion>
+  			<exclusion>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava</artifactId>
+  			</exclusion>
+  		</exclusions>
+  		<scope>provided</scope>
+  	</dependency>
+  	
+	<dependency>
+		<groupId>org.apache.spark</groupId>
+		<artifactId>spark-mllib_2.10</artifactId>
+		<version>1.6.0</version>
+		<scope>provided</scope>
+	</dependency>
+  	
+  	
+  	<dependency>
+		<groupId>org.apache.spark</groupId>
+		<artifactId>spark-graphx_2.10</artifactId>
+		<version>1.6.0</version>
+		<scope>provided</scope>
+	</dependency>
+	
+	<!-- 
+	<dependency>
+        <groupId>org.apache.spark</groupId>
+        <artifactId>spark-hive-thriftserver_2.10</artifactId>
+		<version>1.6.0</version>
+		<scope>provided</scope>
+	</dependency>
+	 -->
+	
+	  	<dependency>
+		<groupId>org.apache.spark</groupId>
+		<artifactId>spark-sql_2.10</artifactId>
+		<version>1.6.0</version>
+		<scope>provided</scope>
+	</dependency>
+	
+	
+	  	<dependency>
+		<groupId>org.apache.spark</groupId>
+		<artifactId>spark-hive_2.10</artifactId>
+		<version>1.6.0</version>
+		<scope>provided</scope>
+	</dependency>
+    
+  
+    <!-- insert any domain jars here -->
+  
+  
+  </dependencies>
+  
+  
+  <reporting>
+    <plugins>
+
+      <plugin>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
+      </plugin>
+  
+    </plugins>
+  </reporting>
+</project>

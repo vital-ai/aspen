@@ -1,7 +1,7 @@
 package ai.vital.aspen.groovy.test
 
-import ai.vital.vitalservice.model.App;
 import ai.vital.vitalsigns.model.GraphObject
+import ai.vital.vitalsigns.model.VitalApp
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer.VitalBlock
 import ai.vital.vitalsigns.block.BlockCompactStringSerializer
 
@@ -23,10 +23,10 @@ import ai.vital.hadoop.writable.VitalBytesWritable;
 class VitalBlockSequenceTest {
 
 	
-	static App app
+	static VitalApp app
 	
 	static {
-		app = new App(ID: 'vital-test', customerID: 'vital-ai')
+		app = VitalApp.withId('vital-test')
 	}
 	
 	

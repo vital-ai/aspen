@@ -16,16 +16,15 @@ import org.slf4j.LoggerFactory;
 // changed from namedperson
 
 
-import ai.vital.domain.Person;
-import ai.vital.domain.Document;
-import ai.vital.domain.Edge_hasEntity;
-import ai.vital.domain.Edge_hasEntityInstance;
-import ai.vital.domain.Edge_hasSentenceEntityInstance;
-import ai.vital.domain.Entity;
-import ai.vital.domain.EntityInstance;
-import ai.vital.domain.Sentence;
-import ai.vital.domain.TextBlock;
-import ai.vital.domain.Token;
+import com.vitalai.domain.nlp.Document;
+import com.vitalai.domain.nlp.Edge_hasEntity;
+import com.vitalai.domain.nlp.Edge_hasEntityInstance;
+import com.vitalai.domain.nlp.Edge_hasSentenceEntityInstance;
+import com.vitalai.domain.nlp.Entity;
+import com.vitalai.domain.nlp.EntityInstance;
+import com.vitalai.domain.nlp.Sentence;
+import com.vitalai.domain.nlp.TextBlock;
+import com.vitalai.domain.nlp.Token;
 import ai.vital.vitalsigns.model.VITAL_Container;
 import ai.vital.aspen.groovy.AspenGroovyConfig;
 import ai.vital.aspen.groovy.nlp.model.DocumentUtils;
@@ -118,7 +117,7 @@ class NamedPersonStep {
 			
 			log.info("Processing document {} ...", docUri);
 			
-			List<Person> namedPersons = new ArrayList<Person>();
+			List<Entity> namedPersons = new ArrayList<Entity>();
 			
 			int blockOffset = 0;
 			
