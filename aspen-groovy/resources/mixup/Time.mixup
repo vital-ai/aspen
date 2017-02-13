@@ -1,5 +1,10 @@
-provide 'time';
+provide 'Time';
 
+declareSpanType Time ;
+
+defSpanProp package_vital:'com.vitalai.domain.nlp' = : [ ... ] ;
+
+provide 'com.vitalai.domain.nlp.Entity' ;
 
 defDict timeSep = : , . , \; ; //how do I capture the ';'?
 defDict atTime = at, @;
@@ -8,7 +13,7 @@ defDict suffixTime = ish;
 defDict midWord = or, -, and, to;
 defDict fromWord = between, btw, bw, bt, from;
 defDict qttyWord = $, dollar, USD, dollars, cent, cents, %, percent, percents, times, quarter, Q, million, millions;
-defDict timeWord = noon, midnight, morning, afternoon, evening, tonight; 
+defDict timeWord = noon, midnight, morning, afternoon, evening, today, tonight; 
 
 defTokenProp prefixtime:1 =: ... [ai(prefixTime)] ... ;
 defTokenProp suffixtime:1 =: ... [ai(suffixTime)] ... ;
@@ -38,12 +43,22 @@ defTokenProp time:1 =: ... !eqi('the')  L time:1+R [midWord:1] time:1+R ... ; //
 defTokenProp time:1 =: ... [fromWord:1] time:1+R midword:1 time:1+R ... ; 
 
 
-defSpanType extracted_time =: ... !ai(qttyWord) [L time:1+ R] !ai(qttyWord) ... || ... !ai(qttyWord) [L time:1+ R] || [L time:1+ R] !ai(qttyWord) ...  ;
-defSpanType extracted_time =: ... <!ai(qttyWord), !time:1> [ai(prefixTime)+ R time:1+ R] !ai(qttyWord) ... || ... <!ai(qttyWord), !time:1> [ai(prefixTime)+ R time:1+ R] || [ai(prefixTime)+ R time:1+ R] !ai(qttyWord) ... ;;
-defSpanType extracted_time =: ... <!ai(qttyWord), !time:1> [ai(prefixTime)+ 'the' time:1+ R] !ai(qttyWord) ... || ... <!ai(qttyWord), !time:1> [ai(prefixTime)+ 'the' time:1+ R] || [ai(prefixTime)+ 'the' time:1+ R] !ai(qttyWord) ... ;;
-
-defTokenProp extracted_time:1 =: ... [@extracted_time] ... ;
+// note: rules can't end with ;; or else it silently breaks
 
 
+defSpanType Time =: ... !ai(qttyWord) [L time:1+ R] !ai(qttyWord) ... || ... !ai(qttyWord) [L time:1+ R] || [L time:1+ R] !ai(qttyWord) ...  ;
+defSpanType Time =: ... <!ai(qttyWord), !time:1> [ai(prefixTime)+ R time:1+ R] !ai(qttyWord) ... || ... <!ai(qttyWord), !time:1> [ai(prefixTime)+ R time:1+ R] || [ai(prefixTime)+ R time:1+ R] !ai(qttyWord) ... ;
+defSpanType Time =: ... <!ai(qttyWord), !time:1> [ai(prefixTime)+ 'the' time:1+ R] !ai(qttyWord) ... || ... <!ai(qttyWord), !time:1> [ai(prefixTime)+ 'the' time:1+ R] || [ai(prefixTime)+ 'the' time:1+ R] !ai(qttyWord) ... ;
 
+//defTokenProp Time:1 =: ... [@Time] ... ;
+
+//declareSpanType 'vital:Entity' ;
+
+//declareSpanType 'vital:Time' ;
+
+//defSpanType Time =~ itrie "first_names.txt" ;
+
+defSpanType 'vital:Entity' = Time : [ any+ ];
+
+//defSpanType 'vital:Entity' =: [ @Time ];
 

@@ -1,7 +1,13 @@
-require 'Person' ;
+//require 'Person' ;
 
-defSpanProp package_vital:'ai.vital.domain' = : [ ... ] ;
+//require 'time' ;
 
-provide 'ai.vital.domain.Entity' ;
 
-defSpanType 'vital:Entity' = 'Person' : [ any+ ];
+//defSpanProp package_vital:'ai.vital.domain' = : [ ... ] ;
+
+//provide 'ai.vital.domain.Entity' ;
+
+//defSpanType 'vital:Entity' = 'Person' : [ any+ ];
+
+//defSpanType 'vital:Entity' = 'extracted_time' : [ any+ ];
+

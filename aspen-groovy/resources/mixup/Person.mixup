@@ -1,13 +1,11 @@
-
 provide 'Person' ;
 
 declareSpanType Person ;
 
 defSpanType Person =~ itrie "first_names.txt" ;
 
+defSpanProp package_vital:'com.vitalai.domain.nlp' = : [ ... ] ;
 
-defSpanProp package_vital:'ai.vital.domain' = : [ ... ] ;
-
-provide 'ai.vital.domain.Entity' ;
+provide 'com.vitalai.domain.nlp.Entity' ;
 
 defSpanType 'vital:Entity' = Person : [ any+ ];

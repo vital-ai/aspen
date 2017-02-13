@@ -1,11 +1,10 @@
-
 //require 'vitalai.demoapp.PersonEntity' ;
 
 //require 'vitalai.demoapp.BrandEntity' ;
 
 //require 'vitalai.demoapp.Artist' ;
 
-//require 'time';
+require 'Time';
 
 require 'Person' ;
 
