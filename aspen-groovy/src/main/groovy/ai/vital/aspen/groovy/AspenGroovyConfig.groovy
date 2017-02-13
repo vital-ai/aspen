@@ -147,11 +147,11 @@ class AspenGroovyConfig {
 		
 		try {
 			
-			this.datesetsLocation = cfg.getString("datesetsLocation")
+			this.datasetsLocation = cfg.getString("datasetsLocation")
 			
 		} catch(ConfigException.Missing ex) {
-			datesetsLocation = "hdfs://127.0.0.1:8020/datasets/"
-			log.warn("Missing datesetsLocation - using default ${this.datesetsLocation}")
+			datasetsLocation = "hdfs://127.0.0.1:8020/datasets/"
+			log.warn("Missing datasetsLocation - using default ${this.datasetsLocation}")
 		}
 		
 	}
