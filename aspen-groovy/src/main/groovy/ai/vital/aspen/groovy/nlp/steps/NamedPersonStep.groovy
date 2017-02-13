@@ -170,7 +170,10 @@ class NamedPersonStep {
 						Set<String> spanTypes = new HashSet<String>()
 						spanTypes.add("Person")
 					
-						entityInstance.spanType = spanTypes
+						//entityInstance.spanType = spanTypes
+						//todo: was this supposed to be a list?
+						entityInstance.spanType = "Person"
+						
 						
 						
 						List<EntityInstance> instances = new ArrayList<EntityInstance>();
