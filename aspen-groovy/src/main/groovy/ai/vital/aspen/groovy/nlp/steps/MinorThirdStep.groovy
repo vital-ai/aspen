@@ -419,8 +419,9 @@ class MinorThirdStep extends AbstractStep {
 							iter.remove()
 						}
 					}
+					// todo: this should be some kind of list?  or multi-valued property?
 					
-					ei.spanType = spanTypes
+					ei.spanType = spanTypes.toString()
 					
 					
 //					entityInstances.add(ei);
