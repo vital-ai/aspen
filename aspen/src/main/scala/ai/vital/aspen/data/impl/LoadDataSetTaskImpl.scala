@@ -38,7 +38,7 @@ object LoadDataSetTaskImpl {
       
       (uri, row)
       
-    }.groupByKey()
+    }.rdd.groupByKey()
     
     val blockRDD : RDD[(String, Array[Byte])] = grouped.map { group =>
       

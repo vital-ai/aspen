@@ -71,8 +71,8 @@ import ai.vital.aspen.analysis.clarifai.AspenClarifaiImageCategorizationModel
 
 /* this is placeholder code */
 
-
 trait AbstractJob extends SparkJob with NamedRddSupport {
+
 
   //this flag is set when the job is about to be submitted to the jobserver - it skip the named rdd validation that would prevent posting it
   var skipNamedRDDValidation = false

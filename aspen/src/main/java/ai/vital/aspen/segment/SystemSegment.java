@@ -9,7 +9,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.spark.sql.DataFrame;
+
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+
 import org.apache.spark.sql.hive.HiveContext;
 
 import ai.vital.sql.schemas.apachesparksql.SparkSQLCustomImplementation;
@@ -71,7 +74,7 @@ public class SystemSegment {
 		
 		String systemSegmentTable = segmentToTableName(SparkSQLCustomImplementation.SYSTEM_SEGMENT_URI);
 		
-		DataFrame df = context.table(systemSegmentTable);
+		Dataset<Row> df = context.table(systemSegmentTable);
 		
 		VITAL_Container systemSegmentContainer = SystemSegmentImpl.readDataFrame(df);
 		

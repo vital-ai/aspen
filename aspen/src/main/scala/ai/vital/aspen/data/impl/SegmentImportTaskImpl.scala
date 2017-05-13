@@ -99,8 +99,8 @@ class SegmentImportTaskImpl(job: AbstractJob, task: SegmentImportTask) extends T
       
     } else {
       
-    	val g1 = initDF.map { r => ( r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r) }.groupByKey({ p => p._1})
-			val g2 = newDF.map { r => ( r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r ) }.groupByKey({ p => p._1})
+    	val g1 = initDF.map { r => ( r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r) }.rdd.groupBy({ p => p._1})
+			val g2 = newDF.map { r => ( r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r ) }.rdd.groupBy({ p => p._1})
 			
 			val join = g1.fullOuterJoin(g2).map { pair =>
 			

@@ -21,9 +21,9 @@ import ai.vital.aspen.task.TaskImpl
 import ai.vital.hadoop.writable.VitalBytesWritable
 import ai.vital.sql.model.VitalSignsToSqlBridge
 
-import org.apache.spark.rdd.PairRDDFunctions
+//import org.apache.spark.rdd.PairRDDFunctions
 
-import org.apache.spark.sql.functions._
+//import org.apache.spark.sql.functions._
 
 class SaveDataSetTaskImpl(job: AbstractJob, task: SaveDataSetTask) extends TaskImpl[SaveDataSetTask](job.sparkContext, task) {
   
@@ -90,9 +90,9 @@ class SaveDataSetTaskImpl(job: AbstractJob, task: SaveDataSetTask) extends TaskI
       
     } else {
       
-    	val g1 = initDF.map { r => ( r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r) }.groupByKey({ p => p._1})
+    	val g1 = initDF.map { r =>  (r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r) }.rdd.groupBy({ p => p._1})
     	
-			val g2 = newDF.map { r => ( r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r ) }.groupByKey({ p => p._1})
+			val g2 = newDF.map { r =>  (r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r)  }.rdd.groupBy({ p => p._1})
 			
 			// KeyValueGroupedDataset, convert to pair rdds? 
 			
