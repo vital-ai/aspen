@@ -2,7 +2,7 @@ package ai.vital.aspen.model
 
 object MatrixFactorizationModelWrapper {}
 
-@serializable
+//@serializable
 class MatrixFactorizationModelWrapper extends Serializable {
   
   var rank : Int = -1

@@ -1,5 +1,6 @@
 package ai.vital.aspen.data.impl
 
+
 import java.util.ArrayList
 
 import scala.collection.JavaConversions.asScalaBuffer
@@ -19,6 +20,10 @@ import ai.vital.aspen.job.AbstractJob
 import ai.vital.aspen.task.TaskImpl
 import ai.vital.hadoop.writable.VitalBytesWritable
 import ai.vital.sql.model.VitalSignsToSqlBridge
+
+import org.apache.spark.rdd.PairRDDFunctions
+
+import org.apache.spark.sql.functions._
 
 class SaveDataSetTaskImpl(job: AbstractJob, task: SaveDataSetTask) extends TaskImpl[SaveDataSetTask](job.sparkContext, task) {
   
@@ -65,6 +70,8 @@ class SaveDataSetTaskImpl(job: AbstractJob, task: SaveDataSetTask) extends TaskI
   
     val hiveContext = job.getHiveContext()
     
+    import hiveContext.implicits._
+    
     
     
     val initDF = hiveContext.table(tableName)
@@ -83,10 +90,11 @@ class SaveDataSetTaskImpl(job: AbstractJob, task: SaveDataSetTask) extends TaskI
       
     } else {
       
-    	val g1 = initDF.map { r => ( r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r) }.groupBy({ p => p._1})
+    	val g1 = initDF.map { r => ( r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r) }.groupByKey({ p => p._1})
     	
-			val g2 = newDF.map { r => ( r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r ) }.groupBy({ p => p._1})
+			val g2 = newDF.map { r => ( r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r ) }.groupByKey({ p => p._1})
 			
+			// KeyValueGroupedDataset, convert to pair rdds? 
 			
 			val join = g1.fullOuterJoin(g2).map { pair =>
 			

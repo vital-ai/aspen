@@ -1,5 +1,7 @@
 package ai.vital.aspen.data.impl
 
+
+
 import java.util.ArrayList
 import java.util.HashMap
 
@@ -18,9 +20,17 @@ import ai.vital.hadoop.writable.VitalBytesWritable
 import ai.vital.sql.model.VitalSignsToSqlBridge
 import ai.vital.vitalsigns.VitalSigns
 
+import org.apache.spark.sql.SparkSession
+
+import org.apache.spark.rdd.PairRDDFunctions
+
+
 object LoadDataSetTaskImpl {
   
     def dataFrameToVitalBlockRDD(df : DataFrame) : RDD[(String, Array[Byte])] = {
+    
+    val sparkSession = SparkSession.builder.getOrCreate()
+    import sparkSession.implicits._
     
     val grouped = df.map { row =>
       

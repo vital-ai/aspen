@@ -1,5 +1,6 @@
 package ai.vital.aspen.data.impl
 
+
 import java.util.ArrayList
 import scala.collection.JavaConversions.asScalaBuffer
 import org.apache.spark.rdd.RDD.rddToPairRDDFunctions
@@ -12,6 +13,9 @@ import ai.vital.aspen.job.AbstractJob
 import ai.vital.aspen.task.TaskImpl
 import ai.vital.sql.model.VitalSignsToSqlBridge
 import org.apache.spark.sql.DataFrame
+
+import org.apache.spark.sql.functions._
+
 
 class SegmentImportTaskImpl(job: AbstractJob, task: SegmentImportTask) extends TaskImpl[SegmentImportTask](job.sparkContext, task) {
   
@@ -27,6 +31,9 @@ class SegmentImportTaskImpl(job: AbstractJob, task: SegmentImportTask) extends T
     
     val hiveContext = job.getHiveContext()
     
+
+	import hiveContext.implicits._
+
 
     //obtain segment table name from vital-sql
     
@@ -92,8 +99,8 @@ class SegmentImportTaskImpl(job: AbstractJob, task: SegmentImportTask) extends T
       
     } else {
       
-    	val g1 = initDF.map { r => ( r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r) }.groupBy({ p => p._1})
-			val g2 = newDF.map { r => ( r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r ) }.groupBy({ p => p._1})
+    	val g1 = initDF.map { r => ( r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r) }.groupByKey({ p => p._1})
+			val g2 = newDF.map { r => ( r.getAs[String](VitalSignsToSqlBridge.COLUMN_URI), r ) }.groupByKey({ p => p._1})
 			
 			val join = g1.fullOuterJoin(g2).map { pair =>
 			
