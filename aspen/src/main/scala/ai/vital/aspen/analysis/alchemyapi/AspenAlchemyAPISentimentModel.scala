@@ -130,13 +130,13 @@ class AspenAlchemyAPISentimentModel extends PredictionModel {
     
     if(cs.length() > 0) {
       
-    	endpoint = "http://access.alchemyapi.com/calls/text/TextGetTextSentiment"
+    	endpoint = "https://access.alchemyapi.com/calls/text/TextGetTextSentiment"
         
     } else if(url != null) {
     	
     	urlCase = true
       
-      endpoint = "http://access.alchemyapi.com/calls/url/URLGetTextSentiment"
+      endpoint = "https://access.alchemyapi.com/calls/url/URLGetTextSentiment"
       
     } else {
       throw new RuntimeException("No text nor uri features")

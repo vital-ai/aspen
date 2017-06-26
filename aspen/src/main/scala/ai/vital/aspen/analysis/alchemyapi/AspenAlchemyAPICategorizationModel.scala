@@ -129,13 +129,13 @@ class AspenAlchemyAPICategorizationModel extends PredictionModel {
     
     if(cs.length() > 0) {
       
-    	endpoint = "http://access.alchemyapi.com/calls/text/TextGetRankedTaxonomy"
+    	endpoint = "https://access.alchemyapi.com/calls/text/TextGetRankedTaxonomy"
         
     } else if(url != null) {
     	
     	urlCase = true
       
-      endpoint = "http://access.alchemyapi.com/calls/url/URLGetRankedTaxonomy"
+      endpoint = "https://access.alchemyapi.com/calls/url/URLGetRankedTaxonomy"
       
     } else {
       throw new RuntimeException("No text nor uri features")
