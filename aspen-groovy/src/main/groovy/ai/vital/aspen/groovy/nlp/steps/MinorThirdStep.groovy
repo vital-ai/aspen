@@ -56,7 +56,7 @@ import ai.vital.aspen.groovy.ontology.VitalOntology
 
 class MinorThirdStep extends AbstractStep {
 
-	public static boolean DEBUG = false;
+	public static boolean DEBUG = true;
 	
 	private static final String PACKAGE_PREFIX = "package_";
 

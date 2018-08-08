@@ -136,7 +136,7 @@ class EntityAnnotatorScript {
 		extract_step.processHtml = false
 		
 		SentenceDetectorStep sentdetect_step = new SentenceDetectorStep()
-		sentdetect_step.singleSentencePerBlock = true
+		sentdetect_step.singleSentencePerBlock = false
 		sentdetect_step.init()
 		
 		
@@ -144,14 +144,12 @@ class EntityAnnotatorScript {
 		wst_step.init()
 		
 		
-		/*
+		
 		PosTaggerStep pos_step = new PosTaggerStep()
 		pos_step.init()
 		
 		ChunkerStep chunker_step = new ChunkerStep()
 		chunker_step.init()
-		*/
-		
 		
 		MinorThirdStep m3rd_step = new MinorThirdStep()
 		m3rd_step.init()
@@ -222,24 +220,45 @@ class EntityAnnotatorScript {
 				vs.addToCache(list)
 				vs.addToCache([d])
 				
+				println "Extract Step: "
+				list.each {println it }
+				
 				list = []
 				
 				sentdetect_step.processDocument(d, list)
 				vs.addToCache(list)
 				
+				println "Sentences: "
+				
+				list.each {println it }
+				
+				
 				list = []
 				
 				wst_step.processDocument(d)
 			
-				/*
+				println "Whitespace Document:"
+				
+				println d
+				
 				pos_step.processDocument(d)
 			
+				println "POS Document:"
+				
+				d.getTextBlocks().each { it.getSentences().each { println it } }
+				
+				
 				list = []
 				
 				chunker_step.processDocument(d, list)
 				
 				vs.addToCache(list)
-				*/
+				
+				println "Chunker:"
+
+				list.each {println it }
+				
+								
 				
 				
 				list = []
@@ -248,10 +267,19 @@ class EntityAnnotatorScript {
 				
 				vs.addToCache(list)
 				
+				println "MinorThird: " 
+				
+				list.each {println it }
+				
 				
 				list = []
 				namePersonStep.processDocument(d, list)
 				vs.addToCache(list)
+				
+				println "NamedPerson: "
+				
+				list.each {println it }
+				
 				
 				
 				list = []
