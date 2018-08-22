@@ -1,12 +1,25 @@
 package ai.vital.aspen.utils.analyzer
 
+import org.slf4j.Logger;
+
 import ai.vital.aspen.utils.stemmer.impl.SnowballStemmer
 import ai.vital.aspen.utils.stemmer.impl.ext.EnglishStemmer
 import opennlp.tools.tokenize.TokenizerME
 import opennlp.tools.tokenize.TokenizerModel
+import ai.vital.aspen.groovy.AspenGroovyConfig;
+
+import org.apache.commons.io.IOUtils;
+
+
+import org.slf4j.LoggerFactory;
+
 
 class VitalSimpleAnalyzer {
 
+	
+	private final static Logger log = LoggerFactory.getLogger(VitalSimpleAnalyzer.class);
+	
+	
 	
 	// get resources out of jar
 	
@@ -40,13 +53,48 @@ class VitalSimpleAnalyzer {
 		
 		stemmer = new EnglishStemmer()
 		
-		InputStream inputStream = new FileInputStream("/Users/hadfield/Local/vital-git/aspen/aspen-groovy/resources/models/en-token.bin");
+		InputStream inputStream = null
 		
+		
+		try {
+			
+				if( AspenGroovyConfig.get().loadResourcesFromClasspath ) {
+					
+					String path = "/resources/models/en-token.bin"
+					
+					log.info("Initializing token model from classpath: {}", path);
+					
+					inputStream = AspenGroovyConfig.class.getResourceAsStream(path)
+					
+					if(inputStream == null) throw new RuntimeException("Model file not found: ${path}")
+					
+				} else {
+				
+					String resDir = AspenGroovyConfig.get().resourcesDir
+					if(!resDir) throw new RuntimeException("resourcesDir not set")
+				
+					File tokenModelFile = new File(new File(resDir, "models"), "en-token.bin")
+					log.info("Initializing token model from file: {}", tokenModelFile.getAbsolutePath());
+					
+					if(!tokenModelFile.exists()) {
+						throw new RuntimeException("Model file not found: ${tokenModelFile.absolutePath}")
+					}
+					
+					inputStream = new FileInputStream(tokenModelFile)
+					
+				}
 		
 		TokenizerModel tokenModel = new TokenizerModel(inputStream);
 		
 		
 		tokenizer = new TokenizerME(tokenModel);
+		
+		
+		} finally {
+		
+			IOUtils.closeQuietly(inputStream)
+		
+		}
 		
 		
 	}
