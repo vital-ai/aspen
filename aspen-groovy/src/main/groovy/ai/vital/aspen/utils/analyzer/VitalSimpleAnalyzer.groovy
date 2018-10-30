@@ -185,7 +185,7 @@ class VitalSimpleAnalyzer {
 	// check on tokenization to match up contractions
 	// wouldn't tokenizes to: would, n't, so "n't" perhaps should be a stop word
 	
-	
+	// these to get moved to a file in resources directory (same as models)
 	
 	String[] default_stopwords =
 	["n't", 'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "'re", "'ve",
