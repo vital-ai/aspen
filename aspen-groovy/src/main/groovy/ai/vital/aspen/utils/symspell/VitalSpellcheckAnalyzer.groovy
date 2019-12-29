@@ -29,7 +29,6 @@ class VitalSpellcheckAnalyzer {
 	private boolean init() throws IOException, SpellCheckException {
 		
 		
-	 // ClassLoader classLoader = VitalSpellcheckAnalyzer.class.getClassLoader();
 	  
 	  SpellCheckSettings spellCheckSettings = SpellCheckSettings.builder()
 	  .countThreshold(1)
@@ -51,14 +50,7 @@ class VitalSpellcheckAnalyzer {
 		  new QwertyDistance()); // new QwertyDistance() // null
 	  
 	  
-	  /*
-	  WeightedDamerauLevenshteinDistance weightedDamerauLevenshteinDistance =
-		  new WeightedDamerauLevenshteinDistance(spellCheckSettings.getDeletionWeight(),
-			  spellCheckSettings.getInsertionWeight(), spellCheckSettings.getReplaceWeight(),
-			  spellCheckSettings.getTranspositionWeight(), null);
-		  
-	  */
-		  
+	 
 		  
 	  dataHolder = new InMemoryDataHolder(spellCheckSettings, new Murmur3HashFunction());
   
@@ -70,13 +62,13 @@ class VitalSpellcheckAnalyzer {
 	  symSpellCheck = new SymSpellCheck(dataHolder, weightedDamerauLevenshteinDistance,
 		  spellCheckSettings);
 	  
-	  println "Loading unigram from source: " + "frequency_dictionary_en_82_765.txt"
+	//  println "Loading unigram from source: " + "frequency_dictionary_en_82_765.txt"
 	  
 	  loadUniGramFile(
 		  VitalSpellcheckAnalyzer.getResourceAsStream("/frequency_dictionary_en_82_765.txt")
 		  );
 	  
-		println "Loading bigram from resource: " + "frequency_bigramdictionary_en_243_342.txt" 
+	//	println "Loading bigram from resource: " + "frequency_bigramdictionary_en_243_342.txt" 
 		  
 	  loadBiGramFile(
 		  VitalSpellcheckAnalyzer.getResourceAsStream("/frequency_bigramdictionary_en_243_342.txt")
@@ -91,16 +83,12 @@ class VitalSpellcheckAnalyzer {
 	  
 		String line;
 		while ((line = br.readLine()) != null) {
-			
-			//println "Line: " + line
-			
+				
 		  String[] arr = line.split("\\s+");
+		  
 		  dataHolder.addItem(new DictionaryItem(arr[0], Double.parseDouble(arr[1]), -1.0));
 		}
 	  
-		//println "unigram dataHolder size: " + dataHolder.size
-		
-		
 	}
   
 	private void loadBiGramFile(InputStream file) throws IOException, SpellCheckException {
@@ -109,27 +97,18 @@ class VitalSpellcheckAnalyzer {
 	  
 		String line;
 		while ((line = br.readLine()) != null) {
-			
-			//println "Line: " + line
-			
+						
 		  String[] arr = line.split("\\s+");
 		  dataHolder
 			  .addItem(new DictionaryItem(arr[0] + " " + arr[1], Double.parseDouble(arr[2]), -1.0));
 		}
-		
-		
-		//println "bigram dataHolder size: " + dataHolder.size
-	  
-		
-		
+				
 	}
   
 	private void suggestItem(String[] args) throws IOException, SpellCheckException {
 	  if (args.length > 0) {
 		suggestItemOnArgs(args[0]);
-	  } else {
-		suggestItemOnConsole();
-	  }
+	  } 
   
 	}
   
@@ -154,53 +133,41 @@ class VitalSpellcheckAnalyzer {
 	  List<SuggestionItem> suggestions = symSpellCheck.lookup("abacs", Verbosity.ALL, 2.0)
 	  
 	  
-	  println "Suggestions: " + suggestions
+	 // println "Suggestions: " + suggestions
 	  
 	  // how to get more than one compound suggestion?
 	  // i always get exactly one
 	  // implementation seems to only select one, so perhaps just not implemented yet
 	  
 	  
-	  
+	 /* 
 	  suggestions //.stream()
 		  //.limit(10)
-		  .each { suggestion -> System.out.println(
+		  .each { suggestion -> 
+			  System.out.println(
 			  "Lookup suggestion: "
 				  + suggestion.getTerm() + " "
 				  + suggestion.getDistance() + " "
 				  + suggestion.getCount())
 		  }
-	  
+	 */
+	   
 	  SuggestionItem compound = symSpellCheck.lookupCompound(inputTerm).get(0);
 		  
 				  
 	  Composition composition = symSpellCheck.wordBreakSegmentation(inputTerm, 10, 2);
 		  
-	  System.out.println("LookupCompound: " + compound.getTerm());
+	//  System.out.println("LookupCompound: " + compound.getTerm());
 	  
-	  System.out.println("Composition: " + composition.getCorrectedString());
+	//  System.out.println("Composition: " + composition.getCorrectedString());
 	  
 	}
   
-	private void suggestItemOnConsole() throws IOException, SpellCheckException {
-	  String inputTerm;
-	  BufferedReader reader =
-		  new BufferedReader(new InputStreamReader(System.in));
-	  while (true) {
-		System.out.println("Please enter the term to get the suggest Item");
-		inputTerm = reader.readLine();
-		if (inputTerm.equalsIgnoreCase("q")) {
-		  return;
-		}
-		suggestItemOnArgs(inputTerm);
-	  }
-	}
+	
   
 	public static void main(String[] args) throws IOException, SpellCheckException {
 		
-	  // migrate library into aspen?
-		  
-		
+	 	
 		
 	  //String[] phrase = ["insurrance pollicy"]
 		
@@ -226,7 +193,53 @@ class VitalSpellcheckAnalyzer {
 	  
 	  println "Input: " + phrase[0]
 	  
-	  spellCheckerConsole.suggestItem(phrase);
+	  // use for single terms
+	  
+   //List<SuggestionItem> suggestions = spellCheckerConsole.symSpellCheck.lookup(phrase[0]);
+   
+   //List<SuggestionItem> suggestions = spellCheckerConsole.symSpellCheck.lookup("pollicy");
+   
+   //println "Suggestions: " + suggestions
+   
+   
+   // get multiple compound suggestions
+   List<SuggestionItem> suggestions = spellCheckerConsole.symSpellCheck.lookupCompound(phrase[0]);
+   
+   
+   //List<SuggestionItem> suggestions = symSpellCheck.lookupCompound(inputTerm)
+   
+	 // use for single word suggestions
+   //List<SuggestionItem> suggestions = symSpellCheck.lookup("abacs", Verbosity.ALL, 2.0)
+   
+   
+  // println "Suggestions: " + suggestions
+   
+   // how to get more than one compound suggestion?
+   // i always get exactly one
+   // implementation seems to only select one, so perhaps just not implemented yet
+   
+   
+  
+   suggestions //.stream()
+	   //.limit(10)
+	   .each { suggestion ->
+		   System.out.println(
+		   "Lookup suggestion: "
+			   + suggestion.getTerm() + " "
+			   + suggestion.getDistance() + " "
+			   + suggestion.getCount())
+	   }
+  
+	
+   SuggestionItem compound = spellCheckerConsole.symSpellCheck.lookupCompound(phrase[0]).get(0);
+	   
+			   
+   Composition composition = spellCheckerConsole.symSpellCheck.wordBreakSegmentation(phrase[0], 10, 2);
+	   
+   System.out.println("LookupCompound: " + compound.getTerm());
+   
+   System.out.println("Composition: " + composition.getCorrectedString());
+ 
 	}
 	
 	

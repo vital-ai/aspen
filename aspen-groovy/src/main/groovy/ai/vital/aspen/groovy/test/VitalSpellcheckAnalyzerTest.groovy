@@ -34,8 +34,6 @@ class VitalSpellcheckAnalyzerTest {
 	// i always get exactly one
 	// implementation seems to only select one, so perhaps just not implemented yet
 	
-	
-	
 	suggestions //.stream()
 		//.limit(10)
 		.each { suggestion -> System.out.println(
@@ -54,8 +52,6 @@ class VitalSpellcheckAnalyzerTest {
 	
 	System.out.println("Composition: " + composition.getCorrectedString());
 	
-	
-		
 		
 	}
 
