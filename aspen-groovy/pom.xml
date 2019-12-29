@@ -272,6 +272,14 @@
 	<version>2.2.0</version>
   </dependency>
 
+
+<dependency>
+      <groupId>io.github.mightguy</groupId>
+      <artifactId>symspell-lib</artifactId>
+      <version>6.6-SNAPSHOT</version>
+    </dependency>
+
+
    
  
     <!-- dependencies installed into local repo from vital software -->
@@ -345,10 +353,6 @@
     
  
  </dependencies>
- 
- 
-  
-  
-  
+
   
 </project>
