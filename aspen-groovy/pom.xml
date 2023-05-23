@@ -1,40 +1,42 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>vital-ai</groupId>
   <artifactId>aspen-groovy</artifactId>
   <version>0.2.304</version>
   <name>Aspen Groovy Modules</name>
-  
-  
+
+
   <properties>
     <!-- github server corresponds to entry in ~/.m2/settings.xml -->
     <github.global.server>github</github.global.server>
     <vital.version>0.2.304</vital.version>
   </properties>
-  
-  <repositories>
-  
-  <!-- vital repositories -->
-  <repository>
-    <id>vital-public-mvn-repo-releases</id>
-    <name>Vital AI Public Maven Repo Releases</name>
-    <url>https://github.com/vital-ai/vital-public-mvn-repo/raw/releases/</url>
-</repository>
 
-<repository>
-    <id>vital-public-mvn-repo-snapshots</id>
-    <name>Vital AI Public Maven Repo Snapshots</name>
-    <url>https://github.com/vital-ai/vital-public-mvn-repo/raw/snapshots/</url>
-</repository>
+  <repositories>
+
+    <!-- vital repositories -->
+    <repository>
+      <id>vital-public-mvn-repo-releases</id>
+      <name>Vital AI Public Maven Repo Releases</name>
+      <url>https://github.com/vital-ai/vital-public-mvn-repo/raw/releases/</url>
+    </repository>
+
+    <repository>
+      <id>vital-public-mvn-repo-snapshots</id>
+      <name>Vital AI Public Maven Repo Snapshots</name>
+      <url>https://github.com/vital-ai/vital-public-mvn-repo/raw/snapshots/</url>
+    </repository>
 
   </repositories>
-  
-  
+
+
   <build>
     <sourceDirectory>src</sourceDirectory>
     <plugins>
-    
-      <!-- assembly -->      
+
+      <!-- assembly -->
       <!-- no longer assembling a fat jar, aspen-groovy is a normal maven library -->
       <!--
       <plugin>
@@ -92,14 +94,14 @@
         </executions>
       </plugin>
       -->
-    
+
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <!-- 2.8.0-01 and later require maven-compiler-plugin 3.1 or higher -->
-       	<version>3.2</version>
+        <version>3.2</version>
         <configuration>
-			<source>1.7</source>
-			<target>1.7</target>
+          <source>1.7</source>
+          <target>1.7</target>
           <compilerId>groovy-eclipse-compiler</compilerId>
           <!-- set verbose to be true if you want lots of uninteresting messages -->
           <!-- <verbose>true</verbose> -->
@@ -118,36 +120,37 @@
             <!-- or choose a different compiler version -->
             <!-- <version>1.8.6-01</version> -->
             <!-- <version>1.7.10-06</version> -->
-        </dependency>
+          </dependency>
         </dependencies>
       </plugin>
 
-      
+<!-- 
       <plugin>
         <artifactId>maven-deploy-plugin</artifactId>
         <version>2.8.1</version>
         <configuration>
-            <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/snapshots</altDeploymentRepository>
+          <altDeploymentRepository>
+            internal.repo::default::file://${project.build.directory}/snapshots</altDeploymentRepository>
         </configuration>
-    </plugin>
-      
-      
-      <plugin>
+      </plugin> -->
+
+
+      <!-- <plugin>
             <groupId>com.github.github</groupId>
             <artifactId>site-maven-plugin</artifactId>
             <version>0.10</version>
             <configuration>
-                <message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
-                <noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
-                <outputDirectory>${project.build.directory}/snapshots</outputDirectory> <!-- matches distribution management repository url above -->
-                <branch>refs/heads/snapshots</branch>                       <!-- remote branch name -->
+                <message>Maven artifacts for ${project.version}</message> 
+                <noJekyll>true</noJekyll>                                
+                <outputDirectory>${project.build.directory}/snapshots</outputDirectory> 
+                <branch>refs/heads/snapshots</branch>                       
                 <includes><include>**/*</include></includes>
-                <merge>true</merge>                                        <!-- don't delete old artifacts -->
-                <repositoryName>vital-public-mvn-repo</repositoryName>      <!-- github repo name -->
-                <repositoryOwner>vital-ai</repositoryOwner>    <!-- github username  -->
+                <merge>true</merge>                                        
+                <repositoryName>vital-public-mvn-repo</repositoryName>      
+                <repositoryOwner>vital-ai</repositoryOwner>    
             </configuration>
             <executions>
-              <!-- run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase -->
+             
               <execution>
                 <goals>
                   <goal>site</goal>
@@ -155,133 +158,139 @@
                 <phase>deploy</phase>
               </execution>
             </executions>
-        </plugin>
-      
-      
-      
-      
+        </plugin> -->
+
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>2.8.2</version>
+        <executions>
+          <execution>
+            <id>default-deploy</id>
+            <phase>deploy</phase>
+            <goals>
+              <goal>deploy</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
     </plugins>
   </build>
-  
-  
 
-  
-  
-  <distributionManagement>
+
+  <!-- <distributionManagement>
     <repository>
         <id>internal.repo</id>
         <name>Temporary Staging Repository</name>
         <url>file://${project.build.directory}/snaphots</url>
     </repository>
-</distributionManagement>
- 
- 
- 
- <dependencies>
- 
- <!-- M3RD, nlp dependencies etc. -->
- <dependency>
-	<groupId>trove</groupId>
-	<artifactId>trove</artifactId>
-	<version>1.0.2</version>
-</dependency>
- 
- 
- 
- <dependency>
-	<groupId>org.beanshell</groupId>
-	<artifactId>bsh</artifactId>
-	<version>2.0b5</version>
-</dependency>
- 
- <dependency>
-	<groupId>colt</groupId>
-	<artifactId>colt</artifactId>
-	<version>1.2.0</version>
-</dependency>
- 
- 
- <dependency>
-	<groupId>mx.bigdata.jcalais</groupId>
-	<artifactId>j-calais</artifactId>
-	<version>1.0</version>
-	<exclusions>
-		<exclusion>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-		</exclusion>
-	</exclusions>
-</dependency>
- 
- <dependency>
-	<groupId>com.cybozu.labs</groupId>
-	<artifactId>langdetect</artifactId>
-	<version>1.1-20120112</version>
-</dependency>
- 
- <dependency>
-	<groupId>com.thoughtworks.xstream</groupId>
-	<artifactId>xstream</artifactId>
-	<version>1.4.7</version>
-</dependency>
- 
- 
- 
- 
+</distributionManagement> -->
 
- <dependency>
-	<groupId>org.jsoup</groupId>
-	<artifactId>jsoup</artifactId>
-	<version>1.8.1</version>
-</dependency>
- 
- 
- 
- <dependency>
-	<groupId>org.apache.opennlp</groupId>
-	<artifactId>opennlp-tools</artifactId>
-	<version>1.5.3</version>
-</dependency>
- 
- <dependency>
-	<groupId>org.knallgrau.utils</groupId>
-	<artifactId>textcat</artifactId>
-	<version>1.0.1</version>
-</dependency>
- 
- 
- 
- <dependency>
-	<groupId>org.htmlparser</groupId>
-	<artifactId>htmlparser</artifactId>
-	<version>2.1</version>
-</dependency>
- 
- 
-   
-   <dependency>
-	<groupId>com.syncthemall</groupId>
-	<artifactId>boilerpipe</artifactId>
-	<version>1.2.2</version>
-</dependency>
-   
-   
-  <dependency>
-	<groupId>org.apache.hadoop</groupId>
-	<artifactId>hadoop-common</artifactId>
-	<version>2.2.0</version>
-  </dependency>
+  <distributionManagement>
+    <repository>
+      <id>harbor-releases</id>
+      <url>https://internal-repo.harbor.ai/repository/harbor-releases/</url>
+    </repository>
+  </distributionManagement>
+
+  <dependencies>
+
+    <!-- M3RD, nlp dependencies etc. -->
+    <dependency>
+      <groupId>trove</groupId>
+      <artifactId>trove</artifactId>
+      <version>1.0.2</version>
+    </dependency>
 
 
-<dependency>
+    <dependency>
+      <groupId>org.beanshell</groupId>
+      <artifactId>bsh</artifactId>
+      <version>2.0b5</version>
+    </dependency>
+
+    <dependency>
+      <groupId>colt</groupId>
+      <artifactId>colt</artifactId>
+      <version>1.2.0</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>mx.bigdata.jcalais</groupId>
+      <artifactId>j-calais</artifactId>
+      <version>1.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>com.cybozu.labs</groupId>
+      <artifactId>langdetect</artifactId>
+      <version>1.1-20120112</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.thoughtworks.xstream</groupId>
+      <artifactId>xstream</artifactId>
+      <version>1.4.7</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>org.jsoup</groupId>
+      <artifactId>jsoup</artifactId>
+      <version>1.8.1</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>org.apache.opennlp</groupId>
+      <artifactId>opennlp-tools</artifactId>
+      <version>1.5.3</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.knallgrau.utils</groupId>
+      <artifactId>textcat</artifactId>
+      <version>1.0.1</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>org.htmlparser</groupId>
+      <artifactId>htmlparser</artifactId>
+      <version>2.1</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>com.syncthemall</groupId>
+      <artifactId>boilerpipe</artifactId>
+      <version>1.2.2</version>
+    </dependency>
+
+
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+      <version>2.2.0</version>
+    </dependency>
+
+
+    <dependency>
       <groupId>io.github.mightguy</groupId>
       <artifactId>symspell-lib</artifactId>
       <version>6.6-SNAPSHOT</version>
     </dependency>
 
 
-   
- 
     <!-- dependencies installed into local repo from vital software -->
     <!-- 
   	<dependency>
@@ -290,69 +299,65 @@
        <version>0.2.0</version>
       <scope>compile</scope>
    	</dependency>
-     --> 
-     
-         
-  
-	<!-- nlp domain -->
-  <dependency>
-    <groupId>vitalai-com</groupId>
-    <artifactId>vital-nlp</artifactId>
-    <version>${vital.version}</version>
-  </dependency>
-   
-    
-  <dependency>
+     -->
+
+
+    <!-- nlp domain -->
+    <dependency>
+      <groupId>vitalai-com</groupId>
+      <artifactId>vital-nlp</artifactId>
+      <version>${vital.version}</version>
+    </dependency>
+
+
+    <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vital-domain</artifactId>
       <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
-  
-  
-  <dependency>
+
+
+    <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vitalsigns</artifactId>
       <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
-  	
 
 
-    
     <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vitalservice</artifactId>
       <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
-     
-    
-    
+
+
     <dependency>
       <groupId>vital-ai</groupId>
       <artifactId>vital-lucene</artifactId>
       <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
-  
-    
+
+
     <dependency>
-	  <groupId>vital-ai</groupId>
+      <groupId>vital-ai</groupId>
       <artifactId>vital-sparql</artifactId>
       <version>${vital.version}</version>
       <scope>compile</scope>
     </dependency>
-  
- 
-    <dependency>
-		<groupId>junit</groupId>
-		<artifactId>junit</artifactId>
-		<version>4.12</version>
-	</dependency>
-    
- 
- </dependencies>
 
-  
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+    </dependency>
+
+
+  </dependencies>
+
+
 </project>
